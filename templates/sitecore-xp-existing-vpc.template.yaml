@@ -1,0 +1,591 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Deploys Sitecore"
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network configuration
+        Parameters:
+          - VPCCIDR
+          - VPCID
+          - PrivateSubnet1A
+          - PrivateSubnet2A
+          - PublicSubnet1
+          - PublicSubnet2
+          - ExternalCertificateARN
+      - Label:
+          default: Sitecore Configuration
+        Parameters:
+          - CDMinSize
+          - CDMaxSize
+          - CDDesiredCapacity
+          - SitecoreInstanceType
+          - SitecoreKeyPair
+          - SitecorePrefix
+          - SitecoreS3Bucket
+          - SCResourcesPrefix
+          - SCLicensePrefix
+          - SOLRCorePrefix
+          - SOLRUrl
+          - EnvironmentType
+          - SCLogLevel
+          - CorsOrigins
+          - LambdaZipsBucketName
+      - Label:
+          default: SQL Server configuration
+        Parameters:
+          - PubliclyAccessible
+          - DBInstanceClass
+          - DBAutoMinorVersionUpgrade
+          - SQLEngineEdition
+          - SQLEngineVersion
+          - VolumeSize
+          - VolumeType
+          - VolumeIops
+          - BackupRetentionPeriod
+      - Label:
+          default: AWS Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+          - RDGWSecurityGroup
+    ParameterLabels:
+    # VPC
+      VPCID:
+        default: VPC ID
+      VPCCIDR:
+        default: VPC CIDR
+      PrivateSubnet1A:
+        default: Private subnet 1 ID
+      PrivateSubnet2A:
+        default: Private subnet 2 ID
+      PublicSubnet1:
+        default: Public subnet 1 ID
+      PublicSubnet2:
+        default: Public subnet 2 ID
+      ExternalCertificateARN:
+        default: External Amazon Certificate Manager ARN
+    # Sitecore Configuration
+      CDMinSize:
+        default: Min number of Content Delivery instances # Currently applied to all instances
+      CDMaxSize:
+        default: Max number of Content Delivery instances # Currently applied to all instances
+      CDDesiredCapacity:
+        deault: The current number of desired Content Delivery instances # Currently applied to all instances
+      SitecoreInstanceType:
+        default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
+      SitecoreKeyPair:
+        default: EC2 Key Pair for Sitecore instances
+      SitecorePrefix: 
+        default: The Prefix to be used for the Sitecore installation
+      SitecoreS3Bucket:
+        default: S3 Bucket where Sitecore artifacts are located (Resource files, licence files.) This deployment will put objects into this bucket.
+      SCResourcesPrefix:
+        default: "The prefix where Sitecore installation files are located (eg: sitecorefiles/)"
+      SCLicensePrefix:
+        default: "The prefix where the sitecore license.zip is located (eg: licence/)"
+      SOLRCorePrefix: 
+        default: The prefix used for the SOLR Cores
+      SOLRUrl:
+        default: The Url for the SOLR deployment 
+      EnvironmentType: 
+        default: The Sitecore Environment Type
+      SCLogLevel: 
+        default: The Sitecore Log Level
+      CorsOrigins: 
+        default: The Sitecore Cors Origins
+      LambdaZipsBucketName:
+        default: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
+    # RDS Configuration
+      PubliclyAccessible:
+        default: Publically Accessible
+      DBInstanceClass:
+        default: To be udpated
+      DBAutoMinorVersionUpgrade:
+        default: Database auto minor version upgrade
+      SQLEngineEdition:
+        default: MSSQL database engine edition
+      SQLEngineVersion:
+        default: MSSQL database engine version
+      VolumeIops:
+        default: Data volume IOPS
+      VolumeSize:
+        default: Data volume size
+      VolumeType:
+        default: Data volume type
+      BackupRetentionPeriod:
+        default: Retention Period
+    # Quick Start Config Params
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      RDGWSecurityGroup:
+        default: Default SG #Remove later
+Parameters:
+  VPCID:
+    Description: ID of the VPC (e.g., vpc-0343606e)
+    Type: AWS::EC2::VPC::Id
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR Block for the VPC
+    Type: String
+  PrivateSubnet1A:
+    Description: ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2A:
+    Description: ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: The public subnet in Availability Zone 1
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: The public subnet in Availability Zone 2
+  ExternalCertificateARN:
+    Type: String
+# Sitecore
+  CDMinSize:
+    Type: Number
+    Default: 1
+    Description: The minimum number of Content Delivery instances to be available (this currently applies to ALL roles)
+  CDMaxSize:
+    Type: Number
+    Default: 1
+    Description: The maximum number of Content Delivery instances to be available (this currently applies to ALL roles)
+  CDDesiredCapacity:
+    Type: Number
+    Default: 1
+    Description: The desired number of Content Delivery instances to be available (this currently applies to ALL roles)
+  SitecoreInstanceType:
+    AllowedValues:
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c3.large
+    - c3.xlarge
+    - c3.2xlarge
+    - c3.4xlarge
+    - c3.8xlarge
+    - r3.large
+    - r3.xlarge
+    - r3.2xlarge
+    - r3.4xlarge
+    - r3.8xlarge
+    - i2.xlarge
+    - i2.2xlarge
+    - i2.4xlarge
+    - i2.8xlarge
+    ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
+    Default: m4.large
+    Description: Web server instance type (this currently applies to ALL roles)
+    Type: String
+  SitecoreKeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: The EC2 Key Pair to use with the Sitecore instances
+  SitecorePrefix: 
+    Type: String
+    Description: The prefix to be used for the sitecore installation
+  SitecoreS3Bucket:
+    Type: String
+    Description: The name of the S3 Bucket where the Sitecore resources (instalation files, license file, etc.) reside.
+  SCResourcesPrefix:
+    Type: String
+    Description: The prefix for the sitecore install files. 
+    Default: resources/
+  SCLicensePrefix:
+    Type: String
+    Description: "The prefix for the sitecore licence.zip file. eg: license/" 
+    Default: license/
+  SOLRCorePrefix: 
+    Type: String
+    Description: The prefix used for the SOLR Cores
+  SOLRUrl:
+    Type: String 
+    Description: The URL of your Solr server/cluster. 
+  EnvironmentType: 
+    Description: The type of deployment
+    AllowedValues:
+      - Production
+      - Development
+    Default: Production
+    Type: String
+  SCLogLevel: 
+    AllowedValues:
+      - Information
+      - Debug
+      - Error
+      - Warning
+      - None
+    Default: Information
+    Type: String
+  CorsOrigins: 
+    Type: String
+  LambdaZipsBucketName:
+    Type: String
+    Default: ''
+# RDS MS SQL
+  DBAutoMinorVersionUpgrade: 
+    AllowedValues: 
+      - "true"
+      - "false"
+    Default: "false"
+    Description: Select true/false to setup Auto Minor Version upgrade.
+    Type: String
+  PubliclyAccessible: 
+    AllowedValues: 
+      - "true"
+      - "false"
+    Default: "false"
+    Description: Select whether DB instance is internet-facing.
+    Type: String
+  DBInstanceClass:
+    AllowedValues:
+      - db.m5.large
+      - db.m5.xlarge
+      - db.m5.2xlarge
+      - db.m5.4xlarge
+      - db.m5.12xlarge
+      - db.m5.24xlarge
+      - db.m4.large
+      - db.m4.xlarge
+      - db.m4.2xlarge
+      - db.m4.4xlarge
+      - db.m4.10xlarge
+      - db.m4.16xlarge
+      - db.r4.large
+      - db.r4.xlarge
+      - db.r4.2xlarge
+      - db.r4.4xlarge
+      - db.r4.8xlarge
+      - db.r4.16xlarge
+    ConstraintDescription: "Must select a valid database instance type."
+    Default: db.r4.2xlarge
+    Description: "The name of the compute and memory capacity class of the database instance."
+    Type: String
+  SQLEngineEdition:
+    AllowedValues:
+      - sqlserver-ee
+      - sqlserver-se
+      - sqlserver-ex
+      - sqlserver-web
+    ConstraintDescription: "Must select a MSSQL Database Engine Edition."
+    Default: sqlserver-se
+    Description: "MSSQL Database Engine Edition."
+    Type: String
+  SQLEngineVersion:
+    AllowedValues:
+      - 14.00.3192.2.v1
+      - 14.00.3049.1.v1
+      - 14.00.3035.2.v1
+      - 14.00.3015.40.v1
+      - 14.00.1000.169.v1
+    ConstraintDescription: "Must select a MSSQL Database Engine Version."
+    Default: 14.00.3192.2.v1
+    Description: "MSSQL Database Engine Version."
+    Type: String
+  BackupRetentionPeriod:
+    Default: 7
+    Description: The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups. 
+    Type: Number
+  VolumeIops:
+    Default: 1000
+    Description: Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This
+      parameter is only applicable when SQL Server Volume Type is set to "io1"
+    MaxValue: '20000'
+    MinValue: '100'
+    Type: Number
+  VolumeSize:
+    Default: 500
+    Description: Volume size for the SQL Data, Logs and TempDb volumes, in GiB
+    MaxValue: '16000'
+    MinValue: '100'
+    Type: Number
+  VolumeType:
+    AllowedValues:
+      - gp2
+      - io1
+    Default: gp2
+    Description: Volume type for the SQL Data, Logs and TempDb volumes
+    Type: String
+# Quick Start Confguration
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: quickstart-sitecore-xp/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/).
+    Type: String
+# Remove Later
+  RDGWSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+
+Conditions:
+  CreateLambdaZipsBucket: !Equals [!Ref 'LambdaZipsBucketName', '']
+
+Resources:
+# Local region S3 bucket for Lambda functions
+  LambdaZipsBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateLambdaZipsBucket
+# Create required Security Groups
+  SitecoreInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub Used for the Sitecore Instances - ${AWS::StackName}
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          SourceSecurityGroupId: !Ref RDGWSecurityGroup
+          Description: RDP from Remote Desktop Gateway 
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref VPCCIDR
+          Description: HTTPS Traffic from within the VPC
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref VPCCIDR
+          Description: HTTP Traffic from within the VPC
+  LoadBalancerInternalSG:
+    # DependsOn: SitecoreInstanceSG
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub Used for the Internal ALB - ${AWS::StackName}
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref SitecoreInstanceSG
+          Description: HTTPS Traffic from within the VPC
+        - IpProtocol: tcp 
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref SitecoreInstanceSG
+          Description: HTTPS Traffic from within the VPC
+  LoadBalancerExternalSG:
+    # DependsOn: SitecoreServerSG
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub Used for the External ALB - ${AWS::StackName}
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+  RDSsqlSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for RDS MSSQL.
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 1433
+          ToPort: 1433
+          CidrIp: !Ref 'VPCCIDR'
+  # Internal ALB
+  LoadBalancerInternal:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internal
+      IpAddressType: ipv4
+      SecurityGroups:
+        - !Ref LoadBalancerInternalSG
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  # External ALB
+  LoadBalancerExternal:
+    # DependsOn: LoadBalancerExternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      IpAddressType: ipv4
+      SecurityGroups:
+        - !Ref LoadBalancerExternalSG
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+  # Parameter entries for internal & External ALB - put here so that Parameter Stack not waiting
+  InternalALBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${AWS::StackName}/net/private/alb
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !GetAtt LoadBalancerInternal.DNSName
+  ExternalALBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${AWS::StackName}/net/public/alb
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !GetAtt LoadBalancerExternal.DNSName
+# Sitecore Security Stack
+  SecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-security.template.yaml'
+      Parameters:
+        SitecoreS3Bucket: !Ref SitecoreS3Bucket
+        RootStackName: !Ref "AWS::StackName"
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        LambdaZipsBucketName: !If [ CreateLambdaZipsBucket, !Ref LambdaZipsBucket, !Ref LambdaZipsBucketName ]
+# Sitecore Parameter Store Stack
+  ParamStoreStack:
+    Type: AWS::CloudFormation::Stack
+    # DependsOn: LoadBalancerInternal
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-parameters.template.yaml'
+      Parameters:
+        IntLBDNS: !GetAtt LoadBalancerInternal.DNSName
+        RootStackName: !Ref "AWS::StackName"
+        SCPrefix: !Ref SitecorePrefix
+        SOLRCorePrefix: !Ref SOLRCorePrefix
+        SOLRUrl: !Ref SOLRUrl
+        EnvironmentType: !Ref EnvironmentType
+        SCLogLevel: !Ref SCLogLevel
+        CorsOrigins: !Ref CorsOrigins
+        SCS3Bucket: !Ref SitecoreS3Bucket
+        SCResourcesPrefix: !Ref SCResourcesPrefix
+        SCLicensePrefix: !Ref SCLicensePrefix
+# Builds the sitecore RDS MSSQL Database Stack
+  RDSStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SecurityStack # RDSsqlSG
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-rds-mssql.template.yaml'
+      Parameters:
+        PrivateSubnet1AID: !Ref PrivateSubnet1A
+        PrivateSubnet2AID: !Ref PrivateSubnet2A
+        PubliclyAccessible: !Ref PubliclyAccessible
+        DBInstanceClass:  !Ref DBInstanceClass
+        SQLEngineEdition: !Ref SQLEngineEdition
+        SQLEngineVersion: !Ref SQLEngineVersion
+        DBAutoMinorVersionUpgrade:  !Ref DBAutoMinorVersionUpgrade
+        BackupRetentionPeriod:  !Ref BackupRetentionPeriod
+        SQLMasterUserName: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${AWS::StackName}-sqladmin:SecretString:username}}'
+        SQLMasterUserPassword: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${AWS::StackName}-sqladmin:SecretString:password}}'
+        RDSSecurityGroup: !Ref RDSsqlSG
+        VolumeIops: !Ref VolumeIops
+        VolumeSize: !Ref VolumeSize
+        VolumeType: !Ref VolumeType
+        RootStackName: !Ref "AWS::StackName"
+
+# Sitecore AMI Build Stack
+  CustomAMIStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn: [SecurityStack, ParamStoreStack]
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-ami.template.yaml'
+      Parameters:
+        AutomationAssumeRole: !GetAtt SecurityStack.Outputs.SCInstanceRoleARN
+        ImageID: "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base"
+        SitecoreKeyPair: !Ref SitecoreKeyPair
+        PrivateSubnet1A: !Ref PrivateSubnet1A
+        IamInstanceProfile: !GetAtt SecurityStack.Outputs.SCInstanceProfileName
+        SecurityGroupIds: !Ref SitecoreInstanceSG
+        InstanceType: "t2.large"
+        LocalPath: !GetAtt ParamStoreStack.Outputs.SCLocalResourcePath 
+        RootStackName: !Ref "AWS::StackName"
+        TargetAmiName: !GetAtt ParamStoreStack.Outputs.CustomAmiName 
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        LocalQSScripts: 'c:\quickstart\scripts'  # this needs to be updated to SSM  -- use a gettatt from parameter outputs for this.
+
+# Create lambda functions
+  FunctionsStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-functions.template.yaml'
+      Parameters:
+        LambdaZipsBucketName: !If [ CreateLambdaZipsBucket, !Ref LambdaZipsBucket, !Ref LambdaZipsBucketName ]
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        CopyZipsRoleArn: !GetAtt SecurityStack.Outputs.CopyZipsRoleArn
+        ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
+
+# Custom Resource to convert and import Instance certificate, as it has the full chain
+  CertConvertACM:
+    Type: AWS::CloudFormation::CustomResource
+    DependsOn: CustomAMIStack # SecurityStack, CertConvertACM
+    Properties:
+      ServiceToken: !GetAtt FunctionsStack.Outputs.ConvertCertificatesLambdaArn
+      S3BucketName: !Ref SitecoreS3Bucket
+      S3ObjectPrefix: !GetAtt ParamStoreStack.Outputs.InstanceCertificateLocation
+      SecretLocation: !Sub sitecore-quickstart-${AWS::StackName}-certpass
+      AcmParameterPath: !Sub /${AWS::StackName}/cert/internal/acm
+
+#Sitecore ALB Stack
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: CustomAMIStack # SecurityStack, CertConvertACM
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-alb.template.yaml'
+      Parameters:
+        PrivateSubnet1A: !Ref PrivateSubnet1A
+        PrivateSubnet2A: !Ref PrivateSubnet2A
+        PublicSubnet1: !Ref PublicSubnet1
+        PublicSubnet2: !Ref PublicSubnet2
+        VPCID: !Ref VPCID
+        LoadBalancerInternal: !Ref LoadBalancerInternal
+        LoadBalancerExternal: !Ref LoadBalancerExternal
+        InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
+        ExternalCertificateARN: !Ref ExternalCertificateARN
+        CDMinSize: !Ref CDMinSize
+        CDMaxSize: !Ref CDMaxSize
+        CDDesiredCapacity: !Ref CDDesiredCapacity
+        RootStackName: !Ref "AWS::StackName"
+        #ImageId: !Sub '{{resolve:ssm:/-${AWS::StackName}/instance/ami/customid:1}}'
+        SitecoreInstanceType: !Ref SitecoreInstanceType
+        SitecoreInstanceSG: !Ref SitecoreInstanceSG
+        SCInstanceProfile: !GetAtt SecurityStack.Outputs.SCInstanceProfileARN
+        SitecoreKeyPair: !Ref SitecoreKeyPair
+        CMMinSize: '1' #udpate later
+        CMMaxSize: '1' #udpate later
+        CMDesiredCapacity: '1' #udpate later
+Outputs:
+  ALBInternalDNS:
+    Description: Internal DNS name of the ALB
+    Value: !GetAtt LoadBalancerInternal.DNSName
+  ALBExternalDNS:
+    Description: Internal DNS name of the ALB
+    Value: !GetAtt LoadBalancerExternal.DNSName

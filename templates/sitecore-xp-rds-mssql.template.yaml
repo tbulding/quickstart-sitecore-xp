@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Sitecore core RDS MSSQL deployment"
+Parameters:
+  DBAutoMinorVersionUpgrade: 
+    Type: String
+  PrivateSubnet1AID:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2AID:
+    Type: AWS::EC2::Subnet::Id
+  PubliclyAccessible: 
+    Type: String
+  DBInstanceClass:
+    Type: String
+  SQLEngineEdition:
+    Type: String
+  SQLEngineVersion:
+    Type: String
+  BackupRetentionPeriod:
+    Type: Number
+  SQLMasterUserName:
+    Type: String
+  SQLMasterUserPassword:
+    Type: String
+    NoEcho: True
+  VolumeIops:
+    Type: Number
+  VolumeSize:
+    Type: Number
+  RDSSecurityGroup:
+    Type: List<String>
+  VolumeType:
+    Type: String
+  RootStackName:
+    Type: String
+
+Conditions:
+  DBProvisionedIops:
+    !Equals [!Ref VolumeType, io1]
+
+Mappings:
+  RDSParameterFamily:
+    sqlserver-ee:
+      family: sqlserver-ee-14.0
+    sqlserver-se:
+      family: sqlserver-se-14.0
+    sqlserver-ex:
+      family: sqlserver-ex-14.0
+    sqlserver-web:
+      family: sqlserver-web-14.0
+
+Resources:
+  RDSParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: !Sub 'RDS Parameter Group for Sitecore MSSQL - ${RootStackName}'
+      Family: !FindInMap [RDSParameterFamily, !Ref SQLEngineEdition, family]
+      Parameters:
+        contained database authentication: '1'
+  RDSSQLDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: !Sub 'RDS Subnet Group for Sitecore RDS MSSQL - ${RootStackName}'
+      SubnetIds: 
+        - !Ref PrivateSubnet1AID
+        - !Ref PrivateSubnet2AID
+  RDSSQL:
+    Type: "AWS::RDS::DBInstance" 
+    Properties: 
+      AutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
+      AllocatedStorage: !Ref VolumeSize
+      BackupRetentionPeriod: !Ref BackupRetentionPeriod
+      DBInstanceClass: !Ref DBInstanceClass
+      DBSubnetGroupName: !Ref RDSSQLDBSubnetGroup
+      Engine: !Ref SQLEngineEdition
+      EngineVersion: !Ref SQLEngineVersion
+      Iops: !If [DBProvisionedIops, !Ref VolumeIops, !Ref 'AWS::NoValue']
+      LicenseModel: license-included
+      MasterUserPassword: !Ref SQLMasterUserPassword
+      MasterUsername: !Ref SQLMasterUserName
+      MultiAZ: False # Sitecore does not support DB Mirroring - this needs to be false
+      VPCSecurityGroups: !Ref RDSSecurityGroup
+      PubliclyAccessible: !Ref PubliclyAccessible
+      DBParameterGroupName: !Ref RDSParameterGroup
+      DBInstanceIdentifier: !Sub sc-${RootStackName}
+      StorageType: !If [DBProvisionedIops, io1, gp2]
+Outputs:
+  RDSSQLEndpoint:
+    Description: Database endpoint
+    Value: !Sub "${RDSSQL.Endpoint.Address}:${RDSSQL.Endpoint.Port}"

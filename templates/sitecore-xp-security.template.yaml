@@ -1,0 +1,385 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates the required secrets in AWS Secrets Manager
+Parameters:
+  SitecoreS3Bucket:
+    Type: String
+  RootStackName:
+    Type: String
+  QSS3BucketName:
+    Type: String
+  QSS3KeyPrefix:
+    Type: String
+  LambdaZipsBucketName:
+    Type: String
+
+Resources:
+#Lambda IAM Policy
+  ConvertCertificatesLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        Policies:
+          - PolicyName: lambda-convert-to-acm
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: s3:GetObject
+                  Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
+          - PolicyName: import-to-acm
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: acm:ImportCertificate
+                  Resource: '*'
+          - PolicyName: get-secret-value
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: secretsmanager:GetSecretValue
+                  Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:*:secret:*'
+          - PolicyName: put-ssm-parameter
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: ssm:PutParameter
+                  Resource: !Sub 'arn:aws:ssm:${AWS::Region}:*:parameter/*'
+  CopyZipsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: lambda-copier
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub 'arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*'
+#Instance IAM Policy
+  # SCInstancePolicy:
+  #   Type: AWS::IAM::ManagedPolicy
+  #   Properties: 
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement: ## this needs to be cleaned up to be limited to the required permissions
+  #         -
+  #           Effect: "Allow"
+  #           Action:
+  #             - "s3:*"
+  #             - "secretsmanager:*"
+  #             - "ssm:*"
+  #             - "logs:*"
+  #             - "ec2:*"
+  #           Resource: "*"
+#Create IAM Role for Instances
+  SCInstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                - ssm.amazonaws.com
+            Effect: Allow
+        Version: 2012-10-17
+      # ManagedPolicyArns:
+      #   - !Ref SCInstancePolicy
+      Policies:
+        - 
+          PolicyName: SCInstanceAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: "Allow" ###################### This policy needs to be limited in scope ######################
+                Action: "*"
+                Resource: "*"
+  SCInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref SCInstanceRole
+
+
+
+#Create Secrets Manager Resources
+  SQLAdminUser: # Used for RDS Master user
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqladmin
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqladminuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlMessagingUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlmessaging
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlmessaginguser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\`'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlProcessingEngineUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlprocessingengine
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlprocessingengineuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlReportingUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlreporting
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlreportinguser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlCoreUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlcore
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlcoreuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlSecurityUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlsecurity
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlsecurityuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlMasterUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlmaster
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlmasteruser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlWebUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlweb
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlwebuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlReferenceDataUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlreferencedata
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlreferencedatauser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlFormsUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlforms
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlformsuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlExmMasterUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlexmmaster
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlexmmasteruser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlProcessingPoolsUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlprocessingpools
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlprocessingpoolsuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlProcessingTasksUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlprocessingtasks
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlprocessingtasksuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlCollectionUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlcollection
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlcollectionuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SqlMarketingAutomationUser: #Sitecore SQL DB User
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sqlmarketingautomation
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "sqlmarketingautomationuser"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  ReportingServiceAPIKey: ###########################################  ?????
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-reportingserviceapikey
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "none"}'
+        GenerateStringKey: "APIKey"
+        PasswordLength: 20
+        ExcludePunctuation: true
+        IncludeSpace: false
+  ClientSecret: ###########################################  ?????
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-clientsecret
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "none"}'
+        GenerateStringKey: "secret"
+        PasswordLength: 20
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SitecoreIdentitySecret: ###########################################  ?????
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sitecoreidentitysecret
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "none"}'
+        GenerateStringKey: "secret"
+        PasswordLength: 20
+        ExcludePunctuation: true
+        IncludeSpace: false
+  SitecoreAdminPassword: # Admin username and password for Sitecore
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-sitecoreadmin
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "administrator"}'
+        GenerateStringKey: "Password"
+        PasswordLength: 20
+        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: true
+        IncludeSpace: false
+  ExportCertPassword: # Password for the certificate Export
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub sitecore-quickstart-${RootStackName}-certpass
+      Description: Secrets for the Sitecore XP1 Quick Start
+      GenerateSecretString:
+        SecretStringTemplate: '{"certificatename": "Export-Certificate"}'
+        GenerateStringKey: "password"
+        PasswordLength: 20
+        ExcludePunctuation: true
+        IncludeSpace: false
+  
+Outputs:
+  SCInstanceRoleARN:
+    Description: Sitecore Instance Role.
+    Value: !GetAtt SCInstanceRole.Arn
+  SCInstanceProfileARN:
+    Description: ARN for the Instance Profile.
+    Value: !GetAtt SCInstanceProfile.Arn
+  SCInstanceProfileName:
+    Description: ARN for the Instance Profile.
+    Value: !Ref SCInstanceProfile
+  ConvertCertificatesLambdaRoleArn:
+    Description: The role ARN for the Lambda function to convert and upload certs to ACM.
+    Value: !GetAtt ConvertCertificatesLambdaRole.Arn
+  CopyZipsRoleArn:
+    Value: !GetAtt CopyZipsRole.Arn

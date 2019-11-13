@@ -1,0 +1,154 @@
+[
+    {
+        "ParameterKey": "VPCCIDR",
+        "ParameterValue": "10.0.0.0/16"
+    },
+    {
+        "ParameterKey": "PrivateSubnet1ACIDR",
+        "ParameterValue": "10.0.0.0/19"
+    },
+    {
+        "ParameterKey": "PrivateSubnet2ACIDR",
+        "ParameterValue": "10.0.32.0/19"
+    },
+    {
+        "ParameterKey": "PublicSubnet1CIDR",
+        "ParameterValue": "10.0.128.0/20"
+    },
+    {
+        "ParameterKey": "PublicSubnet2CIDR",
+        "ParameterValue": "10.0.144.0/20"
+    },
+    {
+        "ParameterKey": "AvailabilityZones",
+        "ParameterValue": "$[taskcat_getaz_2]"
+    },
+    {
+        "ParameterKey": "AdminUser",
+        "ParameterValue": "StackAdmin"
+    },
+    {
+        "ParameterKey": "AdminPassword",
+        "ParameterValue": "$[taskcat_genpass_16]"
+    },
+    {
+        "ParameterKey": "DomainDNSName",
+        "ParameterValue": "example.com"
+    },
+    {
+        "ParameterKey": "NumberOfRDGWHosts",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "RDGWInstanceType",
+        "ParameterValue": "t2.large"
+    },
+    {
+        "ParameterKey": "RDGWCIDR",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey": "KeyPairName",
+        "ParameterValue": "override"
+    },
+    {
+        "ParameterKey": "CDMinSize",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "CDMaxSize",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "CDDesiredCapacity",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "SitecoreInstanceType",
+        "ParameterValue": "m4.large"
+    },
+    {
+        "ParameterKey": "SitecoreKeyPair",
+        "ParameterValue": "override"
+    },
+    {
+        "ParameterKey": "SitecorePrefix",
+        "ParameterValue": "sc"
+    },
+    {
+        "ParameterKey": "SitecoreS3Bucket",
+        "ParameterValue": "yourbucket"
+    },
+    {
+        "ParameterKey": "SCResourcesPrefix",
+        "ParameterValue": "resources/"
+    },
+    {
+        "ParameterKey": "SCLicensePrefix",
+        "ParameterValue": "license/"
+    },
+    {
+        "ParameterKey": "SOLRCorePrefix",
+        "ParameterValue": "scsolr"
+    },
+    {
+        "ParameterKey": "SOLRUrl",
+        "ParameterValue": "SOlr-URL"
+    },
+    {
+        "ParameterKey": "EnvironmentType",
+        "ParameterValue": "Production"
+    },
+    {
+        "ParameterKey": "SCLogLevel",
+        "ParameterValue": "Information"
+    },
+    {
+        "ParameterKey": "CorsOrigins",
+        "ParameterValue": "replace"
+    },
+    {
+        "ParameterKey": "PubliclyAccessible",
+        "ParameterValue": "false"
+    },
+    {
+        "ParameterKey": "DBInstanceClass",
+        "ParameterValue": "db.m5.xlarge"
+    },
+    {
+        "ParameterKey": "DBAutoMinorVersionUpgrade",
+        "ParameterValue": "false"
+    },
+    {
+        "ParameterKey": "SQLEngineEdition",
+        "ParameterValue": "sqlserver-se"
+    },
+    {
+        "ParameterKey": "SQLEngineVersion",
+        "ParameterValue": "14.00.3192.2.v1"
+    },
+    {
+        "ParameterKey": "VolumeSize",
+        "ParameterValue": "500"
+    },
+    {
+        "ParameterKey": "VolumeType",
+        "ParameterValue": "gp2"
+    },
+    {
+        "ParameterKey": "BackupRetentionPeriod",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "QSS3BucketName",
+        "ParameterValue": "$[taskcat_autobucket]"
+    },
+    {
+        "ParameterKey": "QSS3KeyPrefix",
+        "ParameterValue": "quickstart-sitecore-xp/"
+    },
+    {
+        "ParameterKey": "ExternalCertificateARN",
+        "ParameterValue": "arn:aws:acm:your cert arn"
+    }
+]

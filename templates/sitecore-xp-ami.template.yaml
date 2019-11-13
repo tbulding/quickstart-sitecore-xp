@@ -1,0 +1,340 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Creates the AMI"
+Parameters:
+  ImageID:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+  SitecoreKeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+  PrivateSubnet1A:
+    Type: AWS::EC2::Subnet::Id
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  InstanceType:
+    Type: String
+  IamInstanceProfile:
+    Type: String
+  RootStackName:
+    Type: String
+  AutomationAssumeRole:
+    Type: String
+  LocalPath:
+    Type: String
+  QSS3BucketName: #used for scripts
+    Type: String
+  QSS3KeyPrefix:
+    Type: String
+  LocalQSScripts: #location to store the quicks start scripts on the instance. This same location is used for the ASG's instance deployments
+    Type: String
+    Default: c:\quickstart\scripts
+  TargetAmiName:
+    Type: String
+
+Resources:
+  BuildEC2instance: 
+    DependsOn: SitecoreSsmAMIBuild
+    Type: AWS::EC2::Instance
+    CreationPolicy: # This is to stop CFN from showing the instance as completed. The success signal is sent from SSM
+      ResourceSignal:
+        Timeout: PT70M
+        Count: 1
+    Properties: 
+      ImageId: !Ref ImageID
+      KeyName: !Ref SitecoreKeyPair
+      IamInstanceProfile: !Ref IamInstanceProfile
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PrivateSubnet1A
+      SecurityGroupIds: !Ref SecurityGroupIds
+      Tags:
+        - Key: Name
+          Value: !Sub AMI-${RootStackName}
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - '$path = '
+            - !Sub '"${LocalQSScripts}"'
+            - "\n"
+            - 'if (Test-Path $path) { }'
+            - "\n"
+            - 'else { Start-SSMAutomationExecution -DocumentName '
+            - !Sub '"${SitecoreSsmAMIBuild}" }'
+            - "\n"
+            - "</powershell>\n"
+  SitecoreSsmAMIBuild:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Automation
+      Content:
+        schemaVersion: "0.3"
+        description: "Deploy and create AMI"
+        assumeRole: !Ref AutomationAssumeRole
+        parameters:
+          SCAMIServer:
+            type: "String"
+            default: !Sub "AMI-${RootStackName}"
+          scResourcesPath:
+            type: "String"
+            default: !Ref LocalPath
+          rootStackName:
+            type: "String"
+            default: !Ref RootStackName
+          ScriptsLocalPath:
+            type: "String"
+            default: !Ref LocalQSScripts
+          QSS3BucketName:
+            type: "String"
+            default: !Ref QSS3BucketName
+          QSS3KeyPrefix:
+            type: "String"
+            default: !Ref QSS3KeyPrefix
+          StackName:
+            default: !Sub "${AWS::StackName}"
+            description: "Stack Name Input for cfn resource signal"
+            type: "String"
+          TargetAmiName:
+            default: !Ref TargetAmiName
+            description: "Name for the created AMI"
+            type: "String"
+          CloudwatchLogGroup:
+            default: !Sub "${RootStackName}-ssm-amibuild"
+            description: The name of the Cloudwatch Log Group
+            type: "String"
+          RdsDbIdentifier:
+            default: !Sub sc-${RootStackName}
+            description: The RDS database identifier for the Sitecore DB
+            type: "String"
+        mainSteps:
+          - name: "SCInstanceIds"
+            action: aws:executeAwsApi
+            onFailure: "step:signalfailure"
+            nextStep: "PrepInstance"
+            inputs:
+              Service: ec2
+              Api: DescribeInstances
+              Filters:  
+              - Name: "tag:Name"
+                Values: [ "{{SCAMIServer}}" ]
+              - Name: "instance-state-name"
+                Values: [ "running" ]
+            outputs:
+            - Name: InstanceId
+              Selector: "$.Reservations[0].Instances[0].InstanceId"
+              Type: "String"
+          - name: PrepInstance
+            action: aws:runCommand
+            onFailure: "step:signalfailure"
+            nextStep: "UpdateSSMAgent"
+            maxAttempts: 3
+            timeoutSeconds: 3600
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              Parameters:
+                commands:
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-new-certs.ps1" -File "{{ScriptsLocalPath}}\sc-new-certs.ps1"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/install/sc-bootstrap.ps1" -File "{{ScriptsLocalPath}}\sc-bootstrap.ps1"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-update-zips.ps1" -File "{{ScriptsLocalPath}}\sc-update-zips.ps1"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/install/sc-install-resources.ps1" -File "{{ScriptsLocalPath}}\sc-install-resources.ps1"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-role-prep.ps1" -File "{{ScriptsLocalPath}}\sc-role-prep.ps1"'
+                  - '& "{{ScriptsLocalPath}}\sc-new-certs.ps1" -stackName {{rootStackName}}'
+                  - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -stackName {{rootStackName}}'
+                  - '& "{{ScriptsLocalPath}}\sc-update-zips.ps1" -pathToZips {{scResourcesPath}}'
+                  - Main
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: "true"
+                CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-PrepInstance"
+          - name: UpdateSSMAgent
+            action: aws:runCommand
+            maxAttempts: 3
+            onFailure: "step:signalfailure"
+            nextStep: "installInspectorAgent"
+            timeoutSeconds: 600
+            inputs:
+              DocumentName: AWS-UpdateSSMAgent
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              Parameters:
+                allowDowngrade: 'false'
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: "true"
+                CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-UpdateSSMAgent"
+          - name: installInspectorAgent
+            action: aws:runCommand
+            maxAttempts: 3
+            timeoutSeconds: 600
+            onFailure: "step:signalfailure"
+            nextStep: "installUnifiedCloudWatchAgent"
+            inputs:
+              DocumentName: AmazonInspector-ManageAWSAgent
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              Parameters:
+                Operation: Install
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: "true"
+                CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-installInspectorAgent"
+          - name: installUnifiedCloudWatchAgent
+            action: aws:runCommand
+            maxAttempts: 3
+            timeoutSeconds: 600
+            onFailure: "step:signalfailure"
+            nextStep: "RunSysprepGeneralize"
+            inputs:
+              DocumentName: AWS-ConfigureAWSPackage
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              Parameters:
+                name: AmazonCloudWatchAgent
+                action: Install
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: "true"
+                CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-installUnifiedCloudWatchAgent"
+          # Sysprep the instance
+          - name: RunSysprepGeneralize
+            action: aws:runCommand
+            maxAttempts: 3
+            onFailure: "step:signalfailure"
+            nextStep: "StopInstance"
+            timeoutSeconds: 600
+            inputs:
+              DocumentName: AWSEC2-RunSysprep
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              Parameters:
+                Id: '{{automation:EXECUTION_ID}}'
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: "true"
+                CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-RunSysprepGeneralize"
+          - name: StopInstance
+            action: aws:changeInstanceState
+            maxAttempts: 3
+            timeoutSeconds: 7200
+            onFailure: "step:signalfailure"
+            nextStep: "CreateImage"
+            inputs:
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              CheckStateOnly: false
+              DesiredState: stopped
+          # Create the custom AMI
+          - name: CreateImage
+            action: aws:createImage
+            maxAttempts: 3
+            onFailure: "step:signalfailure"
+            nextStep: "writeCustomAmiId"
+            inputs:
+              InstanceId: "{{SCInstanceIds.InstanceId}}"
+              ImageName: '{{ TargetAmiName }}'
+              NoReboot: true
+              ImageDescription: Test CreateImage Description
+            outputs:
+            - Name: CustomAmiId
+              Selector: "ImageId"
+              Type: "String"
+          # Write the custom AMI ID to param store. This is for use in the ALB template.
+          - name: "writeCustomAmiId"
+            action: "aws:executeAwsApi"
+            onFailure: "step:signalfailure"
+            nextStep: "RestartInstance"
+            inputs:
+              Service: ssm
+              Api: PutParameter
+              Name: "/{{rootStackName}}/instance/ami/customid"
+              Type: "String"
+              Value: "{{CreateImage.CustomAmiId}}"
+          # Start the instance so that DB updates can be performed
+          - name: RestartInstance
+            action: aws:changeInstanceState
+            maxAttempts: 3
+            timeoutSeconds: 7200
+            onFailure: "step:signalfailure"
+            nextStep: "WaitForRDSToBeReady"
+            inputs:
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              CheckStateOnly: false
+              DesiredState: running
+          # Check for RDS Status
+          - name: WaitForRDSToBeReady
+            action: aws:waitForAwsResourceProperty
+            onFailure: "step:signalfailure"
+            nextStep: "GetRdsUrl"
+            timeoutSeconds: 2700
+            inputs:
+              Service: rds
+              Api: DescribeDBInstances
+              DBInstanceIdentifier: "{{RdsDbIdentifier}}"
+              PropertySelector: "$.DBInstances[0].DBInstanceStatus"
+              DesiredValues: ["available"]
+          # Get RDS Url
+          - name: GetRdsUrl
+            action: aws:executeAwsApi
+            onFailure: "step:signalfailure"
+            nextStep: "AddRdsSqltoSsm"
+            timeoutSeconds: 2700
+            inputs:
+              Service: rds
+              Api: DescribeDBInstances
+              DBInstanceIdentifier: "{{RdsDbIdentifier}}"
+            outputs:
+            - Type: "String"
+              Name: "RdsUrl"
+              Selector: "$.DBInstances[0].Endpoint.Address"
+          # Add Param for SQL URL
+          - name: AddRdsSqltoSsm
+            action: aws:executeAwsApi
+            onFailure: "step:signalfailure"
+            nextStep: "DeployDatabases"
+            timeoutSeconds: 2700
+            inputs:
+              Service: ssm
+              Api: PutParameter
+              Name: "/{{rootStackName}}/sql/server"
+              Value: "{{GetRdsUrl.RdsUrl}}"
+              Type: "String"
+          #Prepare the RDS Database for Sitecore
+          - name: DeployDatabases
+            action: aws:runCommand
+            maxAttempts: 3
+            onFailure: "step:signalfailure"
+            nextStep: "signalsuccess"
+            timeoutSeconds: 7200
+            inputs:
+              DocumentName: AWS-RunPowerShellScript
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              Parameters:
+                commands:
+                  - '$localPath = "{{ScriptsLocalPath}}"'
+                  - '$stackName = "{{rootStackName}}"'
+                  - '& "$localPath\sc-install-resources.ps1" -Role "DbResources" -StackName $stackName'
+                  - Main
+              CloudWatchOutputConfig:
+                CloudWatchOutputEnabled: "true"
+                CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-DeployDatabases"
+          # If all steps complete successfully signals CFN of Success
+          - name: "signalsuccess"
+            action: "aws:executeAwsApi"
+            isEnd: True
+            inputs:
+              Service: cloudformation
+              Api: SignalResource
+              LogicalResourceId: "BuildEC2instance"
+              StackName: "{{StackName}}"
+              Status: SUCCESS
+              UniqueId: "{{SCInstanceIds.InstanceId}}"
+          # If any steps fails signals CFN of Failure
+          - name: "signalfailure"
+            action: "aws:executeAwsApi"
+            inputs:
+              Service: cloudformation
+              Api: SignalResource
+              LogicalResourceId: "BuildEC2instance"
+              StackName: "{{StackName}}"
+              Status: FAILURE
+              UniqueId: "{{SCInstanceIds.InstanceId}}"
+        outputs:
+        - SCInstanceIds.InstanceId
+        - CreateImage.CustomAmiId
+        - GetRdsUrl.RdsUrl

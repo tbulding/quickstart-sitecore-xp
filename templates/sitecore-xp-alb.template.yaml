@@ -1,0 +1,806 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Deploys the ASG's, TG's for the ALB's which are required for the AWS Sitecore Quick Start"
+Parameters:
+  PrivateSubnet1A: 
+    Type: String
+  PrivateSubnet2A: 
+    Type: String
+  PublicSubnet1:
+    Type: String
+  PublicSubnet2:
+    Type: String
+  VPCID: 
+    Type: String
+  LoadBalancerInternal: 
+    Type: String
+  LoadBalancerExternal: 
+    Type: String
+  InternalCertificateARN: 
+    Type: String
+  ExternalCertificateARN: 
+    Type: String
+  CDMinSize: 
+    Type: String
+  CDMaxSize: 
+    Type: String
+  CDDesiredCapacity: 
+    Type: String
+  RootStackName: 
+    Type: String
+  SitecoreInstanceType: 
+    Type: String
+  SitecoreInstanceSG: 
+    Type: AWS::EC2::SecurityGroup::Id
+  SCInstanceProfile: 
+    Type: String
+  SitecoreKeyPair: 
+    Type: String
+  CMMinSize: 
+    Type: String
+  CMMaxSize: 
+    Type: String
+  CMDesiredCapacity: 
+    Type: String
+
+Resources:
+#--- Internal ALB Config ---#
+  HTTPSListenerInternal:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref InternalCertificateARN
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref CDIntTargetGroup
+      LoadBalancerArn: !Ref LoadBalancerInternal
+      Port: 443
+      Protocol: HTTPS
+#Internal Target Groups
+  CDIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-Content-Delivery
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CMIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-Content-Management
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  ColIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-Collection
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CSIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-CollectionSearch
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CPIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-CortexProcessing
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CRIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-CortexReporting
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  ISIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-IdentityServer
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  MAIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-MarketingAutomation
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  MARIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-MarketingAutomationReporting
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  PrcIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-PRC
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  RDIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-ReferenceData
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  RepIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-REP
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+
+  HTTPSListenerInternalRule1:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CMIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/contentmanagement/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 1
+  HTTPSListenerInternalRule2:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ISIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/identityserver/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 2
+  HTTPSListenerInternalRule3:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref RDIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/referencedata/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 3
+  HTTPSListenerInternalRule4:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref MAIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/marketingautomation/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 4
+  HTTPSListenerInternalRule5:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref MARIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/marketingautomationreporting/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 5
+  HTTPSListenerInternalRule6:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CPIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/cortexprocessing/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 6
+  HTTPSListenerInternalRule7:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CRIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/cortexreporting/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 7
+  HTTPSListenerInternalRule8:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref PrcIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/prc/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 8
+  HTTPSListenerInternalRule9:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref RepIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/rep/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 9
+  HTTPSListenerInternalRule10:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ColIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/collection/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 10
+  HTTPSListenerInternalRule11:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CSIntTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/collectionsearch/*'
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 11
+#--- External ALB Config ---#
+  HTTPSListenerExternal:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref ExternalCertificateARN
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref CDExtTargetGroup
+      LoadBalancerArn: !Ref LoadBalancerExternal
+      Port: 443
+      Protocol: HTTPS
+  HTTPListenerExternal:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions: #Redirect from 80 to 443
+        - Type: redirect
+          RedirectConfig: 
+            Protocol: "HTTPS"
+            Port: "443"
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+      LoadBalancerArn: !Ref LoadBalancerExternal
+      Port: 80
+      Protocol: HTTP
+  HTTPSListenerExternalRule1:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CMExtTargetGroup
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - '/contentmanagement/*'
+      ListenerArn: !Ref HTTPSListenerExternal
+      Priority: 1
+  #External Target Groups
+  CDExtTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Ext-Content-Delivery
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CMExtTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Ext-Content-Management
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  #Create Auto Scaling Groups & Launch Configurations
+  ContentDeliveryASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref ContentDeliveryLC
+      MaxSize: !Ref CDMinSize
+      MinSize: !Ref CDMaxSize
+      DesiredCapacity: !Ref CDDesiredCapacity
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CDExtTargetGroup
+        - !Ref CDIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub ContentDelivery-${RootStackName}
+        PropagateAtLaunch: true
+  ContentDeliveryLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CD" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CD" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  ContentManagementASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref ContentManagementLC
+      MaxSize: !Ref CMMinSize
+      MinSize: !Ref CMMaxSize
+      DesiredCapacity: !Ref CMDesiredCapacity
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CMExtTargetGroup
+        - !Ref CMIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub ContentManagement-${RootStackName}
+        PropagateAtLaunch: true
+  ContentManagementLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CM" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CM" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  CollectionASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref CollectionLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref ColIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub Collection-${RootStackName}
+        PropagateAtLaunch: true
+  CollectionLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Collection" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Collection" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  CollectionSearchASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref CollectionSearchLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CSIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub CollectionSearch-${RootStackName}
+        PropagateAtLaunch: true
+  CollectionSearchLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  CortexProcessingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref CortexProcessingLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CPIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub CortexProcessing-${RootStackName}
+        PropagateAtLaunch: true
+  CortexProcessingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  CortexReportingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref CortexReportingLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref CRIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub CortexReporting-${RootStackName}
+        PropagateAtLaunch: true
+  CortexReportingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  IdentityASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref IdentityLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref ISIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub Identity-${RootStackName}
+        PropagateAtLaunch: true
+  IdentityLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  MarketingAutomationASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref MarketingAutomationLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref MAIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub MarketingAutomation-${RootStackName}
+        PropagateAtLaunch: true
+  MarketingAutomationLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  MarketingAutoRepASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref MarketingAutoRepLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref MARIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub MarketingAutomationReporting-${RootStackName}
+        PropagateAtLaunch: true
+  MarketingAutoRepLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  ProcessingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref ProcessingLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref PrcIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub Processing-${RootStackName}
+        PropagateAtLaunch: true
+  ProcessingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Prc" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Prc" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  ReferenceDataASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref ReferenceDataLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref RDIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub ReferenceData-${RootStackName}
+        PropagateAtLaunch: true
+  ReferenceDataLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
+  ReportingASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref ReportingLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref RepIntTargetGroup
+      Tags:
+      - Key: Name
+        Value: !Sub Reporting-${RootStackName}
+        PropagateAtLaunch: true
+  ReportingLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      InstanceType: !Ref SitecoreInstanceType
+      SecurityGroups:
+        - !Ref SitecoreInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SitecoreKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Rep" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Rep" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - "</powershell>\n"
