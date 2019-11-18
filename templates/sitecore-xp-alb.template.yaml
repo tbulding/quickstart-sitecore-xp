@@ -404,7 +404,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CD" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   ContentManagementASG:
@@ -441,7 +442,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CM" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   CollectionASG:
@@ -477,7 +479,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Collection" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   CollectionSearchASG:
@@ -513,7 +516,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   CortexProcessingASG:
@@ -549,7 +553,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   CortexReportingASG:
@@ -585,7 +590,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   IdentityASG:
@@ -621,7 +627,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   MarketingAutomationASG:
@@ -657,7 +664,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   MarketingAutoRepASG:
@@ -693,7 +701,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   ProcessingASG:
@@ -729,7 +738,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Prc" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   ReferenceDataASG:
@@ -765,7 +775,8 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
   ReportingASG:
@@ -801,6 +812,7 @@ Resources:
             - !Sub '"${RootStackName}"'
             - "\n"
             - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Rep" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${RootStackName} -Region '
+            - !Sub '${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
