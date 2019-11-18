@@ -471,6 +471,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub contentdel.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   CMRecord:
@@ -479,6 +480,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub contentmgmt.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   IDRecord:
@@ -487,6 +489,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub identity.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   CollRecord:
@@ -495,6 +498,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub coll.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   CSRecord:
@@ -503,6 +507,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub collsearch.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   RDRecord:
@@ -511,6 +516,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub refdata.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   MARecord:
@@ -519,6 +525,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub mktauto.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   MARRecord:
@@ -527,6 +534,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub mktautorep.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   CPRecord:
@@ -535,6 +543,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub cortexproc.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   CRRecord:
@@ -543,6 +552,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub cortexrep.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   PRCRecord:
@@ -551,6 +561,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub proc.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
   RepRecord:
@@ -559,6 +570,7 @@ Resources:
       HostedZoneId: !Ref InternalR53
       Name: !Sub rep.${AWS::Region}.sitecore.internal
       Type: CNAME
+      TTL: '900'
       ResourceRecords:
         - !GetAtt LoadBalancerInternal.DNSName
 # Sitecore Security Stack
