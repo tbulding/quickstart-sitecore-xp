@@ -1,5 +1,6 @@
 project:
   name: sitecore-xp
+  s3_enable_sig_v2: true
   regions:
   - us-east-2
   parameters:
