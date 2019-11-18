@@ -468,6 +468,7 @@ Resources:
   CDRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub contentdel.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -475,6 +476,7 @@ Resources:
   CMRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub contentmgmt.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -482,6 +484,7 @@ Resources:
   IDRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub identity.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -489,6 +492,7 @@ Resources:
   CollRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub coll.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -496,6 +500,7 @@ Resources:
   CSRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub collsearch.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -503,6 +508,7 @@ Resources:
   RDRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub refdata.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -510,6 +516,7 @@ Resources:
   MARecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub mktauto.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -517,6 +524,7 @@ Resources:
   MARRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub mktautorep.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -524,6 +532,7 @@ Resources:
   CPRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub cortexproc.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -531,6 +540,7 @@ Resources:
   CRRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub cortexrep.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -538,6 +548,7 @@ Resources:
   PRCRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub proc.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
@@ -545,6 +556,7 @@ Resources:
   RepRecord:
     Type: AWS::Route53::RecordSet
     Properties:
+      HostedZoneId: !Ref InternalR53
       Name: !Sub rep.${AWS::Region}.sitecore.internal
       Type: CNAME
       ResourceRecords:
