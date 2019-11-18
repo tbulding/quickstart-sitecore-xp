@@ -19,7 +19,9 @@ param (
     [string]
     $Role,
     [Parameter(Mandatory)]
-    $StackName
+    $StackName,
+    [Parameter(Mandatory)]
+    $Region
 )
 If (![Environment]::Is64BitProcess) {
     Write-Host "Please run 64-bit PowerShell" -foregroundcolor "yellow"
@@ -27,11 +29,11 @@ If (![Environment]::Is64BitProcess) {
 }
 Import-Module SitecoreInstallFramework
 
-$internalALBFqdn = (Get-SSMParameter -Name "/$StackName/net/private/alb").Value
-$internalALB = "https://$internalALBFqdn"
+# $internalALBFqdn = (Get-SSMParameter -Name "/$StackName/net/private/alb").Value
+# $internalALB = "https://$internalALBFqdn"
 
-$externalALBFqdn = (Get-SSMParameter -Name "/$StackName/net/public/alb").Value
-$externalALB = "https://$externalALBFqdn"
+# $externalALBFqdn = (Get-SSMParameter -Name "/$StackName/net/public/alb").Value
+# $externalALB = "https://$externalALBFqdn"
 
 #region SSM Parameter Store Values
 $parameters = @{
@@ -44,16 +46,19 @@ $parameters = @{
     SolrCorePrefix                       = (Get-SSMParameter -Name "/$StackName/user/solrcoreprefix").Value
     SolrUrl                              = (Get-SSMParameter -Name "/$StackName/user/solruri").Value
     InstanceCertificateThumbPrint        = (Get-SSMParameter -Name "/$stackName/cert/instance/thumbprint").Value
-    XConnectCollectionService            = "$internalALB/collection"
-    XConnectSearchService                = "$internalALB/collection"
-    XConnectCollectionSearchService      = "$internalALB/collectionsearch"
-    XConnectReferenceDataService         = "$internalALB/referencedata"
-    SitecoreIdentityAuthority            = "$internalALB/identityserver"
-    MarketingAutomationOperationsService = "$internalALB/marketingautomation"
-    MarketingAutomationReportingService  = "$internalALB/marketingautomationreporting"
-    CortexReportingService               = "$internalALB/cortexreporting"
-    ProcessingService                    = "$internalALB/prc"
-    ReportingService                     = "$internalALB/rep"
+    XConnectCollectionService            = "coll.$Region.sitecore.internal"
+    XConnectSearchService                = "coll.$Region.sitecore.internal"
+    XConnectCollectionSearchService      = "collsearch.$Region.sitecore.internal"
+    XConnectReferenceDataService         = "refdata.$Region.sitecore.internal"
+    SitecoreIdentityAuthority            = "identity.$Region.sitecore.internal"
+    MarketingAutomationOperationsService = "mktauto.$Region.sitecore.internal"
+    MarketingAutomationReportingService  = "mktautorep.$Region.sitecore.internal"
+    CortexProcessingService              = "cortexproc.$Region.sitecore.internal" 
+    CortexReportingService               = "cortexrep.$Region.sitecore.internal"
+    ProcessingService                    = "proc.$Region.sitecore.internal"
+    ReportingService                     = "rep.$Region.sitecore.internal"
+    ContentManagementService             = "contentmgmt.$Region.sitecore.internal"
+    ContentDeliveryService               = "contentdel.$Region.sitecore.internal"
     SQLServer                            = (Get-SSMParameter -Name "/$StackName/sql/server").Value
 }
 #endregion
@@ -365,8 +370,7 @@ switch ($Role) {
             AllowedCorsOrigins      = $($parameters.allowedCorsOrigins)
             ClientSecret            = $($secrets.ClientSecret)
             CustomConfigurationFile = $($local.CustomConfigurationFile)
-            #DnsName                 = $($local.ComputerName)
-            DnsName                 = $($internalALBFqdn)
+            DnsName                 = $($parameters.SitecoreIdentityAuthority)
             SqlServer               = $($parameters.SQLServer)
             SqlDbPrefix             = $($parameters.prefix)
             SqlSecurityUser         = $($secrets.SqlSecurityUser)
@@ -382,8 +386,7 @@ switch ($Role) {
             XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
             XConnectEnvironment            = $($parameters.Environment)
             XConnectLogLevel               = $($parameters.LogLevel)
-            #DnsName                        = $($local.ComputerName)
-            DnsName                        = $($internalALBFqdn)
+            DnsName                        = $($parameters.XConnectCollectionService)
             SqlDbPrefix                    = $($parameters.prefix)
             SqlServer                      = $($parameters.SQLServer)
             SqlAdminUser                   = $($secrets.SqlAdminUser)
@@ -417,8 +420,7 @@ switch ($Role) {
             SolrUrl                        = $($parameters.SolrUrl)
             XConnectEnvironment            = $($parameters.Environment)
             XConnectLogLevel               = $($parameters.LogLevel)
-            #DnsName                        = $($local.ComputerName)
-            DnsName                        = $($internalALBFqdn)
+            DnsName                        = $($parameters.XConnectCollectionSearchService)
             SqlDbPrefix                    = $($parameters.prefix)
             SqlServer                      = $($parameters.SQLServer)
             SqlCollectionUser              = $($secrets.SqlCollectionUser)
@@ -439,8 +441,7 @@ switch ($Role) {
             XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
             XConnectEnvironment      = $($parameters.Environment)
             XConnectLogLevel         = $($parameters.LogLevel)
-            #DnsName                  = $($local.ComputerName)
-            DnsName                  = $($internalALBFqdn)
+            DnsName                  = $($parameters.XConnectReferenceDataService)
             SqlDbPrefix              = $($parameters.prefix)
             SqlServer                = $($parameters.SQLServer)
             SqlAdminUser             = $($secrets.SqlAdminUser)
@@ -460,8 +461,7 @@ switch ($Role) {
             XConnectReferenceDataService    = $($parameters.XConnectReferenceDataService)
             XConnectEnvironment             = $($parameters.Environment)
             XConnectLogLevel                = $($parameters.LogLevel)
-            #DnsName                         = $($local.ComputerName)
-            DnsName                         = $($internalALBFqdn)
+            DnsName                         = $($parameters.MarketingAutomationOperationsService)
             SqlServer                       = $($parameters.SQLServer)
             SqlDbPrefix                     = $($parameters.prefix)
             SqlAdminUser                    = $($secrets.SqlAdminUser)
@@ -488,8 +488,7 @@ switch ($Role) {
             XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
             XConnectEnvironment            = $($parameters.Environment)
             XConnectLogLevel               = $($parameters.LogLevel)
-            #DnsName                        = $($local.ComputerName)
-            DnsName                        = $($internalALBFqdn)
+            DnsName                        = $($parameters.MarketingAutomationReportingService)
             SqlDbPrefix                    = $($parameters.prefix)
             SqlServer                      = $($parameters.SQLServer)
             SqlReferenceDataUser           = $($secrets.SqlReferenceDataUser)
@@ -509,8 +508,7 @@ switch ($Role) {
             XConnectSearchService       = $($parameters.XConnectSearchService)
             XConnectEnvironment         = $($parameters.Environment)
             XConnectLogLevel            = $($parameters.LogLevel)
-            #DnsName                     = $($local.ComputerName)
-            DnsName                     = $($internalALBFqdn)
+            DnsName                     = $($parameters.CortexProcessingService)
             SqlDbPrefix                 = $($parameters.prefix)
             SqlServer                   = $($parameters.SQLServer)
             SqlAdminUser                = $($secrets.SqlAdminUser)
@@ -532,8 +530,7 @@ switch ($Role) {
             XConnectCert         = $($parameters.InstanceCertificateThumbPrint)
             XConnectEnvironment  = $($parameters.Environment)
             XConnectLogLevel     = $($parameters.LogLevel)
-            #DnsName              = $($local.ComputerName)
-            DnsName              = $($internalALBFqdn)
+            DnsName              = $($parameters.CortexReportingService)
             SqlDbPrefix          = $($parameters.prefix)
             SqlServer            = $($parameters.SQLServer)
             SqlAdminUser         = $($secrets.SqlAdminUser)
@@ -561,8 +558,7 @@ switch ($Role) {
             ProcessingService                    = $($parameters.ProcessingService)
             ReportingService                     = $($parameters.ReportingService)
             ReportingServiceApiKey               = $($secrets.ReportingServiceApiKey)
-            #DnsName                              = $($local.ComputerName)
-            DnsName                              = $($internalALBFqdn)
+            DnsName                              = $($parameters.ContentManagementService)
             SqlDbPrefix                          = $($parameters.prefix)
             SqlServer                            = $($parameters.SQLServer)
             SqlAdminUser                         = $($secrets.SqlAdminUser)
@@ -600,8 +596,7 @@ switch ($Role) {
             XConnectReferenceDataService         = $($parameters.XConnectReferenceDataService)
             MarketingAutomationOperationsService = $($parameters.MarketingAutomationOperationsService)
             MarketingAutomationReportingService  = $($parameters.MarketingAutomationReportingService)
-            #DnsName                              = $($local.ComputerName)
-            DnsName                              = $($internalALBFqdn)
+            DnsName                              = $($parameters.ContentDeliveryService)
             SqlDbPrefix                          = $($parameters.prefix)
             SqlServer                            = $($parameters.SQLServer)
             SqlSecurityUser                      = $($secrets.SqlSecurityUser)
@@ -625,8 +620,7 @@ switch ($Role) {
             XConnectCert               = $($parameters.InstanceCertificateThumbPrint)
             XConnectCollectionService  = $($parameters.XConnectCollectionService)
             ReportingServiceApiKey     = $($secrets.ReportingServiceApiKey)
-            #DnsName                    = $($local.ComputerName)
-            DnsName                    = $($internalALBFqdn)
+            DnsName                    = $($parameters.ProcessingService)
             SqlDbPrefix                = $($parameters.prefix)
             SqlServer                  = $($parameters.SQLServer)
             SqlAdminUser               = $($secrets.SqlAdminUser)
@@ -654,8 +648,7 @@ switch ($Role) {
             SiteName               = $($local.SiteName)
             SSLCert                = $($parameters.InstanceCertificateThumbPrint)
             ReportingServiceApiKey = $($secrets.ReportingServiceApiKey)
-            #DnsName                = $($local.ComputerName)
-            DnsName                = $($internalALBFqdn)
+            DnsName                = $($parameters.ReportingService)
             SqlDbPrefix            = $($parameters.prefix)
             SqlServer              = $($parameters.SQLServer)
             SqlCoreUser            = $($secrets.SqlCoreUser)
