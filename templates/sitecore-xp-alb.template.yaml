@@ -184,9 +184,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref CMIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/contentmanagement/*'
+            - !Sub contentmgmt.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 1
   HTTPSListenerInternalRule2:
@@ -196,9 +196,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref ISIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/identityserver/*'
+            - !Sub identity.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 2
   HTTPSListenerInternalRule3:
@@ -208,9 +208,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref RDIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/referencedata/*'
+            - refdata.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 3
   HTTPSListenerInternalRule4:
@@ -220,9 +220,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref MAIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/marketingautomation/*'
+            - !Sub mktauto.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 4
   HTTPSListenerInternalRule5:
@@ -232,9 +232,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref MARIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/marketingautomationreporting/*'
+            - !Sub mktautorep.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 5
   HTTPSListenerInternalRule6:
@@ -244,9 +244,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref CPIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/cortexprocessing/*'
+            - !Sub cortexproc.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 6
   HTTPSListenerInternalRule7:
@@ -256,9 +256,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref CRIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/cortexreporting/*'
+            - !Sub cortexrep.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 7
   HTTPSListenerInternalRule8:
@@ -268,9 +268,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref PrcIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/prc/*'
+            - !Sub proc.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 8
   HTTPSListenerInternalRule9:
@@ -280,9 +280,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref RepIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/rep/*'
+            - !Sub rep.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 9
   HTTPSListenerInternalRule10:
@@ -292,9 +292,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref ColIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/collection/*'
+            - !Sub coll.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 10
   HTTPSListenerInternalRule11:
@@ -304,9 +304,9 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref CSIntTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
-            - '/collectionsearch/*'
+            - !Sub collsearch.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 11
 #--- External ALB Config ---#
@@ -343,7 +343,7 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref CMExtTargetGroup
       Conditions:
-        - Field: path-pattern
+        - Field: host-header
           Values:
             - '/contentmanagement/*'
       ListenerArn: !Ref HTTPSListenerExternal

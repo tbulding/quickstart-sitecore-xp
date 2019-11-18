@@ -458,6 +458,109 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !GetAtt LoadBalancerExternal.DNSName
+  InternalR53:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Sub ${AWS::Region}.sitecore.internal
+      VPCs:
+        - VPCId: !Ref VPCID
+          VPCRegion: !Sub ${AWS::Region}
+  CDRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub contentdel.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  CMRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub contentmgmt.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  IDRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub identity.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  CollRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub coll.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  CSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub collsearch.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  RDRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub refdata.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  MARecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub mktauto.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  MARRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub mktautorep.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  CPRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub cortexproc.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  CRRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub cortexrep.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  PRCRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub proc.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
+  RepRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref InternalR53
+      Name: !Sub rep.${AWS::Region}.sitecore.internal
+      Type: CNAME
+      ResourceRecords:
+        - !GetAtt LoadBalancerInternal.DNSName
 # Sitecore Security Stack
   SecurityStack:
     Type: AWS::CloudFormation::Stack

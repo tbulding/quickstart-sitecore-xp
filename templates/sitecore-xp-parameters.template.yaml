@@ -108,7 +108,7 @@ Resources:
       Name: !Sub /${RootStackName}/cert/instance/dnsnames
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
-      Value: !Sub "*.${AWS::Region}.compute.internal,*.${AWS::Region}.elb.amazonaws.com,127.0.0.1"
+      Value: !Sub "*.${AWS::Region}.sitecore.internal"
   CertStoreLocation:
     Type: AWS::SSM::Parameter
     Properties:
