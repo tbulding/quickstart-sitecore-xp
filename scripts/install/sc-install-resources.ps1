@@ -32,18 +32,18 @@ Import-Module SitecoreInstallFramework
 $urlsuffix = "$Region.sitecore.internal"
 #region Role Mapping
 $roleMapping = @{
-    'IdentityServer'               = identity
-    'Collection'                   = coll
-    'CollectionSearch'             = collsearch
-    'ReferenceData'                = refdata
-    'MarketingAutomation'          = mktauto
-    'MarketingAutomationReporting' = mktautorep
-    'CortexProcessing'             = cortexproc
-    'CortexReporting'              = cortexrep
-    'CM'                           = contentmgmt
-    'CD'                           = contentdel
-    'Prc'                          = proc
-    'Rep'                          = rep
+    'IdentityServer'               = "identity"
+    'Collection'                   = "coll"
+    'CollectionSearch'             = "collsearch"
+    'ReferenceData'                = "refdata"
+    'MarketingAutomation'          = "mktauto"
+    'MarketingAutomationReporting' = "mktautorep"
+    'CortexProcessing'             = "cortexproc"
+    'CortexReporting'              = "cortexrep"
+    'CM'                           = "contentmgmt"
+    'CD'                           = "contentdel"
+    'Prc'                          = "proc"
+    'Rep'                          = "rep"
 }
 #endregion
 
@@ -58,7 +58,8 @@ $parameters = @{
     SolrCorePrefix                       = (Get-SSMParameter -Name "/$StackName/user/solrcoreprefix").Value
     SolrUrl                              = (Get-SSMParameter -Name "/$StackName/user/solruri").Value
     InstanceCertificateThumbPrint        = (Get-SSMParameter -Name "/$stackName/cert/instance/thumbprint").Value
-    IdentityServerDNS                    = $roleMapping.Identity + '.' + $urlsuffix
+    SQLServer                            = (Get-SSMParameter -Name "/$StackName/sql/server").Value
+    IdentityServerDNS                    = $roleMapping.IdentityServer + '.' + $urlsuffix
     CollectionDNS                        = $roleMapping.Collection + '.' + $urlsuffix
     CollectionSearchDNS                  = $roleMapping.CollectionSearch + '.' + $urlsuffix
     ReferenceDataDNS                     = $roleMapping.ReferenceData + '.' + $urlsuffix
@@ -74,13 +75,12 @@ $parameters = @{
     XConnectSearchService                = "https://" + $roleMapping.Collection + '.' + $urlsuffix
     XConnectCollectionSearchService      = "https://" + $roleMapping.CollectionSearch + '.' + $urlsuffix
     XConnectReferenceDataService         = "https://" + $roleMapping.ReferenceData + '.' + $urlsuffix
-    SitecoreIdentityAuthority            = "https://" + $roleMapping.Identity + '.' + $urlsuffix
+    SitecoreIdentityAuthority            = "https://" + $roleMapping.IdentityServer + '.' + $urlsuffix
     MarketingAutomationOperationsService = "https://" + $roleMapping.MarketingAutomation + '.' + $urlsuffix
     MarketingAutomationReportingService  = "https://" + $roleMapping.MarketingAutomationReporting + '.' + $urlsuffix
     CortexReportingService               = "https://" + $roleMapping.CortexReporting + '.' + $urlsuffix
     ProcessingService                    = "https://" + $roleMapping.Prc + '.' + $urlsuffix
     ReportingService                     = "https://" + $roleMapping.Rep + '.' + $urlsuffix
-    SQLServer                            = (Get-SSMParameter -Name "/$StackName/sql/server").Value
 }
 #endregion
 
