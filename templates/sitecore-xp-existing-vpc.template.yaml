@@ -473,7 +473,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
+        - !GetAtt LoadBalancerExternal.DNSName
   CMRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -482,7 +482,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
+        - !GetAtt LoadBalancerExternal.DNSName
   IDRecord:
     Type: AWS::Route53::RecordSet
     Properties:

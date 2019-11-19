@@ -51,31 +51,31 @@ Resources:
         - CertificateArn: !Ref InternalCertificateARN
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref CDIntTargetGroup
+          TargetGroupArn: !Ref ISIntTargetGroup
       LoadBalancerArn: !Ref LoadBalancerInternal
       Port: 443
       Protocol: HTTPS
 #Internal Target Groups
-  CDIntTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
-      Name: Int-Content-Delivery
-      Port: 443
-      Protocol: HTTPS
-      TargetType: instance
-      VpcId: !Ref VPCID
-  CMIntTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
-      Name: Int-Content-Management
-      Port: 443
-      Protocol: HTTPS
-      TargetType: instance
-      VpcId: !Ref VPCID
+  # CDIntTargetGroup:
+  #   Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  #   Properties:
+  #     HealthCheckPort: '80'
+  #     HealthCheckProtocol: HTTP
+  #     Name: Int-Content-Delivery
+  #     Port: 443
+  #     Protocol: HTTPS
+  #     TargetType: instance
+  #     VpcId: !Ref VPCID
+  # CMIntTargetGroup:
+  #   Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  #   Properties:
+  #     HealthCheckPort: '80'
+  #     HealthCheckProtocol: HTTP
+  #     Name: Int-Content-Management
+  #     Port: 443
+  #     Protocol: HTTPS
+  #     TargetType: instance
+  #     VpcId: !Ref VPCID
   ColIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -177,18 +177,18 @@ Resources:
       TargetType: instance
       VpcId: !Ref VPCID
 
-  HTTPSListenerInternalRule1:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref CMIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub contentmgmt.${AWS::Region}.sitecore.internal
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 1
+  # HTTPSListenerInternalRule1:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref CMIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub contentmgmt.${AWS::Region}.sitecore.internal
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 1
   HTTPSListenerInternalRule2:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -325,14 +325,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions: #Redirect from 80 to 443
-        - Type: redirect
-          RedirectConfig: 
-            Protocol: "HTTPS"
-            Port: "443"
-            Host: "#{host}"
-            Path: "/#{path}"
-            Query: "#{query}"
-            StatusCode: "HTTP_301"
+        - Type: forward
+          TargetGroupArn: !Ref CDExtTargetGroup
       LoadBalancerArn: !Ref LoadBalancerExternal
       Port: 80
       Protocol: HTTP
@@ -355,8 +349,8 @@ Resources:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
       Name: Ext-Content-Delivery
-      Port: 443
-      Protocol: HTTPS
+      Port: 80
+      Protocol: HTTP
       TargetType: instance
       VpcId: !Ref VPCID
   CMExtTargetGroup:
@@ -382,7 +376,6 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CDExtTargetGroup
-        - !Ref CDIntTargetGroup
       Tags:
       - Key: Name
         Value: !Sub ContentDelivery-${RootStackName}
@@ -420,7 +413,6 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CMExtTargetGroup
-        - !Ref CMIntTargetGroup
       Tags:
       - Key: Name
         Value: !Sub ContentManagement-${RootStackName}
