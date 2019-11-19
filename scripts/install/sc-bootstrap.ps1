@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param (
-    [string]$stackName
+    [string]$stackName,
+    [string]$QSS3BucketName,
+    [string]$QSS3KeyPrefix
 )
 $logGroupName = "$stackName-ssm-bootstrap"
 $S3BucketName = (Get-SSMParameter -Name "/$stackName/user/s3bucket/name").Value # The bucket containing the Sitecore 9.2 install files and sitecore license.zip file
@@ -72,6 +74,11 @@ foreach ($file in $files) {
         Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString (Expand-Archive -LiteralPath "$localpath\$filename" -DestinationPath $localpath -Force -Verbose *>&1 | Out-String)
     }
 }
+#Get AWS Custom install JSON Role files
+$customjson = $QSS3KeyPrefix + "scripts/custom/"
+Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Initiating AWS Custom install JSON Role files download'
+Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString (Read-S3Object -BucketName $QSS3BucketName -KeyPrefix $customjson -Folder "$localpath\aws-custom")
+
 # Install NuGet provider
 Install-PackageProvider -Name NuGet -Force
 if ($? -eq 'true') {

@@ -142,7 +142,7 @@ Resources:
                   - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/install/sc-install-resources.ps1" -File "{{ScriptsLocalPath}}\sc-install-resources.ps1"'
                   - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-role-prep.ps1" -File "{{ScriptsLocalPath}}\sc-role-prep.ps1"'
                   - '& "{{ScriptsLocalPath}}\sc-new-certs.ps1" -stackName {{rootStackName}}'
-                  - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -stackName {{rootStackName}}'
+                  - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -stackName {{rootStackName}} -QSS3BucketName {{QSS3BucketName}} -QSS3KeyPrefix {{QSS3KeyPrefix}}'
                   - '& "{{ScriptsLocalPath}}\sc-update-zips.ps1" -pathToZips {{scResourcesPath}}'
                   - Main
               CloudWatchOutputConfig:
