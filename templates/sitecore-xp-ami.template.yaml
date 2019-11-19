@@ -103,6 +103,10 @@ Resources:
             default: !Sub sc-${RootStackName}
             description: The RDS database identifier for the Sitecore DB
             type: "String"
+          SitecoreRegion:
+            default: !Sub "${AWS::Region}"
+            description: The regiong in which Sitecore is being deployed
+            type: "String"
         mainSteps:
           - name: "SCInstanceIds"
             action: aws:executeAwsApi
@@ -308,7 +312,7 @@ Resources:
                 commands:
                   - '$localPath = "{{ScriptsLocalPath}}"'
                   - '$stackName = "{{rootStackName}}"'
-                  - '& "$localPath\sc-install-resources.ps1" -Role "DbResources" -StackName $stackName'
+                  - '& "$localPath\sc-install-resources.ps1" -Role "DbResources" -StackName $stackName -Region {{SitecoreRegion}}'
                   - Main
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"

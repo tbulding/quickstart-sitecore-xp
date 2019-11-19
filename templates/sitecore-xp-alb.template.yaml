@@ -210,7 +210,7 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - refdata.${AWS::Region}.sitecore.internal
+            - !Sub refdata.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 3
   HTTPSListenerInternalRule4:
@@ -345,7 +345,7 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - '/contentmanagement/*'
+            - !Sub contentmgmt.${AWS::Region}.sitecore.internal
       ListenerArn: !Ref HTTPSListenerExternal
       Priority: 1
   #External Target Groups
