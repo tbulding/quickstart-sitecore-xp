@@ -110,6 +110,7 @@ $local = @{
     SiteName                = "$($parameters.prefix).$Role"
     Package                 = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)" -Filter "*$Role.scwdp.zip").FullName
     jsonPath                = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)" -Filter "*$Role.json").FullName
+    jsonPathCustom          = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)/aws.custom" -Filter "*$Role.json").FullName
     CustomConfigurationFile = "$Role.json"
     LicenseFile             = "$($parameters.SCInstallRoot)\license.xml"
 }
@@ -665,6 +666,6 @@ switch ($Role) {
 
 If ($Role -ne 'DbResources') {
     Push-Location $($parameters.SCInstallRoot)
-    Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPath) -Skip $skip -Verbose *>&1 | Tee-Object "$Role.log"
+    Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPathCustom) -Skip $skip -Verbose *>&1 | Tee-Object "$Role.log"
     Pop-Location
 }

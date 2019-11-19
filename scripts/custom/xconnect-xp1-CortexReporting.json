@@ -1,0 +1,385 @@
+﻿{
+    "Parameters": {
+        "Package": {
+            "Type": "string",
+            "Description": "The path to the Web Deploy package to deploy.",
+            "DefaultValue": ""
+        },
+        "LicenseFile": {
+            "Type": "string",
+            "Description": "The path to the Sitecore license file.",
+            "DefaultValue": "License.xml"
+        },
+        "SiteName": {
+            "Type": "string",
+            "DefaultValue": "CortexReporting",
+            "Description": "The name of the site to be deployed."
+        },
+        "SSLCert": {
+            "Type": "string",
+            "Description": "The certificate to use for HTTPS web bindings. Provide the name or the thumbprint. If not provided a certificate will be generated.",
+            "DefaultValue": ""
+        },
+        "XConnectCert": {
+            "Type": "string",
+            "Description": "The certificate to use for encryption. Provide the name or the thumbprint.",
+            "DefaultValue": ""
+        },
+        "SqlDbPrefix": {
+            "Type": "string",
+            "Description": "The prefix used for all Sql databases.",
+            "DefaultValue": ""
+        },
+        "SqlAdminUser": {
+            "Type": "string",
+            "DefaultValue": "sa",
+            "Description": "The Sql admin user account to use when installing databases."
+        },
+        "SqlAdminPassword": {
+            "Type": "string",
+            "DefaultValue": "12345",
+            "Description": "The Sql admin password to use when installing databases."
+        },
+        "SqlReportingUser": {
+            "Type": "string",
+            "DefaultValue": "reportinguser",
+            "Description": "The Sql user for the Reporting connection string in Sitecore."
+        },
+        "SqlReportingPassword": {
+            "Type": "string",
+            "DefaultValue": "SIF-Default",
+            "Description": "The Sql password for the Reporting connection string in Sitecore."
+        },
+        "SqlServer": {
+            "Type": "string",
+            "DefaultValue": ".\\SQLSERVER",
+            "Description": "The Sql Server where databases will be installed."
+        },
+        "XConnectEnvironment": {
+            "Type": "string",
+            "DefaultValue": "Development",
+            "Description": "The configuration environment for this instance."
+        },
+        "XConnectLogLevel": {
+            "Type": "string",
+            "DefaultValue": "Information",
+            "Description": "The level of log information to output."
+        },
+        "HostMappingName": {
+            "Type": "string",
+            "Reference": "SiteName",
+            "Description": "The host mapping name of the site."
+        },
+        "DnsName": {
+            "Type": "string",
+            "Reference": "SiteName",
+            "Description": "The dns name of the site."
+        }
+    },
+    "Variables": {
+        "Sql.Database.Reporting": "[concat(parameter('SqlDbPrefix'), '_Reporting')]",
+        "SqlReporting.Password": "[parameter('SqlReportingPassword'))]",
+        "Security.CertificateStore": "Cert:\\Localmachine\\My",
+        "Security.SSL.CertificateThumbprint": "[GetCertificateThumbprint(parameter('SSLCert'), variable('Security.CertificateStore'))]",
+        "Security.XConnect.CertificateThumbprint": "[GetCertificateThumbprint(parameter('XConnectCert'), variable('Security.CertificateStore'))]",
+        "Security.XConnect.CertificatePath": "[joinpath(variable('Security.CertificateStore'), variable('Security.XConnect.CertificateThumbprint'))]",
+        "Site.PhysicalPath": "[joinpath(environment('SystemDrive'), 'inetpub', 'wwwroot', parameter('SiteName'))]",
+        "Site.DataFolder": "[joinpath(variable('Site.PhysicalPath'), 'App_Data')]",
+        "Sql.Secure.Password": "[ConvertToSecureString(String:parameter('SqlAdminPassword'),AsPlainText:true,Force:true)]"
+    },
+    "Register": {
+        "Tasks": {
+            "RemoveItem": "Remove-Item"
+        },
+        "ConfigFunction": {
+            "ConvertToSecureString": "ConvertTo-SecureString"
+        }
+    },
+    "Tasks": {
+        "CreatePaths": {
+            "Description": "Ensure the destination path for the site exists.",
+            "Type": "EnsurePath",
+            "Params": {
+                "Exists": [
+                    "[variable('Site.PhysicalPath')]"
+                ]
+            }
+        },
+        "CreateAppPool": {
+            "Description": "Creates or updates the app pool.",
+            "Type": "AppPool",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "Properties": {
+                    "ProcessModel": {
+                        "identityType": "ApplicationPoolIdentity"
+                    }
+                }
+            }
+        },
+        "SetAppPoolCertStorePermissions": {
+            "Description": "Set permissions for the App Pool User to access the client certificate.",
+            "Type": "FilePermissions",
+            "Params": {
+                "Path": "[ResolveCertificatePath(variable('Security.XConnect.CertificatePath'))]",
+                "Rights": [
+                    {
+                        "User": "[concat('IIS AppPool\\', parameter('SiteName'))]",
+                        "FileSystemRights": [
+                            "Read"
+                        ],
+                        "InheritanceFlags": [
+                            "None"
+                        ]
+                    }
+                ]
+            }
+        },
+        "CreateWebsite": {
+            "Description": "Creates or updates the IIS website instance.",
+            "Type": "Website",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "ApplicationPool": "[parameter('SiteName')]",
+                "PhysicalPath": "[variable('Site.PhysicalPath')]"
+            }
+        },
+        "StopWebsite": {
+            "Description": "Stops the website if it is running.",
+            "Type": "ManageWebsite",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "Action": "Stop"
+            }
+        },
+        "StopAppPool": {
+            "Description": "Stops the app pool if it is running.",
+            "Type": "ManageAppPool",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "Action": "Stop"
+            }
+        },
+        "RemoveDefaultBinding": {
+            "Description": "Removes the default *:80 web binding.",
+            "Type": "WebBinding",
+            "Params": {
+                "SiteName": "[parameter('SiteName')]",
+                "Remove": [
+                    {
+                        "Port": "80",
+                        "IPAddress": "*"
+                    }
+                ]
+            }
+        },
+        "CreateBindingsWithThumbprint": {
+            "Description": "Configures the site bindings for the website.",
+            "Type": "WebBinding",
+            "Params": {
+                "SiteName": "[parameter('SiteName')]",
+                "Add": [
+                    {
+                        "HostHeader": "[parameter('DnsName')]",
+                        "Protocol": "https",
+                        "SSLFlags": 0,
+                        "Thumbprint": "[variable('Security.SSL.CertificateThumbprint')]"
+                    }
+                ]
+            },
+            "Skip": "[not(parameter('SSLCert'))]"
+        },
+        "SetClientCertificatePermissions": {
+            "Type": "WebsiteClientCert",
+            "Params": {
+                "SiteName": "[parameter('SiteName')]",
+                "Setting": "Accept"
+            }
+        },
+        "CreateHostHeader": {
+            "Description": "Sets a hostheader for the website.",
+            "Type": "HostHeader",
+            "Params": {
+                "HostName": "[parameter('HostMappingName')]"
+            },
+            "Skip": "[not(parameter('HostMappingName'))]"
+        },
+        "SetPermissions": {
+            "Description": "Sets permissions for the app pool user.",
+            "Type": "FilePermissions",
+            "Params": {
+                "Path": "[variable('Site.PhysicalPath')]",
+                "Rights": [
+                    {
+                        "User": "[concat('IIS AppPool\\', parameter('SiteName'))]",
+                        "FileSystemRights": "FullControl",
+                        "InheritanceFlags": [
+                            "ContainerInherit",
+                            "ObjectInherit"
+                        ]
+                    }
+                ]
+            }
+        },
+        "InstallWDP": {
+            "Description": "Syncs the web deploy package with the website.",
+            "Type": "WebDeploy",
+            "Params": {
+                "Verb": "Sync",
+                "Arguments": {
+                    "Source": {
+                        "Package": "[resolvepath(parameter('Package'))]"
+                    },
+                    "Dest": "Auto",
+                    "SetParam": [
+                        {
+                            "Name": "IIS Web Application Name",
+                            "Value": "[parameter('SiteName')]"
+                        },
+                        {
+                            "Name": "Database Server Name",
+                            "Value": "[parameter('SqlServer')]"
+                        },
+                        {
+                            "Name": "Database Admin User Name",
+                            "Value": "[parameter('SqlAdminUser')]"
+                        },
+                        {
+                            "Name": "Database Admin User Password",
+                            "Value": "[parameter('SqlAdminPassword')]"
+                        },
+                        {
+                            "Name": "Reporting Database Name",
+                            "Value": "[variable('Sql.Database.Reporting')]"
+                        },
+                        {
+                            "Name": "Reporting Database Application User Name",
+                            "Value": "[parameter('SqlReportingUser')]"
+                        },
+                        {
+                            "Name": "Reporting Database Application User Password",
+                            "Value": "[variable('SqlReporting.Password')]"
+                        },
+                        {
+                            "Name": "XConnect Server Configuration Environment",
+                            "Value": "[parameter('XConnectEnvironment')]"
+                        },
+                        {
+                            "Name": "XConnect Server Certificate Validation Thumbprint",
+                            "Value": "[variable('Security.XConnect.CertificateThumbprint')]"
+                        },
+                        {
+                            "Name": "XConnect Server Log Level",
+                            "Value": "[parameter('XConnectLogLevel')]"
+                        }
+                    ],
+                    "Skip": [
+                        {
+                            "ObjectName": "dbDacFx"
+                        },
+                        {
+                            "ObjectName": "dbFullSql"
+                        }
+                    ]
+                }
+            }
+        },
+        "SetLicense": {
+            "Description": "Copies the license file to the instance data folder.",
+            "Type": "Copy",
+            "Params": {
+                "Source": "[resolvepath(parameter('LicenseFile'))]",
+                "Destination": "[variable('Site.DataFolder')]"
+            }
+        },
+        "CreateBindingsWithDevelopmentThumbprint": {
+            "Description": "Creates a new thumbprint with a custom CA.",
+            "Type": "AddWebFeatureSSL",
+            "Params": {
+                "SiteName": "[parameter('SiteName')]",
+                "HostName": "[parameter('DnsName')]",
+                "OutputDirectory": "[variable('Site.DataFolder')]"
+            },
+            "Skip": "[parameter('SSLCert')]"
+        },
+        "StartAppPool": {
+            "Description": "Starts the app pool.",
+            "Type": "ManageAppPool",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "Action": "Start"
+            }
+        },
+        "StartWebsite": {
+            "Description": "Starts the website.",
+            "Type": "ManageWebsite",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "Action": "Start"
+            }
+        }
+    },
+    "UninstallTasks": {
+        "StopWebsite": {
+            "Description": "Stops the website if it is running.",
+            "Type": "ManageWebsite",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "Action": "Stop",
+                "ErrorAction": "SilentlyContinue"
+            }
+        },
+        "StopAppPool": {
+            "Description": "Stops the app pool if it is running.",
+            "Type": "ManageAppPool",
+            "Params": {
+                "Name": "[parameter('SiteName')]",
+                "Action": "Stop",
+                "ErrorAction": "SilentlyContinue"
+            }
+        },
+        "RemoveWebsite": {
+            "Description": "Removes the IIS website.",
+            "Type": "RemoveWebsite",
+            "Params": {
+                "Name": "[parameter('SiteName')]"
+            }
+        },
+        "RemoveAppPool": {
+            "Description": "Removes the IIS application pool.",
+            "Type": "RemoveAppPool",
+            "Params": {
+                "Name": "[parameter('SiteName')]"
+            }
+        },
+        "RemoveContent": {
+            "Description": "Removes website content.",
+            "Type": "RemoveItem",
+            "Params": {
+                "Path": "[variable('Site.PhysicalPath')]",
+                "Recurse": true,
+                "ErrorAction": "SilentlyContinue"
+            }
+        },
+        "RemoveHostHeader": {
+            "Description": "Removes the website host name.",
+            "Type": "HostHeader",
+            "Params": {
+                "HostName": "[parameter('SiteName')]",
+                "Action": "Remove"
+            }
+        },
+        "RemoveDatabases": {
+            "Description": "Removes the databases.",
+            "Type": "RemoveSQLDatabase",
+            "Params": {
+                "ServerName": "[parameter('SqlServer')]",
+                "Username": "[parameter('SqlAdminUser')]",
+                "Password": "[variable('Sql.Secure.Password')]",
+                "DatabaseName": [
+                    "[variable('Sql.Database.Reporting')]"
+                ]
+            }
+        }
+    }
+}
