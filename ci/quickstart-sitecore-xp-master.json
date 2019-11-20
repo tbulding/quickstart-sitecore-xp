@@ -52,6 +52,23 @@
         "ParameterValue": "override"
     },
     {
+        "ParameterKey": "CDDNSName",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "CMDNSName",
+        "ParameterValue": "1"
+    },
+    {
+        "ParameterKey": "ISDNSName",
+        "ParameterValue": "1"
+    },
+    
+    {
+        "ParameterKey": "IntDNS",
+        "ParameterValue": "1"
+    },
+    {
         "ParameterKey": "CDMinSize",
         "ParameterValue": "1"
     },
@@ -64,8 +81,20 @@
         "ParameterValue": "1"
     },
     {
-        "ParameterKey": "SitecoreInstanceType",
+        "ParameterKey": "CDInstanceType",
         "ParameterValue": "m4.large"
+    },
+    {
+        "ParameterKey": "CMMinSize",
+        "ParameterValue": "override"
+    },
+    {
+        "ParameterKey": "CMMaxSize",
+        "ParameterValue": "override"
+    },
+    {
+        "ParameterKey": "CMInstanceType",
+        "ParameterValue": "override"
     },
     {
         "ParameterKey": "SitecoreKeyPair",
