@@ -19,9 +19,6 @@ global:
   reporting: true
  
 tests:
-  quickstart-quickstart-sitecore-xpt1:
-    parameter_input: quickstart-quickstart-sitecore-xp-example-params1.json
-    template_file: quickstart-quickstart-sitecore-xp-example1.template
-  quickstart-quickstart-sitecore-xpt2:
-    parameter_input: quickstart-quickstart-sitecore-xp-example-params2.json
-    template_file: quickstart-quickstart-sitecore-xp-example2.template
+  quickstart-quickstart-sitecore-xp1:
+    parameter_input: quickstart-sitecore-xp-master.json
+    template_file: sitecore-xp-master.template.yaml
