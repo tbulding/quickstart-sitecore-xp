@@ -44,6 +44,11 @@ Metadata:
           - VolumeIops
           - BackupRetentionPeriod
       - Label:
+          default: Redis ElastiCache configuration
+        Parameters:
+         - CacheNodeType
+         - RedisPort
+      - Label:
           default: AWS Quick Start configuration
         Parameters:
           - QSS3BucketName
@@ -115,6 +120,11 @@ Metadata:
         default: Data volume type
       BackupRetentionPeriod:
         default: Retention Period
+    # Redis Configuration
+      CacheNodeType:
+        default: Redis cache node type
+      RedisPort:
+        default: Redis Port
     # Quick Start Config Params
       QSS3BucketName:
         default: Quick Start S3 bucket name
@@ -321,6 +331,27 @@ Parameters:
     Default: gp2
     Description: Volume type for the SQL Data, Logs and TempDb volumes
     Type: String
+# Redis Configuration
+  CacheNodeType:
+    Description: The instance type the nodes will launch under.
+    Type: String
+    Default: cache.m3.large
+    AllowedValues:
+      - cache.t2.micro
+      - cache.t2.small
+      - cache.t2.medium
+      - cache.m3.medium
+      - cache.m3.large
+      - cache.m3.xlarge
+      - cache.m3.2xlarge
+      - cache.r3.large
+      - cache.r3.xlarge
+      - cache.r3.2xlarge
+      - cache.r3.4xlarge
+      - cache.r3.8xlarge
+  RedisPort:
+    Type: Number
+    Default: 6379
 # Quick Start Confguration
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -416,6 +447,16 @@ Resources:
         - IpProtocol: tcp
           FromPort: 1433
           ToPort: 1433
+          CidrIp: !Ref 'VPCCIDR'
+  RedisSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub Used for the Redis ElastiCache cluster - ${AWS::StackName}
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref RedisPort
+          ToPort: !Ref RedisPort
           CidrIp: !Ref 'VPCCIDR'
   # Internal ALB
   LoadBalancerInternal:
@@ -624,6 +665,11 @@ Resources:
         VolumeSize: !Ref VolumeSize
         VolumeType: !Ref VolumeType
         RootStackName: !Ref "AWS::StackName"
+        RedisSecurityGroup: !Ref RedisSG
+        CacheNodeType: !Ref CacheNodeType
+        Engine: 'redis'
+        NumCacheNodes: '1'
+        RedisPort: !Ref RedisPort
 
 # Sitecore AMI Build Stack
   CustomAMIStack:

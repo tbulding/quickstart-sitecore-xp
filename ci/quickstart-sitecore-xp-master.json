@@ -150,5 +150,13 @@
     {
         "ParameterKey": "ExternalCertificateARN",
         "ParameterValue": "arn:aws:acm:your cert arn"
+    },
+    {
+        "ParameterKey": "CacheNodeType",
+        "ParameterValue": "cache.m3.large"
+    },
+    {
+        "ParameterKey": "RedisPort",
+        "ParameterValue": "6379"
     }
 ]
