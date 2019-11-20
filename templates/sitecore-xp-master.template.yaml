@@ -26,10 +26,17 @@ Metadata:
       - Label:
           default: Sitecore Configuration
         Parameters:
+          - CDDNSName
+          - CMDNSName
+          - ISDNSName
+          - IntDNS
           - CDMinSize
           - CDMaxSize
           - CDDesiredCapacity
-          - SitecoreInstanceType
+          - CDInstanceType
+          - CMMinSize
+          - CMMaxSize
+          - CMInstanceType
           - SitecoreKeyPair
           - SitecorePrefix
           - SitecoreS3Bucket
@@ -95,13 +102,27 @@ Metadata:
       KeyPairName:
         default: Key pair name for the RD Gateway
     # Sitecore Configuration
+      CDDNSName:
+        default: DNS name for Content Delivery Role
+      CMDNSName:
+        default: DNS name for Content Managment Role
+      ISDNSName:
+        default: DNS name for Identity Server Role
+      IntDNS:
+        default: Internal DNS name
       CDMinSize:
         default: Min number of Content Delivery instances # Currently applied to all instances
       CDMaxSize:
         default: Max number of Content Delivery instances # Currently applied to all instances
       CDDesiredCapacity:
         default: The current number of desired Content Delivery instances # Currently applied to all instances
-      SitecoreInstanceType:
+      CDInstanceType:
+        default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
+      CMMinSize:
+        default: Min number of Content Management instance
+      CMMaxSize:
+        default: Max number of Content Management instance
+      CMInstanceType:
         default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
       SitecoreKeyPair:
         default: EC2 Key Pair for Sitecore instances
@@ -247,6 +268,18 @@ Parameters:
     Description: Public/private key pairs allow you to securely connect to your instance after it launches
     Type: AWS::EC2::KeyPair::KeyName
 #Sitecore
+  CDDNSName:
+    Type: String
+    Description: DNS name for Content Delivery Role
+  CMDNSName:
+    Type: String
+    Description: DNS name for Content Managment Role
+  ISDNSName:
+    Type: String
+    Description: DNS name for Identity Server Role
+  IntDNS:
+    Type: String
+    Description: Internal DNS name
   CDMinSize:
     Type: Number
     Default: '1'
@@ -259,7 +292,7 @@ Parameters:
     Type: Number
     Default: '1'
     Description: The desired number of Content Delivery instances to be available (this currently applies to ALL roles)
-  SitecoreInstanceType:
+  CDInstanceType:
     AllowedValues:
     - t2.micro
     - t2.small
@@ -296,6 +329,48 @@ Parameters:
     ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
     Default: m4.large
     Description: Web server instance type (this currently applies to ALL roles)
+    Type: String
+  CMMinSize:
+    Type: Number
+    Default: 1
+    Description: The minimum number of Content Management instances to be available (this currently applies to ALL roles)
+  CMMaxSize:
+    Type: Number
+    Default: 1
+    Description: The maximum number of Content Management instances to be available (this currently applies to ALL roles)
+  CMInstanceType:
+    AllowedValues:
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c3.large
+    - c3.xlarge
+    - c3.2xlarge
+    - c3.4xlarge
+    - c3.8xlarge
+    - r3.large
+    - r3.xlarge
+    - r3.2xlarge
+    - r3.4xlarge
+    - r3.8xlarge
+    - i2.xlarge
+    - i2.2xlarge
+    - i2.4xlarge
+    - i2.8xlarge
+    ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
+    Default: m4.large
+    Description: Web server instance type for the Content Management role
     Type: String
   SitecoreKeyPair:
     Type: AWS::EC2::KeyPair::KeyName
@@ -513,10 +588,17 @@ Resources:
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1ID 
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2ID 
         ExternalCertificateARN: !Ref ExternalCertificateARN
+        CDDNSName: !Ref CDDNSName
+        CMDNSName: !Ref CMDNSName
+        ISDNSName: !Ref ISDNSName
+        IntDNS: !Ref IntDNS
         CDMinSize: !Ref CDMinSize
         CDMaxSize: !Ref CDMaxSize
         CDDesiredCapacity: !Ref CDDesiredCapacity
-        SitecoreInstanceType: !Ref SitecoreInstanceType
+        CDInstanceType: !Ref CDInstanceType
+        CMMinSize: !Ref CMMinSize
+        CMMaxSize: !Ref CMMaxSize
+        CMInstanceType: !Ref CMInstanceType
         SitecoreKeyPair: !Ref SitecoreKeyPair
         SitecorePrefix: !Ref SitecorePrefix
         SitecoreS3Bucket: !Ref SitecoreS3Bucket
