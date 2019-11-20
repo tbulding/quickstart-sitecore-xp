@@ -29,7 +29,7 @@ If (![Environment]::Is64BitProcess) {
 }
 Import-Module SitecoreInstallFramework
 
-$urlsuffix = "$Region.sitecore.internal"
+$urlsuffix = (Get-SSMParameter -Name "/$StackName/service/internaldns").Value
 #region Role Mapping
 $roleMapping = @{
     'IdentityServer'               = "identity"
@@ -59,7 +59,8 @@ $parameters = @{
     SolrUrl                              = (Get-SSMParameter -Name "/$StackName/user/solruri").Value
     InstanceCertificateThumbPrint        = (Get-SSMParameter -Name "/$stackName/cert/instance/thumbprint").Value
     SQLServer                            = (Get-SSMParameter -Name "/$StackName/sql/server").Value
-    IdentityServerDNS                    = $roleMapping.IdentityServer + '.' + $urlsuffix
+    # IdentityServerDNS                    = $roleMapping.IdentityServer + '.' + $urlsuffix
+    IdentityServerDNS                    = (Get-SSMParameter -Name "/$StackName/service/isdns").Value
     CollectionDNS                        = $roleMapping.Collection + '.' + $urlsuffix
     CollectionSearchDNS                  = $roleMapping.CollectionSearch + '.' + $urlsuffix
     ReferenceDataDNS                     = $roleMapping.ReferenceData + '.' + $urlsuffix
@@ -67,8 +68,10 @@ $parameters = @{
     MarketingAutomationReportingDNS      = $roleMapping.MarketingAutomationReporting + '.' + $urlsuffix
     CortexProcessingDNS                  = $roleMapping.CortexProcessing + '.' + $urlsuffix
     CortexReportingDNS                   = $roleMapping.CortexReporting + '.' + $urlsuffix
-    CMDNS                                = $roleMapping.CM + '.' + $urlsuffix
-    CDDNS                                = $roleMapping.CD + '.' + $urlsuffix
+    # CMDNS                                = $roleMapping.CM + '.' + $urlsuffix
+    CMDNS                                = (Get-SSMParameter -Name "/$StackName/service/cmdns").Value
+    # CDDNS                                = $roleMapping.CD + '.' + $urlsuffix
+    CDDNS                                = (Get-SSMParameter -Name "/$StackName/service/cddns").Value
     PrcDNS                               = $roleMapping.Prc + '.' + $urlsuffix
     RepDNS                               = $roleMapping.Rep + '.' + $urlsuffix
     XConnectCollectionService            = "https://" + $roleMapping.Collection + '.' + $urlsuffix
