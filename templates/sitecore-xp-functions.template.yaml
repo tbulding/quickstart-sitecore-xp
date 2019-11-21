@@ -95,5 +95,6 @@ Resources:
 
 Outputs:
   ConvertCertificatesLambdaArn:
+    Description: The Lambda ARN of the function created to convert the locally generated certificates and upload them to ACM
     Value: !GetAtt ConvertCertificatesLambda.Arn
 
