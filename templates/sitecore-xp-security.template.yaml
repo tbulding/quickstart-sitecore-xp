@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Creates the required secrets in AWS Secrets Manager
+Description: "This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment"
 Parameters:
   SitecoreS3Bucket:
     Type: String
@@ -27,33 +27,38 @@ Resources:
         ManagedPolicyArns:
           - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         Policies:
-          - PolicyName: lambda-convert-to-acm
+          - PolicyName: Get-Certificate-S3
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action: s3:GetObject
                   Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
-          - PolicyName: import-to-acm
+          - PolicyName: Import-Delete-ACM
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
-                  Action: acm:ImportCertificate
+                  Action: 
+                    - acm:ImportCertificate
+                    - acm:DeleteCertificate
                   Resource: '*'
-          - PolicyName: get-secret-value
+          - PolicyName: Get-Secret-Value
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action: secretsmanager:GetSecretValue
                   Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:*:secret:*'
-          - PolicyName: put-ssm-parameter
+          - PolicyName: Put-Delete-SSM-Parameter
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
-                  Action: ssm:PutParameter
+                  Action: 
+                    - ssm:PutParameter
+                    - ssm:GetParameter
+                    - ssm:DeleteParameter
                   Resource: !Sub 'arn:aws:ssm:${AWS::Region}:*:parameter/*'
   CopyZipsRole:
     Type: AWS::IAM::Role
@@ -80,22 +85,6 @@ Resources:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource: !Sub 'arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*'
-#Instance IAM Policy
-  # SCInstancePolicy:
-  #   Type: AWS::IAM::ManagedPolicy
-  #   Properties: 
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement: ## this needs to be cleaned up to be limited to the required permissions
-  #         -
-  #           Effect: "Allow"
-  #           Action:
-  #             - "s3:*"
-  #             - "secretsmanager:*"
-  #             - "ssm:*"
-  #             - "logs:*"
-  #             - "ec2:*"
-  #           Resource: "*"
 #Create IAM Role for Instances
   SCInstanceRole:
     Type: 'AWS::IAM::Role'
@@ -367,19 +356,20 @@ Resources:
         PasswordLength: 20
         ExcludePunctuation: true
         IncludeSpace: false
-  
+
 Outputs:
   SCInstanceRoleARN:
-    Description: Sitecore Instance Role.
+    Description: ARN for the Instance Role.
     Value: !GetAtt SCInstanceRole.Arn
   SCInstanceProfileARN:
     Description: ARN for the Instance Profile.
     Value: !GetAtt SCInstanceProfile.Arn
   SCInstanceProfileName:
-    Description: ARN for the Instance Profile.
+    Description: Name of the Instance Profile.
     Value: !Ref SCInstanceProfile
   ConvertCertificatesLambdaRoleArn:
     Description: The role ARN for the Lambda function to convert and upload certs to ACM.
     Value: !GetAtt ConvertCertificatesLambdaRole.Arn
   CopyZipsRoleArn:
+    Description: The role ARN for the Lambda function to copy Zip's to local S3 bucket for Lambda Functions.
     Value: !GetAtt CopyZipsRole.Arn
