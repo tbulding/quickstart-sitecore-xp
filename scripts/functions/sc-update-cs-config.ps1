@@ -1,8 +1,9 @@
 [CmdletBinding()]
 param (
-    [string]$filepath,
-    [string]$connectionString
+    [string]$filepath
 )
+$connectionString = (Get-SSMParameter -Name "/$StackName/redis/url").Value
+
 #$filepath = '/c/dev/resourcefiles/configfiles/ConnectionStrings.config'
 $xml = New-Object -TypeName xml
 $xml.Load($filepath)
