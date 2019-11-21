@@ -7,8 +7,8 @@ Parameters:
     Type: String
   SOLRUrl:
     Type: String
-  IntLBDNS:
-    Type: String
+  # IntLBDNS:
+  #   Type: String
   EnvironmentType:
     Type: String
   SCLogLevel:
@@ -22,6 +22,14 @@ Parameters:
   SCResourcesPrefix:
     Type: String
   SCLicensePrefix:
+    Type: String
+  CDDNSName:
+    Type: String
+  CMDNSName:
+    Type: String
+  ISDNSName:
+    Type: String
+  IntDNS:
     Type: String
 Resources:
 # Sitecore Installation
@@ -108,7 +116,8 @@ Resources:
       Name: !Sub /${RootStackName}/cert/instance/dnsnames
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
-      Value: !Sub "*.${AWS::Region}.sitecore.internal"
+      Value: !Ref IntDNS
+      # Value: !Sub "*.${AWS::Region}.sitecore.internal"
   CertStoreLocation:
     Type: AWS::SSM::Parameter
     Properties:
@@ -124,13 +133,41 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !Ref SCPrefix
+  ContDelDNS: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${RootStackName}/service/cddns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !Ref CDDNSName
+  ContMgmtDNS: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${RootStackName}/service/cmdns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !Ref CMDNSName
+  IdentityDNS: 
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${RootStackName}/service/isdns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !Ref ISDNSName
+  InternalDNS: # Defines the internal DNS name for R53
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${RootStackName}/service/internaldns
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !Ref IntDNS
   PasswordRecoveryUrl:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub /${RootStackName}/service/passwordrecoveryurl
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
-      Value: !Sub https://${IntLBDNS}/contentmanagment
+      Value: !Ref CMDNSName
   allowedCorsOrigins:
     Type: AWS::SSM::Parameter
     Properties:
