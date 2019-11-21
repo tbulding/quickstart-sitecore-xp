@@ -137,6 +137,10 @@
         "ParameterValue": "replace"
     },
     {
+        "ParameterKey": "EmailNotifications",
+        "ParameterValue": "operator@example.com"
+    },
+    {
         "ParameterKey": "PubliclyAccessible",
         "ParameterValue": "false"
     },
