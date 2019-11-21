@@ -47,6 +47,18 @@ def import_acm(certKey, privateKey, certChain):
         CertificateChain=certChain
     )
     return response
+def del_acm_cert(cert_arn):
+    try:
+        response = acm.delete_certificate(
+            CertificateArn=cert_arn
+        )
+        return response
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceNotFoundException':
+            response = e.response['Error']['Message']
+            return response
+        else:
+            return e.response['Error']
 def write_parameter(param_name, param_value):
     try:
         response = ssm.put_parameter(
@@ -57,6 +69,30 @@ def write_parameter(param_name, param_value):
         return response
     except ClientError as e:
         return e.response['Error']
+def get_param_value(parameter_name):
+    try:
+        response = ssm.get_parameter(
+            Name=parameter_name
+        )
+        return response['Parameter']
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ParameterNotFound':
+            response = "ParameterNotFound : "+parameter_name
+            return response
+        else:
+            return e.response['Error']
+def del_ssm_param(parameter_name):
+    try:
+        response = ssm.delete_parameter(
+            Name=parameter_name
+        )
+        return response
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ParameterNotFound':
+            response = "ParameterNotFound : "+parameter_name
+            return response
+        else:
+            return e.response['Error']
 @helper.create
 def convert_upload(event, _):
     bucket_name = event['ResourceProperties']['S3BucketName']
@@ -71,9 +107,16 @@ def convert_upload(event, _):
     write_parameter(acm_ssm_path, acm_import['CertificateArn'])
     helper.Data['InternalCertARN'] = acm_import['CertificateArn']
 @helper.update
-@helper.delete
 def no_op(_, __):
     pass
+@helper.delete
+def remove_resources(event, __):
+    acm_ssm_path = event['ResourceProperties']['AcmParameterPath']
+    acm_arn = get_param_value(acm_ssm_path)
+    delete_acm_cert = del_acm_cert(acm_arn['Value'])
+    print(delete_acm_cert)
+    delete_ssm_acm = del_ssm_param(acm_arn['Name'])
+    print(delete_ssm_acm)
 
 def handler(event, context):
     helper(event, context)
