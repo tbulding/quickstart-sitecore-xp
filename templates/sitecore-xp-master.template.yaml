@@ -47,6 +47,7 @@ Metadata:
           - EnvironmentType
           - SCLogLevel
           - CorsOrigins
+          - EmailNotifications
           - LambdaZipsBucketName
       - Label:
           default: SQL Server configuration
@@ -144,6 +145,8 @@ Metadata:
         default: The Sitecore Log Level
       CorsOrigins:
         default: The Sitecore Cors Origins
+      EmailNotifications:
+        default: The email address for receiving notifications on instance scaling.
       LambdaZipsBucketName:
         default: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
     # RDS Configuration
@@ -413,6 +416,8 @@ Parameters:
     Type: String
   CorsOrigins: 
     Type: String
+  EmailNotifications:
+    Type: String
   LambdaZipsBucketName:
     Type: String
     Default: ''
@@ -609,6 +614,7 @@ Resources:
         EnvironmentType: !Ref EnvironmentType
         SCLogLevel: !Ref SCLogLevel
         CorsOrigins: !Ref CorsOrigins
+        EmailNotifications: !Ref EmailNotifications
         LambdaZipsBucketName: !Ref LambdaZipsBucketName
         PubliclyAccessible: !Ref PubliclyAccessible
         DBInstanceClass: !Ref DBInstanceClass

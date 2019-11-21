@@ -37,6 +37,7 @@ Metadata:
           - EnvironmentType
           - SCLogLevel
           - CorsOrigins
+          - EmailNotifications
           - LambdaZipsBucketName
       - Label:
           default: SQL Server configuration
@@ -120,6 +121,8 @@ Metadata:
         default: The Sitecore Log Level
       CorsOrigins: 
         default: The Sitecore Cors Origins
+      EmailNotifications:
+        default: The email address for receiving notifications on instance scaling.
       LambdaZipsBucketName:
         default: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
     # RDS Configuration
@@ -319,6 +322,8 @@ Parameters:
     Type: String
   CorsOrigins: 
     Type: String
+  EmailNotifications:
+    Type: String
   LambdaZipsBucketName:
     Type: String
     Default: ''
@@ -459,6 +464,14 @@ Resources:
   LambdaZipsBucket:
     Type: AWS::S3::Bucket
     Condition: CreateLambdaZipsBucket
+  AutoscalingSNS:
+    Type: AWS::SNS::Topic
+  ASGSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref EmailNotifications
+      Protocol: email
+      TopicArn: !Ref 'AutoscalingSNS'
 # Create required Security Groups
   SitecoreInstanceSG:
     Type: AWS::EC2::SecurityGroup
@@ -823,6 +836,7 @@ Resources:
         CMMaxSize: !Ref CMMaxSize
         CMDesiredCapacity: '1' #udpate later
         IntDNS: !Ref IntDNS
+        AutoscalingSNS: !Ref AutoscalingSNS
 Outputs:
   ALBInternalDNS:
     Description: Internal DNS name of the ALB

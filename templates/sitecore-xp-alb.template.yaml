@@ -39,6 +39,8 @@ Parameters:
     Type: String
   IntDNS:
     Type: String
+  AutoscalingSNS:
+    Type: String
   RootStackName: 
     Type: String
   
@@ -407,6 +409,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CDExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub ContentDelivery-${RootStackName}
@@ -448,6 +457,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CMExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub ContentManagement-${RootStackName}
@@ -485,6 +501,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref ColIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Collection-${RootStackName}
@@ -522,6 +545,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CSIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub CollectionSearch-${RootStackName}
@@ -559,6 +589,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CPIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub CortexProcessing-${RootStackName}
@@ -596,6 +633,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CRIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub CortexReporting-${RootStackName}
@@ -634,6 +678,13 @@ Resources:
       TargetGroupARNs:
         # - !Ref ISIntTargetGroup
         - !Ref ISExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Identity-${RootStackName}
@@ -671,6 +722,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref MAIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub MarketingAutomation-${RootStackName}
@@ -708,6 +766,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref MARIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub MarketingAutomationReporting-${RootStackName}
@@ -745,6 +810,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref PrcIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Processing-${RootStackName}
@@ -782,6 +854,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref RDIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub ReferenceData-${RootStackName}
@@ -819,6 +898,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref RepIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Reporting-${RootStackName}
