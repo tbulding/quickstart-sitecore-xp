@@ -16,10 +16,17 @@ Metadata:
       - Label:
           default: Sitecore Configuration
         Parameters:
+          - CDDNSName
+          - CMDNSName
+          - ISDNSName
+          - IntDNS
           - CDMinSize
           - CDMaxSize
           - CDDesiredCapacity
-          - SitecoreInstanceType
+          - CDInstanceType
+          - CMMinSize
+          - CMMaxSize
+          - CMInstanceType
           - SitecoreKeyPair
           - SitecorePrefix
           - SitecoreS3Bucket
@@ -71,13 +78,27 @@ Metadata:
       ExternalCertificateARN:
         default: External Amazon Certificate Manager ARN
     # Sitecore Configuration
+      CDDNSName:
+        default: DNS name for Content Delivery Role
+      CMDNSName:
+        default: DNS name for Content Managment Role
+      ISDNSName:
+        default: DNS name for Identity Server Role
+      IntDNS:
+        default: Internal DNS name
       CDMinSize:
         default: Min number of Content Delivery instances # Currently applied to all instances
       CDMaxSize:
         default: Max number of Content Delivery instances # Currently applied to all instances
       CDDesiredCapacity:
-        deault: The current number of desired Content Delivery instances # Currently applied to all instances
-      SitecoreInstanceType:
+        default: The current number of desired Content Delivery instances # Currently applied to all instances
+      CDInstanceType:
+        default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
+      CMMinSize:
+        default: Min number of Content Managment instance
+      CMMaxSize:
+        default: Max number of Content Managment instance
+      CMInstanceType:
         default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
       SitecoreKeyPair:
         default: EC2 Key Pair for Sitecore instances
@@ -157,6 +178,18 @@ Parameters:
   ExternalCertificateARN:
     Type: String
 # Sitecore
+  CDDNSName:
+    Type: String
+    Description: DNS name for Content Delivery Role
+  CMDNSName:
+    Type: String
+    Description: DNS name for Content Managment Role
+  ISDNSName:
+    Type: String
+    Description: DNS name for Identity Server Role
+  IntDNS:
+    Type: String
+    Description: Internal DNS name
   CDMinSize:
     Type: Number
     Default: 1
@@ -169,7 +202,7 @@ Parameters:
     Type: Number
     Default: 1
     Description: The desired number of Content Delivery instances to be available (this currently applies to ALL roles)
-  SitecoreInstanceType:
+  CDInstanceType:
     AllowedValues:
     - m4.large
     - m4.xlarge
@@ -202,6 +235,48 @@ Parameters:
     ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
     Default: m4.large
     Description: Web server instance type (this currently applies to ALL roles)
+    Type: String
+  CMMinSize:
+    Type: Number
+    Default: 1
+    Description: The minimum number of Content Management instances to be available (this currently applies to ALL roles)
+  CMMaxSize:
+    Type: Number
+    Default: 1
+    Description: The maximum number of Content Management instances to be available (this currently applies to ALL roles)
+  CMInstanceType:
+    AllowedValues:
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c3.large
+    - c3.xlarge
+    - c3.2xlarge
+    - c3.4xlarge
+    - c3.8xlarge
+    - r3.large
+    - r3.xlarge
+    - r3.2xlarge
+    - r3.4xlarge
+    - r3.8xlarge
+    - i2.xlarge
+    - i2.2xlarge
+    - i2.4xlarge
+    - i2.8xlarge
+    ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
+    Default: m4.large
+    Description: Web server instance type for the Content Management role
     Type: String
   SitecoreKeyPair:
     Type: AWS::EC2::KeyPair::KeyName
@@ -502,42 +577,42 @@ Resources:
   InternalR53:
     Type: AWS::Route53::HostedZone
     Properties:
-      Name: !Sub ${AWS::Region}.sitecore.internal
+      Name: !Ref IntDNS
       VPCs:
         - VPCId: !Ref VPCID
           VPCRegion: !Sub ${AWS::Region}
-  CDRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name: !Sub contentdel.${AWS::Region}.sitecore.internal
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerExternal.DNSName
-  CMRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name: !Sub contentmgmt.${AWS::Region}.sitecore.internal
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerExternal.DNSName
-  IDRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name: !Sub identity.${AWS::Region}.sitecore.internal
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
+  # CDRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneId: !Ref InternalR53
+  #     Name: !Sub contentdel.${IntDNS}
+  #     Type: CNAME
+  #     TTL: '900'
+  #     ResourceRecords:
+  #       - !GetAtt LoadBalancerExternal.DNSName
+  # CMRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneId: !Ref InternalR53
+  #     Name: !Sub contentmgmt.${IntDNS}
+  #     Type: CNAME
+  #     TTL: '900'
+  #     ResourceRecords:
+  #       - !GetAtt LoadBalancerExternal.DNSName
+  # IDRecord:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneId: !Ref InternalR53
+  #     Name: !Sub identity.${IntDNS}
+  #     Type: CNAME
+  #     TTL: '900'
+  #     ResourceRecords:
+  #       - !GetAtt LoadBalancerInternal.DNSName
   CollRecord:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub coll.${AWS::Region}.sitecore.internal
+      Name: !Sub coll.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -546,7 +621,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub collsearch.${AWS::Region}.sitecore.internal
+      Name: !Sub collsearch.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -555,7 +630,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub refdata.${AWS::Region}.sitecore.internal
+      Name: !Sub refdata.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -564,7 +639,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub mktauto.${AWS::Region}.sitecore.internal
+      Name: !Sub mktauto.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -573,7 +648,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub mktautorep.${AWS::Region}.sitecore.internal
+      Name: !Sub mktautorep.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -582,7 +657,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub cortexproc.${AWS::Region}.sitecore.internal
+      Name: !Sub cortexproc.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -591,7 +666,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub cortexrep.${AWS::Region}.sitecore.internal
+      Name: !Sub cortexrep.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -600,7 +675,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub proc.${AWS::Region}.sitecore.internal
+      Name: !Sub proc.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -609,7 +684,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub rep.${AWS::Region}.sitecore.internal
+      Name: !Sub rep.${IntDNS}
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -632,7 +707,7 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-parameters.template.yaml'
       Parameters:
-        IntLBDNS: !GetAtt LoadBalancerInternal.DNSName
+        # IntLBDNS: !GetAtt LoadBalancerInternal.DNSName
         RootStackName: !Ref "AWS::StackName"
         SCPrefix: !Ref SitecorePrefix
         SOLRCorePrefix: !Ref SOLRCorePrefix
@@ -643,8 +718,12 @@ Resources:
         SCS3Bucket: !Ref SitecoreS3Bucket
         SCResourcesPrefix: !Ref SCResourcesPrefix
         SCLicensePrefix: !Ref SCLicensePrefix
+        CDDNSName: !Ref CDDNSName
+        CMDNSName: !Ref CMDNSName
+        ISDNSName: !Ref ISDNSName
+        IntDNS: !Ref IntDNS
 # Builds the sitecore RDS MSSQL Database Stack
-  RDSStack:
+  DBStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: SecurityStack # RDSsqlSG
     Properties:
@@ -724,8 +803,6 @@ Resources:
       Parameters:
         PrivateSubnet1A: !Ref PrivateSubnet1A
         PrivateSubnet2A: !Ref PrivateSubnet2A
-        PublicSubnet1: !Ref PublicSubnet1
-        PublicSubnet2: !Ref PublicSubnet2
         VPCID: !Ref VPCID
         LoadBalancerInternal: !Ref LoadBalancerInternal
         LoadBalancerExternal: !Ref LoadBalancerExternal
@@ -736,17 +813,29 @@ Resources:
         CDDesiredCapacity: !Ref CDDesiredCapacity
         RootStackName: !Ref "AWS::StackName"
         #ImageId: !Sub '{{resolve:ssm:/-${AWS::StackName}/instance/ami/customid:1}}'
-        SitecoreInstanceType: !Ref SitecoreInstanceType
+        #SitecoreInstanceType: !Ref SitecoreInstanceType
+        CDInstanceType: !Ref CDInstanceType
+        CMInstanceType: !Ref CMInstanceType
         SitecoreInstanceSG: !Ref SitecoreInstanceSG
         SCInstanceProfile: !GetAtt SecurityStack.Outputs.SCInstanceProfileARN
         SitecoreKeyPair: !Ref SitecoreKeyPair
-        CMMinSize: '1' #udpate later
-        CMMaxSize: '1' #udpate later
+        CMMinSize: !Ref CMMinSize
+        CMMaxSize: !Ref CMMaxSize
         CMDesiredCapacity: '1' #udpate later
+        IntDNS: !Ref IntDNS
 Outputs:
   ALBInternalDNS:
     Description: Internal DNS name of the ALB
     Value: !GetAtt LoadBalancerInternal.DNSName
   ALBExternalDNS:
-    Description: Internal DNS name of the ALB
+    Description: DNS name of the external facing ALB. This will be used for the Content Delivery, Content Management & Identity Server DNS CNAME's
     Value: !GetAtt LoadBalancerExternal.DNSName
+  ContentDelivery:
+    Description: The website name for the Content Delivery role
+    Value: !Ref CDDNSName
+  SQLEndpoint:
+    Description: RDS SQL Database endpoint
+    Value: !GetAtt DBStack.Outputs.RDSSQLEndpoint
+  RedisEndpoint:
+    Description: The Redis primary endpoint location for the Content Delivery role
+    Value: !GetAtt DBStack.Outputs.CDRedisEndpoint
