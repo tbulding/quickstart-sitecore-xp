@@ -1,8 +1,10 @@
 [CmdletBinding()]
 param (
-    [string]$filepath
+    [string]$filepath,
+    [string]$StackName
 )
 #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
+
 $xml = New-Object -TypeName xml
 $xml.Load($filepath)
 $item = Select-Xml -Xml $xml -XPath '//sessionState'
@@ -27,5 +29,15 @@ $add.SetAttribute("applicationName", "private")
 
 $providers.AppendChild($add)
 $sessionState.AppendChild($providers)
-$xml.configuration.'system.web'.AppendChild($sessionState)
+$out = ($xml.configuration.'system.web'.AppendChild($sessionState)*>&1 | Out-String) 
+
+#region  logging
+$parms = @{
+    logGroupName  = "$StackName-update-config-files"
+    LogStreamName = "web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+    LogString     = $out
+}
+./sc-write-logsentry.ps1 @parms
+#endregion
+
 $xml.Save($filepath)
