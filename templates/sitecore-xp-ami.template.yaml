@@ -303,7 +303,7 @@ Resources:
             action: aws:runCommand
             maxAttempts: 3
             onFailure: "step:signalfailure"
-            nextStep: "signalsuccess"
+            nextStep: "FinalStopInstance"
             timeoutSeconds: 7200
             inputs:
               DocumentName: AWS-RunPowerShellScript
@@ -318,6 +318,17 @@ Resources:
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
                 CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-DeployDatabases"
+          - name: FinalStopInstance
+            action: aws:changeInstanceState
+            maxAttempts: 3
+            timeoutSeconds: 7200
+            onFailure: "step:signalfailure"
+            nextStep: "signalsuccess"
+            inputs:
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              CheckStateOnly: false
+              DesiredState: stopped
           # If all steps complete successfully signals CFN of Success
           - name: "signalsuccess"
             action: "aws:executeAwsApi"
