@@ -7,8 +7,6 @@ Parameters:
     Type: String
   SOLRUrl:
     Type: String
-  # IntLBDNS:
-  #   Type: String
   EnvironmentType:
     Type: String
   SCLogLevel:
