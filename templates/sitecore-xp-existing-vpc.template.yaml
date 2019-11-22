@@ -100,7 +100,7 @@ Metadata:
       CMMaxSize:
         default: Max number of Content Managment instance
       CMInstanceType:
-        default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
+        default: The instance type to be used for the Content Delivery instances
       SitecoreKeyPair:
         default: EC2 Key Pair for Sitecore instances
       SitecorePrefix: 
@@ -183,16 +183,17 @@ Parameters:
 # Sitecore
   CDDNSName:
     Type: String
-    Description: DNS name for Content Delivery Role
+    Description: DNS name for Content Delivery Role. An alias for the ELB should be created after the stack creation
   CMDNSName:
     Type: String
-    Description: DNS name for Content Managment Role
+    Description: DNS name for Content Managment Role. An alias for the ELB should be created after the stack creation
   ISDNSName:
     Type: String
-    Description: DNS name for Identity Server Role
+    Description: DNS name for Identity Server Role. An alias for the ELB should be created after the stack creation
   IntDNS:
     Type: String
-    Description: Internal DNS name
+    Default: ''
+    Description: Internal DNS name. If left blank, one will be generated for you
   CDMinSize:
     Type: Number
     Default: 1
@@ -458,6 +459,7 @@ Parameters:
 
 Conditions:
   CreateLambdaZipsBucket: !Equals [!Ref 'LambdaZipsBucketName', '']
+  InternalDNSName: !Equals [!Ref 'IntDNS', '']
 
 Resources:
 # Local region S3 bucket for Lambda functions
@@ -546,7 +548,7 @@ Resources:
           FromPort: !Ref RedisPort
           ToPort: !Ref RedisPort
           CidrIp: !Ref 'VPCCIDR'
-  # Internal ALB
+# Internal ALB
   LoadBalancerInternal:
     # DependsOn: LoadBalancerInternalSG
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -559,7 +561,7 @@ Resources:
       Subnets:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
-  # External ALB
+# External ALB
   LoadBalancerExternal:
     # DependsOn: LoadBalancerExternalSG
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -572,7 +574,7 @@ Resources:
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
-  # Parameter entries for internal & External ALB - put here so that Parameter Stack not waiting
+# Parameter entries for internal & External ALB - put here so that Parameter Stack not waiting
   InternalALBURL:
     Type: AWS::SSM::Parameter
     Properties:
@@ -587,36 +589,19 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !GetAtt LoadBalancerExternal.DNSName
+# Internal DNS Configuration
   InternalR53:
     Type: AWS::Route53::HostedZone
     Properties:
-      Name: !Ref IntDNS
+      Name: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
       VPCs:
         - VPCId: !Ref VPCID
           VPCRegion: !Sub ${AWS::Region}
-  # CDRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: !Ref InternalR53
-  #     Name: !Sub contentdel.${IntDNS}
-  #     Type: CNAME
-  #     TTL: '900'
-  #     ResourceRecords:
-  #       - !GetAtt LoadBalancerExternal.DNSName
-  # CMRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: !Ref InternalR53
-  #     Name: !Sub contentmgmt.${IntDNS}
-  #     Type: CNAME
-  #     TTL: '900'
-  #     ResourceRecords:
-  #       - !GetAtt LoadBalancerExternal.DNSName
   # IDRecord:
   #   Type: AWS::Route53::RecordSet
   #   Properties:
   #     HostedZoneId: !Ref InternalR53
-  #     Name: !Sub identity.${IntDNS}
+  #     Name: !If [InternalDNSName, !Sub 'identity.${AWS::Region}.sitecore.internal', !Ref IntDNS]
   #     Type: CNAME
   #     TTL: '900'
   #     ResourceRecords:
@@ -625,7 +610,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub coll.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'coll.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -634,7 +619,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub collsearch.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'collsearch.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -643,7 +628,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub refdata.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'refdata.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -652,7 +637,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub mktauto.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'mktauto.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -661,7 +646,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub mktautorep.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'mktautorep.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -670,7 +655,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub cortexproc.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'cortexproc.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -679,7 +664,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub cortexrep.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'cortexrep.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -688,7 +673,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub proc.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'proc.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -697,7 +682,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref InternalR53
-      Name: !Sub rep.${IntDNS}
+      Name: !If [InternalDNSName, !Sub 'rep.${AWS::Region}.sitecore.internal', !Ref IntDNS]
       Type: CNAME
       TTL: '900'
       ResourceRecords:
@@ -734,8 +719,8 @@ Resources:
         CDDNSName: !Ref CDDNSName
         CMDNSName: !Ref CMDNSName
         ISDNSName: !Ref ISDNSName
-        IntDNS: !Ref IntDNS
-# Builds the sitecore RDS MSSQL Database Stack
+        IntDNS: !If [InternalDNSName, !Sub 'rep.${AWS::Region}.sitecore.internal', !Ref IntDNS]
+# Builds RDS MSSQL Database and ElastiCache Redis
   DBStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: SecurityStack # RDSsqlSG
@@ -778,11 +763,11 @@ Resources:
         SecurityGroupIds: !Ref SitecoreInstanceSG
         InstanceType: "t2.large"
         LocalPath: !GetAtt ParamStoreStack.Outputs.SCLocalResourcePath 
+        LocalQSScripts: !GetAtt ParamStoreStack.Outputs.QSLocalResourcePath  #'c:\quickstart\scripts'  # this needs to be updated to SSM  -- use a gettatt from parameter outputs for this.
         RootStackName: !Ref "AWS::StackName"
         TargetAmiName: !GetAtt ParamStoreStack.Outputs.CustomAmiName 
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        LocalQSScripts: 'c:\quickstart\scripts'  # this needs to be updated to SSM  -- use a gettatt from parameter outputs for this.
 
 # Create lambda functions
   FunctionsStack:
@@ -825,8 +810,6 @@ Resources:
         CDMaxSize: !Ref CDMaxSize
         CDDesiredCapacity: !Ref CDDesiredCapacity
         RootStackName: !Ref "AWS::StackName"
-        #ImageId: !Sub '{{resolve:ssm:/-${AWS::StackName}/instance/ami/customid:1}}'
-        #SitecoreInstanceType: !Ref SitecoreInstanceType
         CDInstanceType: !Ref CDInstanceType
         CMInstanceType: !Ref CMInstanceType
         SitecoreInstanceSG: !Ref SitecoreInstanceSG
@@ -835,8 +818,9 @@ Resources:
         CMMinSize: !Ref CMMinSize
         CMMaxSize: !Ref CMMaxSize
         CMDesiredCapacity: '1' #udpate later
-        IntDNS: !Ref IntDNS
+        IntDNS: !If [InternalDNSName, !Sub 'rep.${AWS::Region}.sitecore.internal', !Ref IntDNS]
         AutoscalingSNS: !Ref AutoscalingSNS
+        LocalQSScripts: !GetAtt ParamStoreStack.Outputs.QSLocalResourcePath
 Outputs:
   ALBInternalDNS:
     Description: Internal DNS name of the ALB
@@ -845,8 +829,14 @@ Outputs:
     Description: DNS name of the external facing ALB. This will be used for the Content Delivery, Content Management & Identity Server DNS CNAME's
     Value: !GetAtt LoadBalancerExternal.DNSName
   ContentDelivery:
-    Description: The website name for the Content Delivery role
+    Description: The website name for the Content Delivery role. A CNAME entry needs to be added pointing to the 'ALBExternalDNS'
     Value: !Ref CDDNSName
+  ContentManagment:
+    Description: The website name for the Content Managment role. A CNAME entry needs to be added pointing to the 'ALBExternalDNS'
+    Value: !Ref CMDNSName
+  IdentityServer:
+    Description: The website name for the Identity Server role. A CNAME entry needs to be added pointing to the 'ALBExternalDNS'
+    Value: !Ref ISDNSName
   SQLEndpoint:
     Description: RDS SQL Database endpoint
     Value: !GetAtt DBStack.Outputs.RDSSQLEndpoint
