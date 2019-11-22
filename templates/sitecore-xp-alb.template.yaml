@@ -41,6 +41,8 @@ Parameters:
     Type: String
   AutoscalingSNS:
     Type: String
+  LocalQSScripts:
+    Type: String
   RootStackName: 
     Type: String
   
@@ -433,16 +435,18 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CD" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CD" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CD" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CD" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\sc.CD\Web.config"'
+            - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\sc.CD\Web.config" -StackName '
+            - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\sc.CD\App_Config\ConnectionStrings.config"'
+            - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\sc.CD\App_Config\ConnectionStrings.config" -StackName '
+            - !Sub '"${RootStackName}"'
             - "\n"
             - "</powershell>\n"
   ContentManagementASG:
@@ -481,10 +485,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CM" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CM" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CM" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CM" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -525,10 +529,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Collection" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Collection" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Collection" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Collection" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -569,10 +573,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CollectionSearch" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -613,10 +617,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexProcessing" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -657,10 +661,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexReporting" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -702,10 +706,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "IdentityServer" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -746,10 +750,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomation" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -790,10 +794,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -834,10 +838,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Prc" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Prc" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Prc" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Prc" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -878,10 +882,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "ReferenceData" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -922,10 +926,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Rep" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Rep" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Rep" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Rep" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
