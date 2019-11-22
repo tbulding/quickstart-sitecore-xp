@@ -75,6 +75,13 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: "c:\\resources"
+  LocalQuickStartResourcesPath:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${RootStackName}/user/localqsresourcespath
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: "c:\\quickstart\\scripts"
   ExportRootCertName:
     Type: AWS::SSM::Parameter
     Properties:
@@ -217,6 +224,9 @@ Outputs:
   SCLocalResourcePath:
     Description: The location of the Sitecore resources on the AMI
     Value: !GetAtt LocalResourcesPath.Value
+  QSLocalResourcePath:
+    Description: The name of the Quick Start Sitecore custom AMI
+    Value: !GetAtt LocalQuickStartResourcesPath.Value
   InstanceCertificateLocation:
     Description: Location of the certificate on the instance
     Value: !Join 
