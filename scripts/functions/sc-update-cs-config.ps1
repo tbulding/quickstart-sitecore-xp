@@ -5,6 +5,7 @@ param (
 )
 
 $connectionString = (Get-SSMParameter -Name "/$StackName/redis/url").Value
+$cwScript = (Get-SSMParameter -Name "/$StackName/user/localqsresourcespath").Value
 
 #$filepath = '/c/dev/resourcefiles/configfiles/ConnectionStrings.config'
 $xml = New-Object -TypeName xml
@@ -18,11 +19,11 @@ $cs = Select-Xml -Xml $xml -XPath '//connectionStrings'
 $out = ($cs.Node.AppendChild($newnode)*>&1 | Out-String)
 #region  logging
 $parms = @{
-    logGroupName  = "$StackName-update-config-files"
-    LogStreamName = "cs-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+    logGroupName  = "$StackName-CD"
+    LogStreamName = "update-cs-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
     LogString     = $out
 }
-./sc-write-logsentry.ps1 @parms
+$cwScript\sc-write-logsentry.ps1 @parms
 #endregion
 
 $xml.Save($filepath)

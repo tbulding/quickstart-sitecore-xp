@@ -4,6 +4,7 @@ param (
     [string]$StackName
 )
 #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
+$cwScript = (Get-SSMParameter -Name "/$StackName/user/localqsresourcespath").Value
 
 $xml = New-Object -TypeName xml
 $xml.Load($filepath)
@@ -33,11 +34,11 @@ $out = ($xml.configuration.'system.web'.AppendChild($sessionState)*>&1 | Out-Str
 
 #region  logging
 $parms = @{
-    logGroupName  = "$StackName-update-config-files"
-    LogStreamName = "web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+    logGroupName  = "$StackName-CD"
+    LogStreamName = "update-web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
     LogString     = $out
 }
-./sc-write-logsentry.ps1 @parms
+$cwScript\sc-write-logsentry.ps1 @parms
 #endregion
 
 $xml.Save($filepath)
