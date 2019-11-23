@@ -1,11 +1,8 @@
 [CmdletBinding()]
 param (
-    [string]$filepath,
-    [string]$StackName
+    [string]$filepath
 )
 #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
-$cwScript = (Get-SSMParameter -Name "/$StackName/user/localqsresourcespath").Value
-
 $xml = New-Object -TypeName xml
 $xml.Load($filepath)
 $item = Select-Xml -Xml $xml -XPath '//sessionState'
@@ -15,7 +12,7 @@ $null = $item.Node.ParentNode.RemoveChild($item.Node)
 
 #Create the replacement node
 $sessionState = $xml.CreateElement("sessionState")
-$sessionState.SetAttribute("mode", "Custom")
+$sessionState.SetAttribute("mode", "custom")
 $sessionState.SetAttribute("customProvider", "redis")
 $sessionState.SetAttribute("timeout", "20")
 
@@ -30,6 +27,9 @@ $add.SetAttribute("applicationName", "private")
 
 $providers.AppendChild($add)
 $sessionState.AppendChild($providers)
+$xml.configuration.'system.web'.AppendChild($sessionState)
+$xml.Save($filepath)
+$sessionState.AppendChild($providers)
 $out = ($xml.configuration.'system.web'.AppendChild($sessionState)*>&1 | Out-String) 
 
 #region  logging
@@ -38,7 +38,8 @@ $parms = @{
     LogStreamName = "update-web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
     LogString     = $out
 }
-$cwScript\sc-write-logsentry.ps1 @parms
+$scriptPath = Split-Path $MyInvocation.MyCommand.Path
+& "$scriptPath\sc-write-logsentry.ps1" @parms
 #endregion
 
 $xml.Save($filepath)

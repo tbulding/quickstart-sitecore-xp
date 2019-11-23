@@ -5,7 +5,7 @@ param (
 )
 
 $connectionString = (Get-SSMParameter -Name "/$StackName/redis/url").Value
-$cwScript = (Get-SSMParameter -Name "/$StackName/user/localqsresourcespath").Value
+#$cwScript = (Get-SSMParameter -Name "/$StackName/user/localqsresourcespath").Value
 
 #$filepath = '/c/dev/resourcefiles/configfiles/ConnectionStrings.config'
 $xml = New-Object -TypeName xml
@@ -23,7 +23,8 @@ $parms = @{
     LogStreamName = "update-cs-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
     LogString     = $out
 }
-$cwScript\sc-write-logsentry.ps1 @parms
+$scriptPath = Split-Path $MyInvocation.MyCommand.Path
+& "$scriptPath\sc-write-logsentry.ps1" @parms
 #endregion
 
 $xml.Save($filepath)
