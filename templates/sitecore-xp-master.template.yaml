@@ -34,9 +34,13 @@ Metadata:
           - CDMaxSize
           - CDDesiredCapacity
           - CDInstanceType
+          - CDScalingMetric
+          - CDScalingMetricValue
           - CMMinSize
           - CMMaxSize
           - CMInstanceType
+          - CMScalingMetric
+          - CMScalingMetricValue
           - SitecoreKeyPair
           - SitecorePrefix
           - SitecoreS3Bucket
@@ -106,7 +110,7 @@ Metadata:
       CDDNSName:
         default: DNS name for Content Delivery Role
       CMDNSName:
-        default: DNS name for Content Managment Role
+        default: DNS name for Content Management Role
       ISDNSName:
         default: DNS name for Identity Server Role
       IntDNS:
@@ -119,12 +123,20 @@ Metadata:
         default: The current number of desired Content Delivery instances # Currently applied to all instances
       CDInstanceType:
         default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
+      CDScalingMetric:
+        default: The metric used to determine scalling of the Content Delivery role
+      CDScalingMetricValue:
+        default: The metric value used to determine scalling of the Content Delivery role
       CMMinSize:
         default: Min number of Content Management instance
       CMMaxSize:
         default: Max number of Content Management instance
       CMInstanceType:
-        default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
+        default: The instance type to be used for the Content Management instances
+      CMScalingMetric:
+        default: The metric used to determine scalling of the Content Management role
+      CMScalingMetricValue:
+        default: The metric value used to determine scalling of the Content Management role
       SitecoreKeyPair:
         default: EC2 Key Pair for Sitecore instances
       SitecorePrefix:
@@ -333,6 +345,18 @@ Parameters:
     Default: m4.large
     Description: Web server instance type (this currently applies to ALL roles)
     Type: String
+  CDScalingMetric:
+    Description: The metric used to determine scalling of the Content Delivery role
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+    Type: String
+  CDScalingMetricValue:
+    Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes)
+    Default: 300
+    Type: Number
   CMMinSize:
     Type: Number
     Default: 1
@@ -375,6 +399,18 @@ Parameters:
     Default: m4.large
     Description: Web server instance type for the Content Management role
     Type: String
+  CMScalingMetric:
+    Description: The metric used to determine scalling of the Content Management role
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+    Type: String
+  CMScalingMetricValue:
+    Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes)
+    Default: 300
+    Type: Number
   SitecoreKeyPair:
     Type: AWS::EC2::KeyPair::KeyName
     Description: The EC2 Key Pair to use with the Sitecore instances
@@ -601,9 +637,13 @@ Resources:
         CDMaxSize: !Ref CDMaxSize
         CDDesiredCapacity: !Ref CDDesiredCapacity
         CDInstanceType: !Ref CDInstanceType
+        CDScalingMetric: !Ref CDScalingMetric
+        CDScalingMetricValue: !Ref CDScalingMetricValue
         CMMinSize: !Ref CMMinSize
         CMMaxSize: !Ref CMMaxSize
         CMInstanceType: !Ref CMInstanceType
+        CMScalingMetric: !Ref CMScalingMetric
+        CMScalingMetricValue: !Ref CMScalingMetricValue
         SitecoreKeyPair: !Ref SitecoreKeyPair
         SitecorePrefix: !Ref SitecorePrefix
         SitecoreS3Bucket: !Ref SitecoreS3Bucket

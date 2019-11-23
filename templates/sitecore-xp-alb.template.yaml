@@ -23,6 +23,16 @@ Parameters:
     Type: String
   CDInstanceType: 
     Type: String
+  CDScalingMetric:
+    Type: String
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+  CDScalingMetricValue:
+    Type: String
+    Default: 5
   CMInstanceType:
     Type: String
   CMMinSize: 
@@ -31,6 +41,16 @@ Parameters:
     Type: String
   CMDesiredCapacity: 
     Type: String
+  CMScalingMetric:
+    Type: String
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+  CMScalingMetricValue:
+    Type: String
+    Default: 5
   SitecoreInstanceSG: 
     Type: AWS::EC2::SecurityGroup::Id
   SCInstanceProfile: 
@@ -442,13 +462,25 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\sc.CD\Web.config" -StackName '
+            - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\'
+            - !Sub '{{resolve:ssm:/${RootStackName}user/sitecoreprefix:1}}.CD\Web.config" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\sc.CD\App_Config\ConnectionStrings.config" -StackName '
+            - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\'
+            - !Sub '{{resolve:ssm:/${RootStackName}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
             - "</powershell>\n"
+  CDScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ContentDeliveryASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: !Ref CDScalingMetric
+        TargetValue: !Ref CDScalingMetricValue
   ContentManagementASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -493,6 +525,16 @@ Resources:
             - !Sub '"${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
+  CMScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ContentManagementASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: !Ref CMScalingMetric
+        TargetValue: !Ref CMScalingMetricValue
   CollectionASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
