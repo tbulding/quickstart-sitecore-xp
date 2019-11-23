@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param (
-    [string]$filepath
+    [string]$filepath,
+    [string]$StackName
 )
 #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
 $xml = New-Object -TypeName xml

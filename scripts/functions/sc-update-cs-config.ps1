@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param (
     [string]$filepath,
-    [string] $StackName
+    [string]$StackName
 )
 
 $connectionString = (Get-SSMParameter -Name "/$StackName/redis/url").Value
