@@ -29,14 +29,14 @@ Parameters:
   TargetAmiName:
     Type: String
 Resources:
-  BuildEC2instance: 
+  BuildEC2instance:
     DependsOn: SitecoreSsmAMIBuild
     Type: AWS::EC2::Instance
     CreationPolicy: # This is to stop CFN from showing the instance as completed. The success signal is sent from SSM
       ResourceSignal:
         Timeout: PT70M
         Count: 1
-    Properties: 
+    Properties:
       ImageId: !Ref ImageID
       KeyName: !Ref SitecoreKeyPair
       IamInstanceProfile: !Ref IamInstanceProfile
@@ -48,14 +48,14 @@ Resources:
           Value: !Sub AMI-${RootStackName}
       UserData: !Base64
         Fn::Join:
-          - ''
+          - ""
           - - "<powershell>\n"
-            - '$path = '
+            - "$path = "
             - !Sub '"${LocalQSScripts}"'
             - "\n"
-            - 'if (Test-Path $path) { }'
+            - "if (Test-Path $path) { }"
             - "\n"
-            - 'else { Start-SSMAutomationExecution -DocumentName '
+            - "else { Start-SSMAutomationExecution -DocumentName "
             - !Sub '"${SitecoreSsmAMIBuild}" }'
             - "\n"
             - "</powershell>\n"
@@ -114,15 +114,15 @@ Resources:
             inputs:
               Service: ec2
               Api: DescribeInstances
-              Filters:  
-              - Name: "tag:Name"
-                Values: [ "{{SCAMIServer}}" ]
-              - Name: "instance-state-name"
-                Values: [ "running" ]
+              Filters:
+                - Name: "tag:Name"
+                  Values: ["{{SCAMIServer}}"]
+                - Name: "instance-state-name"
+                  Values: ["running"]
             outputs:
-            - Name: InstanceId
-              Selector: "$.Reservations[0].Instances[0].InstanceId"
-              Type: "String"
+              - Name: InstanceId
+                Selector: "$.Reservations[0].Instances[0].InstanceId"
+                Type: "String"
           - name: PrepInstance
             action: aws:runCommand
             onFailure: "step:signalfailure"
@@ -137,6 +137,7 @@ Resources:
                 commands:
                   - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/install/" -Folder "{{ScriptsLocalPath}}"'
                   - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/functions/" -Folder "{{ScriptsLocalPath}}"'
+                  - 'Read-S3Object -BucketName {{SitecoreRegion}} -Key latest/codedeploy-agent.msi -File "{{ScriptsLocalPath}}\codedeploy-agent.msi"'
                   # - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/install/sc-bootstrap.ps1" -File "{{ScriptsLocalPath}}\sc-bootstrap.ps1"'
                   # - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/install/sc-install-resources.ps1" -File "{{ScriptsLocalPath}}\sc-install-resources.ps1"'
                   # - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-update-zips.ps1" -File "{{ScriptsLocalPath}}\sc-update-zips.ps1"'
@@ -148,6 +149,7 @@ Resources:
                   - '& "{{ScriptsLocalPath}}\sc-new-certs.ps1" -stackName {{rootStackName}}'
                   - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -stackName {{rootStackName}} -QSS3BucketName {{QSS3BucketName}} -QSS3KeyPrefix {{QSS3KeyPrefix}}'
                   - '& "{{ScriptsLocalPath}}\sc-update-zips.ps1" -pathToZips {{scResourcesPath}}'
+                  - '"{{ScriptsLocalPath}}\codedeploy-agent.msi" /quiet /l "{{ScriptsLocalPath}}\codedeploy-agent.log"'
                   - Main
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
@@ -163,7 +165,7 @@ Resources:
               InstanceIds:
                 - "{{SCInstanceIds.InstanceId}}"
               Parameters:
-                allowDowngrade: 'false'
+                allowDowngrade: "false"
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
                 CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-UpdateSSMAgent"
@@ -210,7 +212,7 @@ Resources:
               InstanceIds:
                 - "{{SCInstanceIds.InstanceId}}"
               Parameters:
-                Id: '{{automation:EXECUTION_ID}}'
+                Id: "{{automation:EXECUTION_ID}}"
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
                 CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-RunSysprepGeneralize"
@@ -233,13 +235,13 @@ Resources:
             nextStep: "writeCustomAmiId"
             inputs:
               InstanceId: "{{SCInstanceIds.InstanceId}}"
-              ImageName: '{{ TargetAmiName }}'
+              ImageName: "{{ TargetAmiName }}"
               NoReboot: true
               ImageDescription: Test CreateImage Description
             outputs:
-            - Name: CustomAmiId
-              Selector: "ImageId"
-              Type: "String"
+              - Name: CustomAmiId
+                Selector: "ImageId"
+                Type: "String"
           # Write the custom AMI ID to param store. This is for use in the ALB template.
           - name: "writeCustomAmiId"
             action: "aws:executeAwsApi"
@@ -286,9 +288,9 @@ Resources:
               Api: DescribeDBInstances
               DBInstanceIdentifier: "{{RdsDbIdentifier}}"
             outputs:
-            - Type: "String"
-              Name: "RdsUrl"
-              Selector: "$.DBInstances[0].Endpoint.Address"
+              - Type: "String"
+                Name: "RdsUrl"
+                Selector: "$.DBInstances[0].Endpoint.Address"
           # Add Param for SQL URL
           - name: AddRdsSqltoSsm
             action: aws:executeAwsApi
@@ -354,6 +356,6 @@ Resources:
               Status: FAILURE
               UniqueId: "{{SCInstanceIds.InstanceId}}"
         outputs:
-        - SCInstanceIds.InstanceId
-        - CreateImage.CustomAmiId
-        - GetRdsUrl.RdsUrl
+          - SCInstanceIds.InstanceId
+          - CreateImage.CustomAmiId
+          - GetRdsUrl.RdsUrl
