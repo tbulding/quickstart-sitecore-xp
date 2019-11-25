@@ -1,2 +1,9 @@
 taskcat_outputs/*
 maint/*
+*project_override*
+*dub.json
+*ireland.yml
+*frankfurt.json
+*frankfurt.yml
+*n-virginia.json
+*n-virginia.yml
