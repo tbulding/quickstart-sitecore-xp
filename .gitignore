@@ -7,3 +7,4 @@ ci/taskcat-ireland.yml
 ci/taskcat-frankfurt.yml
 *n-virginia.json
 ci/taskcat-n-virginia.yml
+.vscode/settings.json
