@@ -12,7 +12,7 @@ project:
     AdminUser: StackAdmin
     AdminPassword: "$[taskcat_genpass_16]"
     DomainDNSName: example.com
-    NumberOfRDGWHosts: '1'
+    NumberOfRDGWHosts: 1
     RDGWInstanceType: t2.large
     RDGWCIDR: 0.0.0.0/0
     KeyPairName: override
@@ -20,24 +20,24 @@ project:
     CMDNSName: 'sc-tb-cm.dylanowe.myinstance.com'
     ISDNSName: 'sc-tb-id.dylanowe.myinstance.com'
     IntDNS: ''
-    CDMinSize: '1'
-    CDMaxSize: '1'
-    CDDesiredCapacity: '1'
+    CDMinSize: 1
+    CDMaxSize: 1
+    CDDesiredCapacity: 1
     CDInstanceType: m4.large
     CDScalingMetric: ASGAverageCPUUtilization
-    CDScalingMetricValue: '50'
-    CMMinSize: override
-    CMMaxSize: override
-    CMInstanceType: override
+    CDScalingMetricValue: 50
+    CMMinSize: 1
+    CMMaxSize: 1
+    CMInstanceType: m4.large
     CMScalingMetric: ASGAverageCPUUtilization
-    CMScalingMetricValue: '50'
+    CMScalingMetricValue: 50
     SitecoreKeyPair: override
     SitecorePrefix: sc
     SitecoreS3Bucket: yourbucket
     SCResourcesPrefix: resources/
     SCLicensePrefix: license/
     SOLRCorePrefix: scsolr
-    SOLRUrl: 
+    SOLRUrl: 'https://ss777029-b4xtdrfm-us-east-1-aws.searchstax.com/solr/'
     EnvironmentType: Production
     SCLogLevel: Information
     CorsOrigins: replace
@@ -47,18 +47,18 @@ project:
     DBAutoMinorVersionUpgrade: 'false'
     SQLEngineEdition: sqlserver-se
     SQLEngineVersion: 14.00.3192.2.v1
-    VolumeSize: '500'
+    VolumeSize: 500
     VolumeType: gp2
-    BackupRetentionPeriod: '1'
+    BackupRetentionPeriod: 1
     QSS3BucketName: "$[taskcat_autobucket]"
     QSS3KeyPrefix: quickstart-sitecore-xp/
-    ExternalCertificateARN: arn:aws:acm:us-east-1:503759272940:certificate/2b20afde-33b7-411e-8afc-216c912c3d10
+    ExternalCertificateARN: 'override'
     CacheNodeType: cache.m3.large
-    RedisPort: '6379'
+    RedisPort: 6379
     EmailNotifications: user@example.com
     LambdaZipsBucketName: ''
 tests:
-  ohio:
+  virginia:
     template: ./templates/sitecore-xp-master.template.yaml
     regions:
-      - us-east-2
+      - us-east-1
