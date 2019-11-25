@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Creates the AMI"
+Description: "This template creates an SSM document and deploys an EC2 Instance. These are used for creation of the Sitecore AMI and for the deployment of the Sitecore databases to RDS MSSQL"
 Parameters:
   ImageID:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
@@ -28,16 +28,15 @@ Parameters:
     Default: c:\quickstart\scripts
   TargetAmiName:
     Type: String
-
 Resources:
-  BuildEC2instance: 
+  BuildEC2instance:
     DependsOn: SitecoreSsmAMIBuild
     Type: AWS::EC2::Instance
     CreationPolicy: # This is to stop CFN from showing the instance as completed. The success signal is sent from SSM
       ResourceSignal:
         Timeout: PT70M
         Count: 1
-    Properties: 
+    Properties:
       ImageId: !Ref ImageID
       KeyName: !Ref SitecoreKeyPair
       IamInstanceProfile: !Ref IamInstanceProfile
@@ -49,14 +48,14 @@ Resources:
           Value: !Sub AMI-${RootStackName}
       UserData: !Base64
         Fn::Join:
-          - ''
+          - ""
           - - "<powershell>\n"
-            - '$path = '
+            - "$path = "
             - !Sub '"${LocalQSScripts}"'
             - "\n"
-            - 'if (Test-Path $path) { }'
+            - "if (Test-Path $path) { }"
             - "\n"
-            - 'else { Start-SSMAutomationExecution -DocumentName '
+            - "else { Start-SSMAutomationExecution -DocumentName "
             - !Sub '"${SitecoreSsmAMIBuild}" }'
             - "\n"
             - "</powershell>\n"
@@ -115,15 +114,15 @@ Resources:
             inputs:
               Service: ec2
               Api: DescribeInstances
-              Filters:  
-              - Name: "tag:Name"
-                Values: [ "{{SCAMIServer}}" ]
-              - Name: "instance-state-name"
-                Values: [ "running" ]
+              Filters:
+                - Name: "tag:Name"
+                  Values: ["{{SCAMIServer}}"]
+                - Name: "instance-state-name"
+                  Values: ["running"]
             outputs:
-            - Name: InstanceId
-              Selector: "$.Reservations[0].Instances[0].InstanceId"
-              Type: "String"
+              - Name: InstanceId
+                Selector: "$.Reservations[0].Instances[0].InstanceId"
+                Type: "String"
           - name: PrepInstance
             action: aws:runCommand
             onFailure: "step:signalfailure"
@@ -136,16 +135,13 @@ Resources:
                 - "{{SCInstanceIds.InstanceId}}"
               Parameters:
                 commands:
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/install/sc-bootstrap.ps1" -File "{{ScriptsLocalPath}}\sc-bootstrap.ps1"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/install/sc-install-resources.ps1" -File "{{ScriptsLocalPath}}\sc-install-resources.ps1"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-update-zips.ps1" -File "{{ScriptsLocalPath}}\sc-update-zips.ps1"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-new-certs.ps1" -File "{{ScriptsLocalPath}}\sc-new-certs.ps1"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-role-prep.ps1" -File "{{ScriptsLocalPath}}\sc-role-prep.ps1"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-update-web-config.ps1" -File "{{ScriptsLocalPath}}\sc-update-web-config.ps1"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Key "/{{QSS3KeyPrefix}}scripts/functions/sc-update-cs-config.ps1" -File "{{ScriptsLocalPath}}\sc-update-cs-config.ps1"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/install/" -Folder "{{ScriptsLocalPath}}"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/functions/" -Folder "{{ScriptsLocalPath}}"'
+                  - 'Read-S3Object -BucketName {{SitecoreRegion}} -Key latest/codedeploy-agent.msi -File "{{ScriptsLocalPath}}\codedeploy-agent.msi"'
                   - '& "{{ScriptsLocalPath}}\sc-new-certs.ps1" -stackName {{rootStackName}}'
                   - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -stackName {{rootStackName}} -QSS3BucketName {{QSS3BucketName}} -QSS3KeyPrefix {{QSS3KeyPrefix}}'
                   - '& "{{ScriptsLocalPath}}\sc-update-zips.ps1" -pathToZips {{scResourcesPath}}'
+                  - '"{{ScriptsLocalPath}}\codedeploy-agent.msi" /quiet /l "{{ScriptsLocalPath}}\codedeploy-agent.log"'
                   - Main
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
@@ -161,7 +157,7 @@ Resources:
               InstanceIds:
                 - "{{SCInstanceIds.InstanceId}}"
               Parameters:
-                allowDowngrade: 'false'
+                allowDowngrade: "false"
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
                 CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-UpdateSSMAgent"
@@ -208,7 +204,7 @@ Resources:
               InstanceIds:
                 - "{{SCInstanceIds.InstanceId}}"
               Parameters:
-                Id: '{{automation:EXECUTION_ID}}'
+                Id: "{{automation:EXECUTION_ID}}"
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
                 CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-RunSysprepGeneralize"
@@ -231,13 +227,13 @@ Resources:
             nextStep: "writeCustomAmiId"
             inputs:
               InstanceId: "{{SCInstanceIds.InstanceId}}"
-              ImageName: '{{ TargetAmiName }}'
+              ImageName: "{{ TargetAmiName }}"
               NoReboot: true
               ImageDescription: Test CreateImage Description
             outputs:
-            - Name: CustomAmiId
-              Selector: "ImageId"
-              Type: "String"
+              - Name: CustomAmiId
+                Selector: "ImageId"
+                Type: "String"
           # Write the custom AMI ID to param store. This is for use in the ALB template.
           - name: "writeCustomAmiId"
             action: "aws:executeAwsApi"
@@ -284,9 +280,9 @@ Resources:
               Api: DescribeDBInstances
               DBInstanceIdentifier: "{{RdsDbIdentifier}}"
             outputs:
-            - Type: "String"
-              Name: "RdsUrl"
-              Selector: "$.DBInstances[0].Endpoint.Address"
+              - Type: "String"
+                Name: "RdsUrl"
+                Selector: "$.DBInstances[0].Endpoint.Address"
           # Add Param for SQL URL
           - name: AddRdsSqltoSsm
             action: aws:executeAwsApi
@@ -304,7 +300,7 @@ Resources:
             action: aws:runCommand
             maxAttempts: 3
             onFailure: "step:signalfailure"
-            nextStep: "signalsuccess"
+            nextStep: "FinalStopInstance"
             timeoutSeconds: 7200
             inputs:
               DocumentName: AWS-RunPowerShellScript
@@ -319,6 +315,17 @@ Resources:
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
                 CloudWatchLogGroupName: "{{CloudwatchLogGroup}}-DeployDatabases"
+          - name: FinalStopInstance
+            action: aws:changeInstanceState
+            maxAttempts: 3
+            timeoutSeconds: 7200
+            onFailure: "step:signalfailure"
+            nextStep: "signalsuccess"
+            inputs:
+              InstanceIds:
+                - "{{SCInstanceIds.InstanceId}}"
+              CheckStateOnly: false
+              DesiredState: stopped
           # If all steps complete successfully signals CFN of Success
           - name: "signalsuccess"
             action: "aws:executeAwsApi"
@@ -341,6 +348,6 @@ Resources:
               Status: FAILURE
               UniqueId: "{{SCInstanceIds.InstanceId}}"
         outputs:
-        - SCInstanceIds.InstanceId
-        - CreateImage.CustomAmiId
-        - GetRdsUrl.RdsUrl
+          - SCInstanceIds.InstanceId
+          - CreateImage.CustomAmiId
+          - GetRdsUrl.RdsUrl

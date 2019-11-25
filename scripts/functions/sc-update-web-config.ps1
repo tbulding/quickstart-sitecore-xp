@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param (
-    [string]$filepath
+    [string]$filepath,
+    [string]$StackName
 )
 #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
 $xml = New-Object -TypeName xml
@@ -28,4 +29,18 @@ $add.SetAttribute("applicationName", "private")
 $providers.AppendChild($add)
 $sessionState.AppendChild($providers)
 $xml.configuration.'system.web'.AppendChild($sessionState)
+$xml.Save($filepath)
+$sessionState.AppendChild($providers)
+$out = ($xml.configuration.'system.web'.AppendChild($sessionState)*>&1 | Out-String) 
+
+#region  logging
+$parms = @{
+    logGroupName  = "$StackName-CD"
+    LogStreamName = "update-web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+    LogString     = $out
+}
+$scriptPath = Split-Path $MyInvocation.MyCommand.Path
+& "$scriptPath\sc-write-logsentry.ps1" @parms
+#endregion
+
 $xml.Save($filepath)

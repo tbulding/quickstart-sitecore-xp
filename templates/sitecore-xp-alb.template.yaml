@@ -1,13 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Deploys the ASG's, TG's for the ALB's which are required for the AWS Sitecore Quick Start"
+Description: "Deploys the Auto Scaling Groups, Target Groups, Listners and rules for the Load balancers. These launch the instances for the Sitecore roles"
 Parameters:
   PrivateSubnet1A: 
     Type: String
   PrivateSubnet2A: 
-    Type: String
-  PublicSubnet1:
-    Type: String
-  PublicSubnet2:
     Type: String
   VPCID: 
     Type: String
@@ -25,15 +21,19 @@ Parameters:
     Type: String
   CDDesiredCapacity: 
     Type: String
-  RootStackName: 
+  CDInstanceType: 
     Type: String
-  SitecoreInstanceType: 
+  CDScalingMetric:
     Type: String
-  SitecoreInstanceSG: 
-    Type: AWS::EC2::SecurityGroup::Id
-  SCInstanceProfile: 
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+  CDScalingMetricValue:
     Type: String
-  SitecoreKeyPair: 
+    Default: 5
+  CMInstanceType:
     Type: String
   CMMinSize: 
     Type: String
@@ -41,7 +41,31 @@ Parameters:
     Type: String
   CMDesiredCapacity: 
     Type: String
-
+  CMScalingMetric:
+    Type: String
+    Default: ASGAverageCPUUtilization
+    AllowedValues:
+      - ASGAverageCPUUtilization 
+      - ASGAverageNetworkIn 
+      - ALBRequestCountPerTarget 
+  CMScalingMetricValue:
+    Type: String
+    Default: 5
+  SitecoreInstanceSG: 
+    Type: AWS::EC2::SecurityGroup::Id
+  SCInstanceProfile: 
+    Type: String
+  SitecoreKeyPair: 
+    Type: String
+  IntDNS:
+    Type: String
+  AutoscalingSNS:
+    Type: String
+  LocalQSScripts:
+    Type: String
+  RootStackName: 
+    Type: String
+  
 Resources:
 #--- Internal ALB Config ---#
   HTTPSListenerInternal:
@@ -51,7 +75,7 @@ Resources:
         - CertificateArn: !Ref InternalCertificateARN
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref ISIntTargetGroup
+          TargetGroupArn: !Ref RepIntTargetGroup
       LoadBalancerArn: !Ref LoadBalancerInternal
       Port: 443
       Protocol: HTTPS
@@ -116,16 +140,16 @@ Resources:
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
-  ISIntTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
-      Name: Int-IdentityServer
-      Port: 443
-      Protocol: HTTPS
-      TargetType: instance
-      VpcId: !Ref VPCID
+  # ISIntTargetGroup:
+  #   Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  #   Properties:
+  #     HealthCheckPort: '80'
+  #     HealthCheckProtocol: HTTP
+  #     Name: Int-IdentityServer
+  #     Port: 443
+  #     Protocol: HTTPS
+  #     TargetType: instance
+  #     VpcId: !Ref VPCID
   MAIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -189,18 +213,18 @@ Resources:
   #           - !Sub contentmgmt.${AWS::Region}.sitecore.internal
   #     ListenerArn: !Ref HTTPSListenerInternal
   #     Priority: 1
-  HTTPSListenerInternalRule2:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref ISIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub identity.${AWS::Region}.sitecore.internal
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 2
+  # HTTPSListenerInternalRule2:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref ISIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub identity.${AWS::Region}.sitecore.internal
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 2
   HTTPSListenerInternalRule3:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -210,7 +234,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub refdata.${AWS::Region}.sitecore.internal
+            # - !Sub refdata.${AWS::Region}.sitecore.internal
+            - !Sub refdata.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 3
   HTTPSListenerInternalRule4:
@@ -222,7 +247,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub mktauto.${AWS::Region}.sitecore.internal
+            # - !Sub mktauto.${AWS::Region}.sitecore.internal
+            - !Sub mktauto.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 4
   HTTPSListenerInternalRule5:
@@ -234,7 +260,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub mktautorep.${AWS::Region}.sitecore.internal
+            # - !Sub mktautorep.${AWS::Region}.sitecore.internal
+            - !Sub mktautorep.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 5
   HTTPSListenerInternalRule6:
@@ -246,7 +273,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub cortexproc.${AWS::Region}.sitecore.internal
+            # - !Sub cortexproc.${AWS::Region}.sitecore.internal
+            - !Sub cortexproc.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 6
   HTTPSListenerInternalRule7:
@@ -258,7 +286,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub cortexrep.${AWS::Region}.sitecore.internal
+            # - !Sub cortexrep.${AWS::Region}.sitecore.internal
+            - !Sub cortexrep.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 7
   HTTPSListenerInternalRule8:
@@ -270,7 +299,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub proc.${AWS::Region}.sitecore.internal
+            # - !Sub proc.${AWS::Region}.sitecore.internal
+            - !Sub proc.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 8
   HTTPSListenerInternalRule9:
@@ -282,7 +312,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub rep.${AWS::Region}.sitecore.internal
+            # - !Sub rep.${AWS::Region}.sitecore.internal
+            - !Sub rep.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 9
   HTTPSListenerInternalRule10:
@@ -294,7 +325,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub coll.${AWS::Region}.sitecore.internal
+            # - !Sub coll.${AWS::Region}.sitecore.internal
+            - !Sub coll.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 10
   HTTPSListenerInternalRule11:
@@ -306,7 +338,8 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub collsearch.${AWS::Region}.sitecore.internal
+            # - !Sub collsearch.${AWS::Region}.sitecore.internal
+            - !Sub collsearch.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 11
 #--- External ALB Config ---#
@@ -324,7 +357,7 @@ Resources:
   HTTPListenerExternal:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      DefaultActions: #Redirect from 80 to 443
+      DefaultActions: 
         - Type: forward
           TargetGroupArn: !Ref CDExtTargetGroup
       LoadBalancerArn: !Ref LoadBalancerExternal
@@ -339,9 +372,21 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub contentmgmt.${AWS::Region}.sitecore.internal
+            - !Sub '{{resolve:ssm:/${RootStackName}/service/cmdns:1}}'
       ListenerArn: !Ref HTTPSListenerExternal
       Priority: 1
+  HTTPSListenerExternalRule2:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ISExtTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub '{{resolve:ssm:/${RootStackName}/service/isdns:1}}'
+      ListenerArn: !Ref HTTPSListenerExternal
+      Priority: 2
   #External Target Groups
   CDExtTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -363,6 +408,16 @@ Resources:
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+  ISExtTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Ext-Identity-Server
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
   #Create Auto Scaling Groups & Launch Configurations
   ContentDeliveryASG:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -376,6 +431,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CDExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub ContentDelivery-${RootStackName}
@@ -384,7 +446,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -393,14 +455,32 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CD" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CD" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CD" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CD" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\'
+            - !Sub '{{resolve:ssm:/${RootStackName}user/sitecoreprefix:1}}.CD\Web.config" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\'
+            - !Sub '{{resolve:ssm:/${RootStackName}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -StackName '
+            - !Sub '"${RootStackName}"'
+            - "\n"
             - "</powershell>\n"
+  CDScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ContentDeliveryASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: !Ref CDScalingMetric
+        TargetValue: !Ref CDScalingMetricValue
   ContentManagementASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -413,6 +493,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CMExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub ContentManagement-${RootStackName}
@@ -421,7 +508,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CMInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -430,14 +517,24 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CM" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CM" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CM" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CM" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
+  CMScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref ContentManagementASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: !Ref CMScalingMetric
+        TargetValue: !Ref CMScalingMetricValue
   CollectionASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -450,6 +547,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref ColIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Collection-${RootStackName}
@@ -458,7 +562,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -467,10 +571,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Collection" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Collection" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Collection" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Collection" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -487,6 +591,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CSIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub CollectionSearch-${RootStackName}
@@ -495,7 +606,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -504,10 +615,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CollectionSearch" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -524,6 +635,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CPIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub CortexProcessing-${RootStackName}
@@ -532,7 +650,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -541,10 +659,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexProcessing" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -561,6 +679,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref CRIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub CortexReporting-${RootStackName}
@@ -569,7 +694,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -578,10 +703,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexReporting" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -597,7 +722,15 @@ Resources:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
-        - !Ref ISIntTargetGroup
+        # - !Ref ISIntTargetGroup
+        - !Ref ISExtTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Identity-${RootStackName}
@@ -606,7 +739,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -615,10 +748,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "IdentityServer" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -635,6 +768,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref MAIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub MarketingAutomation-${RootStackName}
@@ -643,7 +783,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -652,10 +792,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomation" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -672,6 +812,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref MARIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub MarketingAutomationReporting-${RootStackName}
@@ -680,7 +827,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -689,10 +836,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -709,6 +856,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref PrcIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Processing-${RootStackName}
@@ -717,7 +871,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -726,10 +880,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Prc" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Prc" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Prc" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Prc" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -746,6 +900,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref RDIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub ReferenceData-${RootStackName}
@@ -754,7 +915,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -763,10 +924,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "ReferenceData" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -783,6 +944,13 @@ Resources:
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
         - !Ref RepIntTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Reporting-${RootStackName}
@@ -791,7 +959,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
-      InstanceType: !Ref SitecoreInstanceType
+      InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -800,10 +968,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - 'c:\quickstart\scripts\sc-role-prep.ps1 -Role "Rep" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Rep" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
-            - 'c:\quickstart\scripts\sc-install-resources.ps1 -Role "Rep" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Rep" -StackName '
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"

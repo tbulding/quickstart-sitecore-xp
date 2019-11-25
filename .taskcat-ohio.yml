@@ -46,6 +46,7 @@ project:
     CMDNSName: sitecore.cn.internal.test
     ISDNSName: sitecore.id.internal.test
     IntDNS: sitecore.internal.test
+    EmailNotifications: operator@example.com
 tests:
   ohio:
     template: ./templates/sitecore-xp-master.template.yaml

@@ -41,6 +41,11 @@ project:
     QSS3BucketName: "$[taskcat_autobucket]"
     QSS3KeyPrefix: quickstart-sitecore-xp/
     ExternalCertificateARN: arn:aws:acm:your cert arn
+    CDDNSName: sitecore.cd.internal.test
+    CMDNSName: sitecore.cn.internal.test
+    ISDNSName: sitecore.id.internal.test
+    IntDNS: sitecore.internal.test
+    EmailNotifications: operator@example.com
 tests:
   default:
     template: ./templates/sitecore-xp-master.template.yaml

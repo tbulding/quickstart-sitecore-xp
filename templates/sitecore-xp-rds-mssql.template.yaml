@@ -1,6 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Sitecore core RDS MSSQL deployment"
+Description: "This template deploys RDS with MS SQL and its corresponding Parameter and Subnet Groups, along with ElastiCache for Redis and its corresponding Subnet Group."
 Parameters:
+# RDS Parameters
   DBAutoMinorVersionUpgrade: 
     Type: String
   PubliclyAccessible: 
@@ -26,7 +27,7 @@ Parameters:
     Type: List<String>
   VolumeType:
     Type: String
-  # Redis parameters
+# Redis parameters
   RedisSecurityGroup:
     Type: AWS::EC2::SecurityGroup::Id
   CacheNodeType:
@@ -37,7 +38,7 @@ Parameters:
     Type: Number
   RedisPort:
     Type: Number
-  # General parameters
+# General parameters
   PrivateSubnet1AID:
     Type: AWS::EC2::Subnet::Id
   PrivateSubnet2AID:
@@ -95,7 +96,6 @@ Resources:
       DBParameterGroupName: !Ref RDSParameterGroup
       DBInstanceIdentifier: !Sub sc-${RootStackName}
       StorageType: !If [DBProvisionedIops, io1, gp2]
-
 # Redis Configuration for the Content Delivery role
   RedisCD:
     Type: AWS::ElastiCache::CacheCluster
@@ -114,18 +114,18 @@ Resources:
       SubnetIds:
         - !Ref PrivateSubnet1AID
         - !Ref PrivateSubnet2AID
-
+# Adding Redis output to Parameter Store for CD Role reference
+  RedisURLParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${RootStackName}/redis/url
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !Sub "${RedisCD.RedisEndpoint.Address}:${RedisCD.RedisEndpoint.Port}"
 Outputs:
   RDSSQLEndpoint:
     Description: Database endpoint
     Value: !Sub "${RDSSQL.Endpoint.Address}:${RDSSQL.Endpoint.Port}"
   CDRedisEndpoint:
     Description: The Redis primary endpoint location for the Content Delivery role
-    Value: !GetAtt 
-            - RedisCD
-            - RedisEndpoint.Address
-  CDRedisPort:
-    Description: The Redis port for the Content Delivery role
-    Value: !GetAtt 
-            - RedisCD
-            - RedisEndpoint.Port
+    Value: !Sub "${RedisCD.RedisEndpoint.Address}:${RedisCD.RedisEndpoint.Port}"
