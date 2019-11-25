@@ -63,7 +63,6 @@
         "ParameterKey": "ISDNSName",
         "ParameterValue": "1"
     },
-    
     {
         "ParameterKey": "IntDNS",
         "ParameterValue": "1"
@@ -85,6 +84,14 @@
         "ParameterValue": "m4.large"
     },
     {
+        "ParameterKey": "CDScalingMetric",
+        "ParameterValue": "ASGAverageCPUUtilization"
+    },
+    {
+        "ParameterKey": "CDScalingMetricValue",
+        "ParameterValue": "50"
+    },
+    {
         "ParameterKey": "CMMinSize",
         "ParameterValue": "override"
     },
@@ -95,6 +102,14 @@
     {
         "ParameterKey": "CMInstanceType",
         "ParameterValue": "override"
+    },
+    {
+        "ParameterKey": "CMScalingMetric",
+        "ParameterValue": "ASGAverageCPUUtilization"
+    },
+    {
+        "ParameterKey": "CMScalingMetricValue",
+        "ParameterValue": "50"
     },
     {
         "ParameterKey": "SitecoreKeyPair",
@@ -191,5 +206,13 @@
     {
         "ParameterKey": "RedisPort",
         "ParameterValue": "6379"
+    },
+    {
+        "ParameterKey": "EmailNotifications",
+        "ParameterValue": "user@example.com"
+    },
+    {
+        "ParameterKey": "LambdaZipsBucketName",
+        "ParameterValue": ""
     }
 ]
