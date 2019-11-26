@@ -1,0 +1,23 @@
+project:
+  name: quickstart-sitecore-xp
+  regions:
+    - us-east-1
+  parameters:
+    ImageID: "ami-08b11fc5bd2026dee"
+    SitecoreKeyPair: "override"
+    PrivateSubnet1A: "subnet-023aad887ceea9acd"
+    SecurityGroupIds: "sg-016a15c7eb6200ea8"
+    InstanceType: "t2.large"
+    IamInstanceProfile: "tCaT-quickstart-sitecore-xp-virginia-821a8e4c424f42a08c7b9737429f88c8-SCInstanceProfile-JJ608JU7HU7C"
+    RootStackName: "myroot"
+    AutomationAssumeRole: "arn:aws:iam::503759272940:role/sc-tb-ssm-automation"
+    LocalPath: 'c:\resourcefiles'
+    QSS3BucketName: "tcat-quickstart-sitecore-xp-0y85ih2c"
+    QSS3KeyPrefix: "quickstart-sitecore-xp/"
+    LocalQSScripts: 'c:\quickstart\scripts'
+    TargetAmiName: "sc-tb-test-ami"
+tests:
+  virginia:
+    template: ./templates/sitecore-xp-ami.template.yaml
+    regions:
+      - us-east-1

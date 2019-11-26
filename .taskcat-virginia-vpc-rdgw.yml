@@ -1,0 +1,28 @@
+project:
+  name: quickstart-sitecore-xp
+  regions:
+    - us-east-1
+  parameters:
+    # Network Configuration
+    VPCCIDR: 10.0.0.0/16
+    PrivateSubnet1ACIDR: 10.0.0.0/19
+    PrivateSubnet2ACIDR: 10.0.32.0/19
+    PublicSubnet1CIDR: 10.0.128.0/20
+    PublicSubnet2CIDR: 10.0.144.0/20
+    AvailabilityZones: "$[taskcat_getaz_2]"
+    # RDGW Configuration
+    AdminUser: StackAdmin
+    AdminPassword: "$[taskcat_genpass_16]"
+    DomainDNSName: example.com
+    NumberOfRDGWHosts: 1
+    RDGWInstanceType: t2.large
+    RDGWCIDR: 0.0.0.0/0
+    KeyPairName: override
+    # AWS Quick Start Configuration
+    QSS3BucketName: "$[taskcat_autobucket]"
+    QSS3KeyPrefix: quickstart-sitecore-xp/
+tests:
+  virginia:
+    template: ./templates/sitecore-xp-vpc-rdgw.yaml
+    regions:
+      - us-east-1
