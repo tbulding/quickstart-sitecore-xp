@@ -13,58 +13,58 @@ Parameters:
     Type: String
 
 Resources:
-#Lambda IAM Policy
+  #Lambda IAM Policy
   ConvertCertificatesLambdaRole:
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service: lambda.amazonaws.com
-              Action: sts:AssumeRole
-        ManagedPolicyArns:
-          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        Policies:
-          - PolicyName: Get-Certificate-S3
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: s3:GetObject
-                  Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
-          - PolicyName: Import-Delete-ACM
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: 
-                    - acm:ImportCertificate
-                    - acm:DeleteCertificate
-                  Resource: '*'
-          - PolicyName: Get-Secret-Value
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: secretsmanager:GetSecretValue
-                  Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:*:secret:*'
-          - PolicyName: Put-Delete-SSM-Parameter
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: 
-                    - ssm:PutParameter
-                    - ssm:GetParameter
-                    - ssm:DeleteParameter
-                  Resource: !Sub 'arn:aws:ssm:${AWS::Region}:*:parameter/*'
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: Get-Certificate-S3
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
+        - PolicyName: Import-Delete-ACM
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - acm:ImportCertificate
+                  - acm:DeleteCertificate
+                Resource: "*"
+        - PolicyName: Get-Secret-Value
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:*:secret:*"
+        - PolicyName: Put-Delete-SSM-Parameter
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:PutParameter
+                  - ssm:GetParameter
+                  - ssm:DeleteParameter
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:*:parameter/*"
   CopyZipsRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -75,24 +75,24 @@ Resources:
       Policies:
         - PolicyName: lambda-copier
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
-                Resource: !Sub 'arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*'
-#Create IAM Role for Instances
+                Resource: !Sub "arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*"
+  #Create IAM Role for Instances
   SCInstanceRole:
-    Type: 'AWS::IAM::Role'
+    Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
         Statement:
           - Action:
-              - 'sts:AssumeRole'
+              - "sts:AssumeRole"
             Principal:
               Service:
                 - ec2.amazonaws.com
@@ -102,13 +102,11 @@ Resources:
       # ManagedPolicyArns:
       #   - !Ref SCInstancePolicy
       Policies:
-        - 
-          PolicyName: SCInstanceAccess
+        - PolicyName: SCInstanceAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - 
-                Effect: "Allow" ###################### This policy needs to be limited in scope ######################
+              - Effect: "Allow" ###################### This policy needs to be limited in scope ######################
                 Action: "*"
                 Resource: "*"
   SCInstanceProfile:
@@ -116,10 +114,31 @@ Resources:
     Properties:
       Roles:
         - !Ref SCInstanceRole
+  #Create IAM Role for SSM Automation
+  SCAutomationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+            Effect: Allow
+        Version: 2012-10-17
+      # ManagedPolicyArns:
+      #   - !Ref SCInstancePolicy
+      Policies:
+        - PolicyName: SCAutomationAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow" ###################### This policy needs to be limited in scope ######################
+                Action: "*"
+                Resource: "*"
 
-
-
-#Create Secrets Manager Resources
+  #Create Secrets Manager Resources
   SQLAdminUser: # Used for RDS Master user
     Type: AWS::SecretsManager::Secret
     Properties:
@@ -133,7 +152,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlMessagingUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlmessaging
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -145,7 +164,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlProcessingEngineUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlprocessingengine
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -157,7 +176,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlReportingUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlreporting
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -169,7 +188,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlCoreUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlcore
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -181,7 +200,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlSecurityUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlsecurity
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -193,7 +212,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlMasterUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlmaster
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -205,7 +224,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlWebUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlweb
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -217,7 +236,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlReferenceDataUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlreferencedata
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -229,7 +248,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlFormsUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlforms
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -241,7 +260,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlExmMasterUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlexmmaster
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -253,7 +272,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlProcessingPoolsUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlprocessingpools
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -265,7 +284,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlProcessingTasksUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlprocessingtasks
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -277,7 +296,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlCollectionUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlcollection
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -289,7 +308,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SqlMarketingAutomationUser: #Sitecore SQL DB User
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sqlmarketingautomation
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -301,7 +320,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   ReportingServiceAPIKey: ###########################################  ?????
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-reportingserviceapikey
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -312,7 +331,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   ClientSecret: ###########################################  ?????
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-clientsecret
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -323,7 +342,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SitecoreIdentitySecret: ###########################################  ?????
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sitecoreidentitysecret
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -334,7 +353,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   SitecoreAdminPassword: # Admin username and password for Sitecore
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-sitecoreadmin
       Description: Secrets for the Sitecore XP1 Quick Start
@@ -346,7 +365,7 @@ Resources:
         ExcludePunctuation: true
         IncludeSpace: false
   ExportCertPassword: # Password for the certificate Export
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
       Name: !Sub sitecore-quickstart-${RootStackName}-certpass
       Description: Secrets for the Sitecore XP1 Quick Start
