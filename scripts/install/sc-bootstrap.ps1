@@ -8,6 +8,7 @@ $logGroupName = "$stackName-ssm-bootstrap"
 $S3BucketName = (Get-SSMParameter -Name "/$stackName/user/s3bucket/name").Value # The bucket containing the Sitecore 9.2 install files and sitecore license.zip file
 $S3ScResourcesPrefix = (Get-SSMParameter -Name "/$stackName/user/s3bucket/scresourcesprefix").Value # The prefix where the install files are located
 $localPath = (Get-SSMParameter -Name "/$stackName/user/localresourcespath").Value # Path on the instance where the files will be located
+$qslocalPath = (Get-SSMParameter -Name "/$stackName/user/localqsresourcespath").Value # Path on the instance where the files will be located
 
 function Write-LogsEntry {
     [CmdletBinding()]
@@ -78,6 +79,15 @@ foreach ($file in $files) {
 $customjson = $QSS3KeyPrefix + "scripts/custom/"
 Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Initiating AWS Custom install JSON Role files download'
 Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString (Read-S3Object -BucketName $QSS3BucketName -KeyPrefix $customjson -Folder "$localpath\aws-custom")
+
+#Extract QuickStart MS Utilities
+Expand-Archive -LiteralPath "$qslocalPath\utilities\AWSQuickStart.zip" -DestinationPath "C:\Windows\system32\WindowsPowerShell\v1.0\Modules\" -Force -Verbose *>&1
+if ($? -eq 'true') {
+    Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Successfully extracted Quick Start Microsoft Utilities'
+    }
+else {
+    Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Failed to extracted Quick Start Microsoft Utilities'
+    }
 
 # Install NuGet provider
 Install-PackageProvider -Name NuGet -Force

@@ -421,6 +421,10 @@ Resources:
   #Create Auto Scaling Groups & Launch Configurations
   ContentDeliveryASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: !Ref CDDesiredCapacity
     Properties:
       LaunchConfigurationName: !Ref ContentDeliveryLC
       MaxSize: !Ref CDMinSize
@@ -470,6 +474,10 @@ Resources:
             - !Sub '{{resolve:ssm:/${RootStackName}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -StackName '
             - !Sub '"${RootStackName}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CD" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   CDScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -483,6 +491,10 @@ Resources:
         TargetValue: !Ref CDScalingMetricValue
   ContentManagementASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: !Ref CMDesiredCapacity
     Properties:
       LaunchConfigurationName: !Ref ContentManagementLC
       MaxSize: !Ref CMMinSize
@@ -524,6 +536,10 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CM" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   CMScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -537,6 +553,10 @@ Resources:
         TargetValue: !Ref CMScalingMetricValue
   CollectionASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref CollectionLC
       MaxSize: '1'
@@ -578,9 +598,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Collection" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   CollectionSearchASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref CollectionSearchLC
       MaxSize: '1'
@@ -622,9 +650,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   CortexProcessingASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref CortexProcessingLC
       MaxSize: '1'
@@ -666,9 +702,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   CortexReportingASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref CortexReportingLC
       MaxSize: '1'
@@ -710,9 +754,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   IdentityASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref IdentityLC
       MaxSize: '1'
@@ -755,9 +807,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   MarketingAutomationASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref MarketingAutomationLC
       MaxSize: '1'
@@ -799,9 +859,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   MarketingAutoRepASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref MarketingAutoRepLC
       MaxSize: '1'
@@ -843,9 +911,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   ProcessingASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref ProcessingLC
       MaxSize: '1'
@@ -887,9 +963,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Prc" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   ReferenceDataASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref ReferenceDataLC
       MaxSize: '1'
@@ -931,9 +1015,17 @@ Resources:
             - !Sub '"${RootStackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
             - "</powershell>\n"
   ReportingASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT10M
+        Count: 1
     Properties:
       LaunchConfigurationName: !Ref ReportingLC
       MaxSize: '1'
@@ -973,6 +1065,10 @@ Resources:
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Rep" -StackName '
             - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Rep" -StackName '
+            - !Sub '"${AWS::StackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - "</powershell>\n"
