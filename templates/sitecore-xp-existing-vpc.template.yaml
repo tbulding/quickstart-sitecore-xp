@@ -323,7 +323,7 @@ Parameters:
     Description: The EC2 Key Pair to use with the Sitecore instances
   SitecorePrefix: 
     Type: String
-    Description: The prefix to be used for the sitecore installation
+    Description: The prefix to be used for the sitecore installation. This is limited to 8 characters.
   SitecoreS3Bucket:
     Type: String
     Description: The name of the S3 Bucket where the Sitecore resources (instalation files, license file, etc.) reside.
@@ -816,6 +816,7 @@ Resources:
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         CopyZipsRoleArn: !GetAtt SecurityStack.Outputs.CopyZipsRoleArn
         ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
+        SitecorePrefix: !Ref SitecorePrefix
 
 # Custom Resource to convert and import Instance certificate, as it has the full chain
   CertConvertACM:
