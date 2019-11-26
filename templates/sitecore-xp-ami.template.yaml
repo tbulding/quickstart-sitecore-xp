@@ -139,11 +139,11 @@ Resources:
                   - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/functions/" -Folder "{{ScriptsLocalPath}}"'
                   - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}submodules/quickstart-microsoft-utilities/scripts/" -Folder "{{ScriptsLocalPath}}/utilities"'
                   - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}submodules/quickstart-microsoft-utilities/modules/" -Folder "{{ScriptsLocalPath}}/utilities"'
-                  - 'Read-S3Object -BucketName {{SitecoreRegion}} -Key latest/codedeploy-agent.msi -File "{{ScriptsLocalPath}}\codedeploy-agent.msi"'
+                  - 'Read-S3Object -BucketName "aws-codedeploy-{{SitecoreRegion}}" -Key latest/codedeploy-agent.msi -File "{{ScriptsLocalPath}}\codedeploy-agent.msi"'
                   - '& "{{ScriptsLocalPath}}\sc-new-certs.ps1" -stackName {{rootStackName}}'
                   - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -stackName {{rootStackName}} -QSS3BucketName {{QSS3BucketName}} -QSS3KeyPrefix {{QSS3KeyPrefix}}'
                   - '& "{{ScriptsLocalPath}}\sc-update-zips.ps1" -pathToZips {{scResourcesPath}}'
-                  - '& "{{ScriptsLocalPath}}\codedeploy-agent.msi" /quiet /l "{{ScriptsLocalPath}}\codedeploy-agent.log"'
+                  - '& "{{ScriptsLocalPath}}\codedeploy-agent.msi /quiet /l" "{{ScriptsLocalPath}}\codedeploy-agent.log"'
                   - Main
               CloudWatchOutputConfig:
                 CloudWatchOutputEnabled: "true"
