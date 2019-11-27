@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Deploys Sitecore"
+Description: "Deploys Sitecore into an existing VPC"
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -90,7 +90,7 @@ Metadata:
       ISDNSName:
         default: DNS name for Identity Server Role
       IntDNS:
-        default: Internal DNS name
+        default: '[OPTIONAL] Internal DNS suffix for the Sitecore installation'
       CDMinSize:
         default: Min number of Content Delivery instances # Currently applied to all instances
       CDMaxSize:
@@ -324,6 +324,9 @@ Parameters:
   SitecorePrefix: 
     Type: String
     Description: The prefix to be used for the sitecore installation. This is limited to 8 characters.
+    MinLength: 1
+    MaxLength: 8
+    AllowedPattern: ^[a-zA-Z0-9]*
   SitecoreS3Bucket:
     Type: String
     Description: The name of the S3 Bucket where the Sitecore resources (instalation files, license file, etc.) reside.
@@ -514,7 +517,7 @@ Resources:
   SitecoreInstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub Used for the Sitecore Instances - ${AWS::StackName}
+      GroupDescription: Used for the Sitecore Instances
       VpcId: !Ref VPCID
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -536,7 +539,7 @@ Resources:
     # DependsOn: SitecoreInstanceSG
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub Used for the Internal ALB - ${AWS::StackName}
+      GroupDescription: Used for the Internal ALB
       VpcId: !Ref VPCID
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -553,7 +556,7 @@ Resources:
     # DependsOn: SitecoreServerSG
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub Used for the External ALB - ${AWS::StackName}
+      GroupDescription: Used for the External ALB
       VpcId: !Ref VPCID
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -577,7 +580,7 @@ Resources:
   RedisSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub Used for the Redis ElastiCache cluster - ${AWS::StackName}
+      GroupDescription: Used for the Redis ElastiCache cluster
       VpcId: !Ref VPCID
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -614,14 +617,22 @@ Resources:
   InternalALBURL:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub /${AWS::StackName}/net/private/alb
+      Name: !Join #!Sub /${AWS::StackName}/net/private/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/private/alb'
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !GetAtt LoadBalancerInternal.DNSName
   ExternalALBURL:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub /${AWS::StackName}/net/public/alb
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/public/alb'
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !GetAtt LoadBalancerExternal.DNSName
@@ -730,19 +741,30 @@ Resources:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-security.template.yaml'
       Parameters:
         SitecoreS3Bucket: !Ref SitecoreS3Bucket
-        RootStackName: !Ref "AWS::StackName"
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         LambdaZipsBucketName: !If [ CreateLambdaZipsBucket, !Ref LambdaZipsBucket, !Ref LambdaZipsBucketName ]
+# Create lambda functions
+  FunctionsStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-functions.template.yaml'
+      Parameters:
+        LambdaZipsBucketName: !If [ CreateLambdaZipsBucket, !Ref LambdaZipsBucket, !Ref LambdaZipsBucketName ]
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        CopyZipsRoleArn: !GetAtt SecurityStack.Outputs.CopyZipsRoleArn
+        ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
+        SitecorePrefix: !Ref SitecorePrefix
 # Sitecore Parameter Store Stack
-  ParamStoreStack:
+  ParamStack:
     Type: AWS::CloudFormation::Stack
-    # DependsOn: LoadBalancerInternal
+    # DependsOn: LoadBalancerInternal; FunctionsStack
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-parameters.template.yaml'
       Parameters:
         # IntLBDNS: !GetAtt LoadBalancerInternal.DNSName
-        RootStackName: !Ref "AWS::StackName"
+        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         SCPrefix: !Ref SitecorePrefix
         SOLRCorePrefix: !Ref SOLRCorePrefix
         SOLRUrl: !Ref SOLRUrl
@@ -759,7 +781,7 @@ Resources:
 # Builds RDS MSSQL Database and ElastiCache Redis
   DBStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: SecurityStack # RDSsqlSG
+    DependsOn: [SecurityStack, ParamStack] # RDSsqlSG
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-rds-mssql.template.yaml'
       Parameters:
@@ -771,13 +793,11 @@ Resources:
         SQLEngineVersion: !Ref SQLEngineVersion
         DBAutoMinorVersionUpgrade:  !Ref DBAutoMinorVersionUpgrade
         BackupRetentionPeriod:  !Ref BackupRetentionPeriod
-        SQLMasterUserName: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${AWS::StackName}-sqladmin:SecretString:username}}'
-        SQLMasterUserPassword: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${AWS::StackName}-sqladmin:SecretString:password}}'
         RDSSecurityGroup: !Ref RDSsqlSG
         VolumeIops: !Ref VolumeIops
         VolumeSize: !Ref VolumeSize
         VolumeType: !Ref VolumeType
-        RootStackName: !Ref "AWS::StackName"
+        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         RedisSecurityGroup: !Ref RedisSG
         CacheNodeType: !Ref CacheNodeType
         Engine: 'redis'
@@ -787,7 +807,7 @@ Resources:
 # Sitecore AMI Build Stack
   CustomAMIStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn: [SecurityStack, ParamStoreStack]
+    #DependsOn: [SecurityStack, ParamStack]
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-ami.template.yaml'
       Parameters:
@@ -798,25 +818,12 @@ Resources:
         IamInstanceProfile: !GetAtt SecurityStack.Outputs.SCInstanceProfileName
         SecurityGroupIds: !Ref SitecoreInstanceSG
         InstanceType: "t2.large"
-        LocalPath: !GetAtt ParamStoreStack.Outputs.SCLocalResourcePath 
-        LocalQSScripts: !GetAtt ParamStoreStack.Outputs.QSLocalResourcePath  #'c:\quickstart\scripts'  # this needs to be updated to SSM  -- use a gettatt from parameter outputs for this.
-        RootStackName: !Ref "AWS::StackName"
-        TargetAmiName: !GetAtt ParamStoreStack.Outputs.CustomAmiName 
+        LocalPath: !GetAtt ParamStack.Outputs.SCLocalResourcePath 
+        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath  #'c:\quickstart\scripts'  # this needs to be updated to SSM  -- use a gettatt from parameter outputs for this.
+        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        TargetAmiName: !GetAtt ParamStack.Outputs.CustomAmiName 
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
-
-# Create lambda functions
-  FunctionsStack:
-    Type: "AWS::CloudFormation::Stack"
-    Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-functions.template.yaml'
-      Parameters:
-        LambdaZipsBucketName: !If [ CreateLambdaZipsBucket, !Ref LambdaZipsBucket, !Ref LambdaZipsBucketName ]
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        CopyZipsRoleArn: !GetAtt SecurityStack.Outputs.CopyZipsRoleArn
-        ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
-        SitecorePrefix: !Ref SitecorePrefix
 
 # Custom Resource to convert and import Instance certificate, as it has the full chain
   CertConvertACM:
@@ -825,9 +832,17 @@ Resources:
     Properties:
       ServiceToken: !GetAtt FunctionsStack.Outputs.ConvertCertificatesLambdaArn
       S3BucketName: !Ref SitecoreS3Bucket
-      S3ObjectPrefix: !GetAtt ParamStoreStack.Outputs.InstanceCertificateLocation
-      SecretLocation: !Sub sitecore-quickstart-${AWS::StackName}-certpass
-      AcmParameterPath: !Sub /${AWS::StackName}/cert/internal/acm
+      S3ObjectPrefix: !GetAtt ParamStack.Outputs.InstanceCertificateLocation
+      SecretLocation: !Join #!Sub sitecore-quickstart-${AWS::StackName}-certpass
+                - ''
+                - - 'sitecore-quickstart-'
+                  - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+                  - '-certpass'
+      AcmParameterPath: !Join #!Sub /${AWS::StackName}/cert/internal/acm
+                - ''
+                - - '/'
+                  - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+                  - '/cert/internal/acm'
 
 #Sitecore ALB Stack
   ALBStack:
@@ -846,7 +861,7 @@ Resources:
         CDMinSize: !Ref CDMinSize
         CDMaxSize: !Ref CDMaxSize
         CDDesiredCapacity: !Ref CDDesiredCapacity
-        RootStackName: !Ref "AWS::StackName"
+        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         CDInstanceType: !Ref CDInstanceType
         CDScalingMetric: !Ref CDScalingMetric
         CDScalingMetricValue: !Ref CDScalingMetricValue
@@ -861,7 +876,7 @@ Resources:
         CMDesiredCapacity: '1' #udpate later
         IntDNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
         AutoscalingSNS: !Ref AutoscalingSNS
-        LocalQSScripts: !GetAtt ParamStoreStack.Outputs.QSLocalResourcePath
+        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
 Outputs:
   ALBInternalDNS:
     Description: Internal DNS name of the ALB
@@ -884,3 +899,6 @@ Outputs:
   RedisEndpoint:
     Description: The Redis primary endpoint location for the Content Delivery role
     Value: !GetAtt DBStack.Outputs.CDRedisEndpoint
+  SitecoreQuickStartPrefix:
+    Description: The prefix used for resources created by the Quick Start
+    Value: !GetAtt FunctionsStack.Outputs.SCQSPrefix
