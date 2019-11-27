@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: ---
+Description: Creates a new VPC and RD GW host, and deploys Sitecore into the newly created VPC
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -114,7 +114,7 @@ Metadata:
       ISDNSName:
         default: DNS name for Identity Server Role
       IntDNS:
-        default: Internal DNS name
+        default: '[OPTIONAL] Internal DNS suffix for the Sitecore installation'
       CDMinSize:
         default: Min number of Content Delivery instances # Currently applied to all instances
       CDMaxSize:
@@ -294,7 +294,7 @@ Parameters:
     Description: DNS name for Identity Server Role
   IntDNS:
     Type: String
-    Description: Internal DNS name
+    Description: Internal DNS name. If left blank, one will be generated for you
   CDMinSize:
     Type: Number
     Default: '1'
@@ -417,6 +417,9 @@ Parameters:
   SitecorePrefix: 
     Type: String
     Description: The prefix to be used for the sitecore installation
+    MinLength: 1
+    MaxLength: 8
+    AllowedPattern: ^[a-zA-Z0-9]*
   SitecoreS3Bucket:
     Type: String
     Description: The name of the S3 Bucket where the Sitecore resources (instalation files, license file, etc.) reside.
