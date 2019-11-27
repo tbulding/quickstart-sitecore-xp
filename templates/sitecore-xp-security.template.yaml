@@ -11,58 +11,58 @@ Parameters:
     Type: String
 
 Resources:
-#Lambda IAM Policy
+  #Lambda IAM Policy
   ConvertCertificatesLambdaRole:
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service: lambda.amazonaws.com
-              Action: sts:AssumeRole
-        ManagedPolicyArns:
-          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        Policies:
-          - PolicyName: Get-Certificate-S3
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: s3:GetObject
-                  Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
-          - PolicyName: Import-Delete-ACM
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: 
-                    - acm:ImportCertificate
-                    - acm:DeleteCertificate
-                  Resource: '*'
-          - PolicyName: Get-Secret-Value
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: secretsmanager:GetSecretValue
-                  Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:*:secret:*'
-          - PolicyName: Put-Delete-SSM-Parameter
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: 
-                    - ssm:PutParameter
-                    - ssm:GetParameter
-                    - ssm:DeleteParameter
-                  Resource: !Sub 'arn:aws:ssm:${AWS::Region}:*:parameter/*'
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: Get-Certificate-S3
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
+        - PolicyName: Import-Delete-ACM
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - acm:ImportCertificate
+                  - acm:DeleteCertificate
+                Resource: "*"
+        - PolicyName: Get-Secret-Value
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:*:secret:*"
+        - PolicyName: Put-Delete-SSM-Parameter
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:PutParameter
+                  - ssm:GetParameter
+                  - ssm:DeleteParameter
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:*:parameter/*"
   CopyZipsRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -73,24 +73,24 @@ Resources:
       Policies:
         - PolicyName: lambda-copier
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
-                Resource: !Sub 'arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*'
-#Create IAM Role for Instances
+                Resource: !Sub "arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*"
+  #Create IAM Role for Instances
   SCInstanceRole:
-    Type: 'AWS::IAM::Role'
+    Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
         Statement:
           - Action:
-              - 'sts:AssumeRole'
+              - "sts:AssumeRole"
             Principal:
               Service:
                 - ec2.amazonaws.com
@@ -100,13 +100,11 @@ Resources:
       # ManagedPolicyArns:
       #   - !Ref SCInstancePolicy
       Policies:
-        - 
-          PolicyName: SCInstanceAccess
+        - PolicyName: SCInstanceAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - 
-                Effect: "Allow" ###################### This policy needs to be limited in scope ######################
+              - Effect: "Allow" ###################### This policy needs to be limited in scope ######################
                 Action: "*"
                 Resource: "*"
   SCInstanceProfile:
@@ -114,6 +112,29 @@ Resources:
     Properties:
       Roles:
         - !Ref SCInstanceRole
+  #Create IAM Role for SSM Automation
+  SCAutomationRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+            Effect: Allow
+        Version: 2012-10-17
+      # ManagedPolicyArns:
+      #   - !Ref SCInstancePolicy
+      Policies:
+        - PolicyName: SCAutomationAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow" ###################### This policy needs to be limited in scope ######################
+                Action: "*"
+                Resource: "*"
 
 
 Outputs:
