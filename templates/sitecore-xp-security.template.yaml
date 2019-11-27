@@ -85,8 +85,8 @@ Resources:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource: !Sub "arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*"
-  #Create IAM Role for Instances
-  SCInstanceRole:
+  #IAM Role AMI Instance
+  SCAMIInstanceRole:
     Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
@@ -124,6 +124,57 @@ Resources:
               - Effect: "Allow"
                 Action: ssm:GetAutomationExecution
                 Resource: "*"
+        - PolicyName: CWAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:log-stream:*"
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                Resource: "*"
+  SCAMIInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref SCAMIInstanceRole
+  #IAM Role for Instances
+  SCInstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Effect: Allow
+        Version: 2012-10-17
+      #ManagedPolicyArns:
+      #  - "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole"
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
+              - Effect: "Allow"
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}"
         - PolicyName: CWAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -197,6 +248,15 @@ Resources:
                     - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${RootStackName}/*"
                     - { RootStackName: !Ref RootStackName }
 Outputs:
+  SCAMIInstanceRoleARN:
+    Description: ARN for the Instance Role.
+    Value: !GetAtt SCAMIInstanceRole.Arn
+  SCAMIInstanceProfileARN:
+    Description: ARN for the Instance Profile.
+    Value: !GetAtt SCInstanceProfile.Arn
+  SCAMIInstanceProfileName:
+    Description: Name of the Instance Profile.
+    Value: !Ref SCInstanceProfile
   SCInstanceRoleARN:
     Description: ARN for the Instance Role.
     Value: !GetAtt SCInstanceRole.Arn
