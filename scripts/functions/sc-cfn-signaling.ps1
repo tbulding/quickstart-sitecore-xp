@@ -27,5 +27,5 @@ $asgMapping = @{
     'Rep'                          = "ReportingASG"
 }
 
-New-AWSQuickStartResourceSignal -Stack $StackName -Resource $asgMapping.Role -Region $Region
+New-AWSQuickStartResourceSignal -Stack $StackName -Resource $asgMapping.$Role -Region $Region
 Write-AWSQuickStartStatus
