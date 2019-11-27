@@ -14,11 +14,6 @@ Parameters:
     Type: String
   BackupRetentionPeriod:
     Type: Number
-  SQLMasterUserName:
-    Type: String
-  SQLMasterUserPassword:
-    Type: String
-    NoEcho: True
   VolumeIops:
     Type: Number
   VolumeSize:
@@ -88,8 +83,8 @@ Resources:
       EngineVersion: !Ref SQLEngineVersion
       Iops: !If [DBProvisionedIops, !Ref VolumeIops, !Ref 'AWS::NoValue']
       LicenseModel: license-included
-      MasterUserPassword: !Ref SQLMasterUserPassword
-      MasterUsername: !Ref SQLMasterUserName
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${AWS::StackName}-sqladmin:SecretString:password}}'
+      MasterUsername: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${AWS::StackName}-sqladmin:SecretString:username}}'
       MultiAZ: False # Sitecore does not support DB Mirroring - this needs to be false
       VPCSecurityGroups: !Ref RDSSecurityGroup
       PubliclyAccessible: !Ref PubliclyAccessible

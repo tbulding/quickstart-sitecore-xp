@@ -423,7 +423,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: !Ref CDDesiredCapacity
     Properties:
       LaunchConfigurationName: !Ref ContentDeliveryLC
@@ -493,7 +493,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: !Ref CMDesiredCapacity
     Properties:
       LaunchConfigurationName: !Ref ContentManagementLC
@@ -555,7 +555,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref CollectionLC
@@ -607,7 +607,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref CollectionSearchLC
@@ -659,7 +659,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref CortexProcessingLC
@@ -711,7 +711,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref CortexReportingLC
@@ -763,7 +763,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref IdentityLC
@@ -816,7 +816,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref MarketingAutomationLC
@@ -868,7 +868,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref MarketingAutoRepLC
@@ -920,7 +920,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref ProcessingLC
@@ -972,7 +972,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref ReferenceDataLC
@@ -1024,7 +1024,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
-        Timeout: PT10M
+        Timeout: PT15M
         Count: 1
     Properties:
       LaunchConfigurationName: !Ref ReportingLC
