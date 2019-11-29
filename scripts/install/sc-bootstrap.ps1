@@ -8,7 +8,7 @@ $logGroupName = "$stackName-ssm-bootstrap"
 $S3BucketName = (Get-SSMParameter -Name "/$stackName/user/s3bucket/name").Value # The bucket containing the Sitecore 9.2 install files and sitecore license.zip file
 $S3ScResourcesPrefix = (Get-SSMParameter -Name "/$stackName/user/s3bucket/scresourcesprefix").Value # The prefix where the install files are located
 $localPath = (Get-SSMParameter -Name "/$stackName/user/localresourcespath").Value # Path on the instance where the files will be located
-$qslocalPath = (Get-SSMParameter -Name "/$stackName/user/localqsresourcespath").Value # Path on the instance where the files will be located
+$qslocalPath = (Get-SSMParameter -Name "/$stackName/user/localqsresourcespath").Value # Path on the instance where the Quick Start files will be located
 
 function Write-LogsEntry {
     [CmdletBinding()]
