@@ -1,96 +1,75 @@
-#This needs to be setup to delete resources from the account owhen the stack is deleted.
+#  Copyright 2016 Amazon Web Services, Inc. or its affiliates. All Rights Reserved.
+#  This file is licensed to you under the AWS Customer Agreement (the "License").
+#  You may not use this file except in compliance with the License.
+#  A copy of the License is located at http://aws.amazon.com/agreement/ .
+#  This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied.
+#  See the License for the specific language governing permissions and limitations under the License.
 
-
-#order :
-# 1) AMI
-# 2) ACM
-# 3) Param Store
-
-#Any secrets created
-#AMI deregister & snapshot deletion
-#ACM certificate removals
-
-
-
-#SSM:
-# /$stackName/cert/instance/thumbprint
-# /$stackName/instance/ami/customid
-# /$stackName/instance/image/custom
-# /$stackName/cert/internal/acm
-
-#Secrets manager:
-
-
-#ACM:
-
-
+from crhelper import CfnResource
 import boto3
-
 from botocore.exceptions import ClientError
+
+# Clients
 ssm = boto3.client('ssm')
-ec2 = boto3.client('ec2',region_name='eu-central-1')
-ec2_resource = boto3.resource('ec2',region_name='eu-central-1')
+ec2resource = boto3.resource('ec2')
+helper = CfnResource()
 
-
-# rootStackName = 
-# ami_id_parameter = "/" + rootStackName + "/instance/ami/customid"
-
-
-
-# def get_ssm_parameter(parameter_name):
-#     response = client.get_parameter(
-#         Name=parameter_name
-#     )
-#     return response.value
- 
-# def delete_ssm_parameters(parameter_list):
-#     response = client.delete_parameters(
-#         Names=[
-#             'string',
-#         ]
-#     )
-#     return response
-
-ami_id = 'ami-0524f1780ecbc977b'
-
-def ec2_deregister_ami(ami_id):
+def get_param_value(parameter_name):
     try:
-        ami_image = ec2_resource.Image(ami_id)
-        response_deregister = ami_image.deregister()
-        return response_deregister['ResponseMetadata']
+        response = ssm.get_parameter(
+            Name=parameter_name
+        )
+        return response['Parameter']
     except ClientError as e:
-        if e.response['Error']['Code'] == 'InvalidAMIID.Unavailable':
-            return e.response['Error']['Message']
+        if e.response['Error']['Code'] == 'ParameterNotFound':
+            response = "ParameterNotFound : "+parameter_name
+            return response
         else:
             return e.response['Error']
-
-def ec2_delete_ami_snaphot(deregistered_ami_id):
-    list_snapshots = ec2.describe_snapshots(OwnerIds=['self'])
-    all_snapshots = list_snapshots['Snapshots']
-    for snapshot in all_snapshots:
-        try:
-            if deregistered_ami_id in snapshot['Description']:
-                ec2_snapshot_id = ec2_resource.Snapshot(snapshot['SnapshotId'])
-                response = ec2_snapshot_id.delete()
-                return response
-        except ClientError as e:
-            return e.response['Error']
+            
+def del_ssm_param(parameter_name):
+    try:
+        response = ssm.delete_parameter(
+            Name=parameter_name
+        )
+        return response
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ParameterNotFound':
+            response = "ParameterNotFound : "+parameter_name
+            return response
         else:
-            return 'No matching Snapshot'
+            return e.response['Error']
+def deregister_ami(ami_id):
+    try:
+        image = ec2resource.Image(ami_id['Value'])
+        response = image.deregister()
+        return response
+    except ClientError as e:
+        return e.response['Error']
 
-start = ec2_deregister_ami(ami_id)
-try:
-    if (start['HTTPStatusCode'] == '200'):
-        delete_snapshot = ec2_delete_ami_snaphot(ami_id)
-        print(delete_snapshot)
-except:
-    print(start)
+def handler(event, context):
+    helper(event, context)
 
+@helper.create
+@helper.update
+def no_op(_, __):
+    pass
 
-
-
-
-# ami_id_value = get_ssm_parameter(ami_id_parameter)
-# ssmparameter_list = '/$stackName/cert/instance/thumbprint', '/$stackName/instance/ami/customid'
-
-# ami_deregister = ec2_deregister_ami(ami_id_value)
+@helper.delete
+def remove_resources(event, context):
+    ssm_cert_thumbprint = event['ResourceProperties']['certThumbprint'] # Remove SSM parameter for Certificate Thumbprint
+    ssm_rds_sql = event['ResourceProperties']['rdsSql'] # Remove SSM parameter for RDS SQL URL
+    ssm_ami_id = event['ResourceProperties']['amiId'] # Remove SSM parameter for EC2 AMI ID
+    ssm_custom_id = event['ResourceProperties']['amiInstanceId'] # Remove SSM parameter for EC2 AMI Instance ID
+    ami_id = get_param_value(ssm_ami_id)
+    print(ami_id)
+    deregister = deregister_ami(ami_id)
+    print(deregister)
+    cert_thumbprint = del_ssm_param(ssm_cert_thumbprint)
+    print(cert_thumbprint)
+    rds_sql = del_ssm_param(ssm_rds_sql)
+    print(rds_sql)
+    ami_id = del_ssm_param(ssm_ami_id)
+    print(ami_id)
+    custom_id = del_ssm_param(ssm_custom_id)
+    print(custom_id)

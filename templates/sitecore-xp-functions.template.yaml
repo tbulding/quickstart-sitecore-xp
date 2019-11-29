@@ -121,7 +121,7 @@ Resources:
     DependsOn: CopyZips
     Type: AWS::Lambda::Function
     Properties:
-      Description: Converts Sitecore generated certificates and adds to Amazon Certificate Manager
+      Description: Converts Sitecore generated certificates and adds to Amazon Certificate Manager.
       Handler: lambda_function.handler
       MemorySize: 128
       Role: !Ref ConvertCertsRoleArn
@@ -130,6 +130,44 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaZipsBucketName
         S3Key: !Sub '${QSS3KeyPrefix}functions/packages/ConvertCertificate/lambda.zip'
+  DeleteResourcesLambda:
+    DependsOn: CopyZips
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Removes Sitecore Quick Start script generated SSM Parameters and EC2 Sitecore AMI. AMI Snapshot is retained.
+      Handler: lambda_function.handler
+      MemorySize: 128
+      Role: !Ref DeleteResourcesRoleArn # TODO create role to remove resources : ec2:DeregisterImage , ssm:DeleteParameter , ssm:GetParameter , basiclambdaexe
+      Runtime: python3.8
+      Timeout: 900
+      Code:
+        S3Bucket: !Ref LambdaZipsBucketName
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/DeleteResources/lambda.zip'
+  # TODO run the lambda to delete - this may need to be moved to a location where the resources are already created
+  DeleteSCResources:
+    Type: Custom::CopyZips
+    Properties:
+      ServiceToken: !GetAtt 'DeleteResourcesLambda.Arn'
+      certThumbprint: !Join 
+          - ''
+          - - '/'
+            - !GetAtt RandomString.key
+            - '/cert/instance/thumbprint'
+      rdsSql: !Join 
+          - ''
+          - - '/'
+            - !GetAtt RandomString.key
+            - '/sql/server'
+      amiId: !Join 
+          - ''
+          - - '/'
+            - !GetAtt RandomString.key
+            - '/instance/ami/customid'
+      amiInstanceId: !Join 
+          - ''
+          - - '/'
+            - !GetAtt RandomString.key
+            - '/instance/image/custom'
 Outputs:
   ConvertCertificatesLambdaArn:
     Description: The Lambda ARN of the function created to convert the locally generated certificates and upload them to ACM
