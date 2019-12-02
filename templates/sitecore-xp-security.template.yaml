@@ -1,8 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment"
 Parameters:
-  RootStackName:
-    Type: String
   SitecoreS3Bucket:
     Type: String
   QSS3BucketName:
@@ -186,8 +184,8 @@ Resources:
                   - logs:DescribeLogStreams
                   - logs:PutLogEvents
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${RootStackName}:log-stream:*"
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${RootStackName}"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
               - Effect: "Allow"
                 Action:
                   - logs:CreateLogGroup
@@ -220,9 +218,6 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - ec2:RebootInstances
-                Condition:
-                  StringEquals:
-                    ec2:ResourceTag/Name: !Sub AMI-${RootStackName}
                 Resource:
                   - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
               - Effect: "Allow"
@@ -241,12 +236,10 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: "Allow" #TODO This policy needs to be limited in scope ######################
+              - Effect: "Allow"
                 Action: ["ssm:PutParameter", "ssm:GetParameter"]
                 Resource:
-                  - !Sub
-                    - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${RootStackName}/*"
-                    - { RootStackName: !Ref RootStackName }
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
 Outputs:
   SCAMIInstanceRoleARN:
     Description: ARN for the Instance Role.
