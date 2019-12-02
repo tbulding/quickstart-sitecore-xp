@@ -1,8 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment"
 Parameters:
-  RootStackName:
-    Type: String
   SitecoreS3Bucket:
     Type: String
   QSS3BucketName:
@@ -85,8 +83,8 @@ Resources:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource: !Sub "arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*"
-  #Create IAM Role for Instances
-  SCInstanceRole:
+  #IAM Role AMI Instance
+  SCAMIInstanceRole:
     Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
@@ -130,13 +128,64 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:log-stream:*"
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                Resource: "*"
+  SCAMIInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref SCAMIInstanceRole
+  #IAM Role for Instances
+  SCInstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Effect: Allow
+        Version: 2012-10-17
+      #ManagedPolicyArns:
+      #  - "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole"
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
+              - Effect: "Allow"
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}"
+        - PolicyName: CWAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
                   - logs:CreateLogStream
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                   - logs:PutLogEvents
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${RootStackName}:log-stream:*"
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${RootStackName}"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
               - Effect: "Allow"
                 Action:
                   - logs:CreateLogGroup
@@ -169,9 +218,6 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - ec2:RebootInstances
-                Condition:
-                  StringEquals:
-                    ec2:ResourceTag/Name: !Sub AMI-${RootStackName}
                 Resource:
                   - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
               - Effect: "Allow"
@@ -190,13 +236,20 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: "Allow" #TODO This policy needs to be limited in scope ######################
+              - Effect: "Allow"
                 Action: ["ssm:PutParameter", "ssm:GetParameter"]
                 Resource:
-                  - !Sub
-                    - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${RootStackName}/*"
-                    - { RootStackName: !Ref RootStackName }
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
 Outputs:
+  SCAMIInstanceRoleARN:
+    Description: ARN for the Instance Role.
+    Value: !GetAtt SCAMIInstanceRole.Arn
+  SCAMIInstanceProfileARN:
+    Description: ARN for the Instance Profile.
+    Value: !GetAtt SCInstanceProfile.Arn
+  SCAMIInstanceProfileName:
+    Description: Name of the Instance Profile.
+    Value: !Ref SCInstanceProfile
   SCInstanceRoleARN:
     Description: ARN for the Instance Role.
     Value: !GetAtt SCInstanceRole.Arn
