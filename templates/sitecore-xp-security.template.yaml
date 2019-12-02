@@ -1,6 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment"
 Parameters:
+  RootStackName:
+    Type: String
   SitecoreS3Bucket:
     Type: String
   QSS3BucketName:
@@ -97,15 +99,47 @@ Resources:
                 - ssm.amazonaws.com
             Effect: Allow
         Version: 2012-10-17
-      # ManagedPolicyArns:
-      #   - !Ref SCInstancePolicy
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole"
       Policies:
-        - PolicyName: SCInstanceAccess
+        - PolicyName: S3Access
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: "Allow" ###################### This policy needs to be limited in scope ######################
-                Action: "*"
+              - Effect: "Allow"
+                Action: s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
+              - Effect: "Allow"
+                Action: s3:ListBucket
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}"
+        - PolicyName: SSMAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: ssm:StartAutomationExecution
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/*:VersionId}"
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*SitecoreSsmAMIBuild*"
+              - Effect: "Allow"
+                Action: ssm:GetAutomationExecution
+                Resource: "*"
+        - PolicyName: CWAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${RootStackName}:log-stream:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${RootStackName}"
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
                 Resource: "*"
   SCInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -125,18 +159,43 @@ Resources:
                 - ssm.amazonaws.com
             Effect: Allow
         Version: 2012-10-17
-      # ManagedPolicyArns:
-      #   - !Ref SCInstancePolicy
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole"
       Policies:
-        - PolicyName: SCAutomationAccess
+        - PolicyName: EC2Access
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: "Allow" ###################### This policy needs to be limited in scope ######################
-                Action: "*"
+              - Effect: "Allow"
+                Action:
+                  - ec2:RebootInstances
+                Condition:
+                  StringEquals:
+                    ec2:ResourceTag/Name: !Sub AMI-${RootStackName}
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+              - Effect: "Allow"
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
                 Resource: "*"
-
-
+        - PolicyName: RDSAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: ["rds:DescribeDBInstances"]
+                Resource: "*"
+        - PolicyName: SSMAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow" #TODO This policy needs to be limited in scope ######################
+                Action: ["ssm:PutParameter", "ssm:GetParameter"]
+                Resource:
+                  - !Sub
+                    - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${RootStackName}/*"
+                    - { RootStackName: !Ref RootStackName }
 Outputs:
   SCInstanceRoleARN:
     Description: ARN for the Instance Role.
@@ -147,6 +206,9 @@ Outputs:
   SCInstanceProfileName:
     Description: Name of the Instance Profile.
     Value: !Ref SCInstanceProfile
+  SCAutomationRoleARN:
+    Description: ARN for the Instance Role.
+    Value: !GetAtt SCAutomationRole.Arn
   ConvertCertificatesLambdaRoleArn:
     Description: The role ARN for the Lambda function to convert and upload certs to ACM.
     Value: !GetAtt ConvertCertificatesLambdaRole.Arn
