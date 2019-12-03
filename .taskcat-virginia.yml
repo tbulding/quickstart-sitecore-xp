@@ -33,7 +33,7 @@ project:
     CMScalingMetricValue: 50
     SitecoreKeyPair: override
     SitecorePrefix: sc
-    SitecoreS3Bucket: yourbucket
+    SitecoreS3Bucket: "tb-$[taskcat_autobucket]"
     SCResourcesPrefix: resources/
     SCLicensePrefix: license/
     SOLRCorePrefix: scsolr
