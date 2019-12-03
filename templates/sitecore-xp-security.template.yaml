@@ -58,6 +58,36 @@ Resources:
                   - ssm:GetParameter
                   - ssm:DeleteParameter
                 Resource: !Sub "arn:aws:ssm:${AWS::Region}:*:parameter/*"
+  DeleteResourcesLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: Ec2-RemoveAMI
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - ec2:DeregisterImage
+                Resource: "*"
+        - PolicyName: SSM-ParameterStore
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:DeleteParameter
+                  - ssm:GetParameter
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
   CopyZipsRole:
     Type: AWS::IAM::Role
     Properties:
@@ -118,7 +148,7 @@ Resources:
                 Action: ssm:StartAutomationExecution
                 Resource:
                   - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/*:VersionId}"
-                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*SitecoreSsmAMIBuild*"
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*SsmAMIBuild*"
               - Effect: "Allow"
                 Action: ssm:GetAutomationExecution
                 Resource: "*"
@@ -246,10 +276,10 @@ Outputs:
     Value: !GetAtt SCAMIInstanceRole.Arn
   SCAMIInstanceProfileARN:
     Description: ARN for the Instance Profile.
-    Value: !GetAtt SCInstanceProfile.Arn
+    Value: !GetAtt SCAMIInstanceProfile.Arn
   SCAMIInstanceProfileName:
     Description: Name of the Instance Profile.
-    Value: !Ref SCInstanceProfile
+    Value: !Ref SCAMIInstanceProfile
   SCInstanceRoleARN:
     Description: ARN for the Instance Role.
     Value: !GetAtt SCInstanceRole.Arn
@@ -265,6 +295,9 @@ Outputs:
   ConvertCertificatesLambdaRoleArn:
     Description: The role ARN for the Lambda function to convert and upload certs to ACM.
     Value: !GetAtt ConvertCertificatesLambdaRole.Arn
+  DeleteResourcesLambdaRoleArn:
+    Description: The role ARN for the Lambda function to remove resources when the stack is deleted.
+    Value: !GetAtt DeleteResourcesLambdaRole.Arn
   CopyZipsRoleArn:
     Description: The role ARN for the Lambda function to copy Zip's to local S3 bucket for Lambda Functions.
     Value: !GetAtt CopyZipsRole.Arn
