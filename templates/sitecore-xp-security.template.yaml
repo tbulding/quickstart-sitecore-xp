@@ -144,6 +144,16 @@ Resources:
               - Effect: "Allow"
                 Action: s3:ListBucket
                 Resource: !Sub "arn:aws:s3:::${QSS3BucketName}"
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
+              - Effect: "Allow"
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}"
         - PolicyName: SSMAccess
           PolicyDocument:
             Version: "2012-10-17"
