@@ -162,20 +162,13 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
-                  - logs:PutLogEvents
-                Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:log-stream:*"
-              - Effect: "Allow"
-                Action:
+                  - logs:CreateLogGroup
                   - logs:CreateLogStream
+                  - logs:PutLogEvents
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
-              - Effect: "Allow"
-                Action:
-                  - logs:CreateLogGroup
-                Resource: "*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
   SCAMIInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -276,6 +269,19 @@ Resources:
                 Action: ["ssm:PutParameter", "ssm:GetParameter"]
                 Resource:
                   - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+        - PolicyName: CWAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 Outputs:
   SCAMIInstanceRoleARN:
     Description: ARN for the Instance Role.
