@@ -76,7 +76,7 @@ Resources:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
-                Action: 
+                Action:
                   - ec2:DeregisterImage
                 Resource: "*"
         - PolicyName: SSM-ParameterStore
@@ -198,8 +198,10 @@ Resources:
             Version: "2012-10-17"
             Statement:
               - Effect: "Allow"
-                Action: s3:GetObject
-                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/*"
               - Effect: "Allow"
                 Action: s3:ListBucket
                 Resource: !Sub "arn:aws:s3:::${QSS3BucketName}"
