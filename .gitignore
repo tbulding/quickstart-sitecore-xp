@@ -8,4 +8,5 @@ ci/taskcat-frankfurt.yml
 *n-virginia.json
 ci/taskcat-n-virginia.yml
 .vscode/settings.json
-.taskcat-*.yml
+.taskcat-*-parameters.yml
+.taskcat-virginia-parameters.yml
