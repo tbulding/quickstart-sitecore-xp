@@ -152,7 +152,7 @@ Resources:
                 Action: ssm:StartAutomationExecution
                 Resource:
                   - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/*:VersionId}"
-                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*SsmAMIBuild*"
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*"
               - Effect: "Allow"
                 Action: ssm:GetAutomationExecution
                 Resource: "*"
