@@ -10,7 +10,7 @@ project:
     SCLogLevel: "information"
     CorsOrigins: "*"
     RootStackName: "myroot"
-    SCS3Bucket: "sitecore-software"
+    SCS3Bucket: "tcat-quickstart-sitecore-xp-0y85ih2c"
     SCResourcesPrefix: "XP1/resourcefiles/"
     SCLicensePrefix: "/"
     CDDNSName: "cd.com"
