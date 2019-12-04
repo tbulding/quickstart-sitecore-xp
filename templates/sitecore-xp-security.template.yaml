@@ -11,7 +11,7 @@ Parameters:
     Type: String
 
 Resources:
-  #Lambda IAM Policy
+# Lambda IAM Policies
   ConvertCertificatesLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -113,7 +113,7 @@ Resources:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource: !Sub "arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*"
-  #IAM Role AMI Instance
+# IAM Role AMI Instance
   SCAMIInstanceRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -226,7 +226,7 @@ Resources:
     Properties:
       Roles:
         - !Ref SCAMIInstanceRole
-  #IAM Role for Instances
+# IAM Role for Instances
   SCInstanceRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -239,8 +239,6 @@ Resources:
                 - ec2.amazonaws.com
             Effect: Allow
         Version: 2012-10-17
-      #ManagedPolicyArns:
-      #  - "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole"
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
@@ -249,11 +247,18 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - s3:GetObject
-                  - s3:PutObject
-                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/*"
+                  - s3:ListBucket
+                Resource: 
+                  - !Sub "arn:aws:s3:::${QSS3BucketName}/*"
+                  - !Sub "arn:aws:s3:::${QSS3BucketName}"
               - Effect: "Allow"
-                Action: s3:ListBucket
-                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}"
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
+                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}"
         - PolicyName: CWAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -271,12 +276,29 @@ Resources:
                 Action:
                   - logs:CreateLogGroup
                 Resource: "*"
+        - PolicyName: SSMParameters
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+        - PolicyName: SECAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
   SCInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
         - !Ref SCInstanceRole
-  #Create IAM Role for SSM Automation
+# Create IAM Role for SSM Automation
   SCAutomationRole:
     Type: "AWS::IAM::Role"
     Properties:
