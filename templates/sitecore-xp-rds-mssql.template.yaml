@@ -38,7 +38,7 @@ Parameters:
     Type: AWS::EC2::Subnet::Id
   PrivateSubnet2AID:
     Type: AWS::EC2::Subnet::Id
-  RootStackName:
+  SCQSPrefix:
     Type: String
 
 Conditions:
@@ -60,14 +60,14 @@ Resources:
   RDSParameterGroup:
     Type: AWS::RDS::DBParameterGroup
     Properties:
-      Description: !Sub 'RDS Parameter Group for Sitecore MSSQL - ${RootStackName}'
+      Description: !Sub 'RDS Parameter Group for Sitecore MSSQL - ${SCQSPrefix}'
       Family: !FindInMap [RDSParameterFamily, !Ref SQLEngineEdition, family]
       Parameters:
         contained database authentication: '1'
   RDSSQLDBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
-      DBSubnetGroupDescription: !Sub 'RDS Subnet Group for Sitecore RDS MSSQL - ${RootStackName}'
+      DBSubnetGroupDescription: !Sub 'RDS Subnet Group for Sitecore RDS MSSQL - ${SCQSPrefix}'
       SubnetIds: 
         - !Ref PrivateSubnet1AID
         - !Ref PrivateSubnet2AID
@@ -83,13 +83,13 @@ Resources:
       EngineVersion: !Ref SQLEngineVersion
       Iops: !If [DBProvisionedIops, !Ref VolumeIops, !Ref 'AWS::NoValue']
       LicenseModel: license-included
-      MasterUserPassword: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${RootStackName}-sqladmin:SecretString:password}}'
-      MasterUsername: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${RootStackName}-sqladmin:SecretString:username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${SCQSPrefix}-sqladmin:SecretString:password}}'
+      MasterUsername: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${SCQSPrefix}-sqladmin:SecretString:username}}'
       MultiAZ: False # Sitecore does not support DB Mirroring - this needs to be false
       VPCSecurityGroups: !Ref RDSSecurityGroup
       PubliclyAccessible: !Ref PubliclyAccessible
       DBParameterGroupName: !Ref RDSParameterGroup
-      DBInstanceIdentifier: !Sub sc-${RootStackName}
+      DBInstanceIdentifier: !Sub sc-${SCQSPrefix}
       StorageType: !If [DBProvisionedIops, io1, gp2]
 # Redis Configuration for the Content Delivery role
   RedisCD:
@@ -105,7 +105,7 @@ Resources:
   RedisSubnetGroup:
     Type: AWS::ElastiCache::SubnetGroup
     Properties:
-      Description: !Sub 'Redis subnet group for Content Delivery - ${RootStackName}'
+      Description: !Sub 'Redis subnet group for Content Delivery - ${SCQSPrefix}'
       SubnetIds:
         - !Ref PrivateSubnet1AID
         - !Ref PrivateSubnet2AID
@@ -113,7 +113,7 @@ Resources:
   RedisURLParam:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub /${RootStackName}/redis/url
+      Name: !Sub /${SCQSPrefix}/redis/url
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !Sub "${RedisCD.RedisEndpoint.Address}:${RedisCD.RedisEndpoint.Port}"
