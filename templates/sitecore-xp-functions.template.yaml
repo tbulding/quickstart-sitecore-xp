@@ -27,6 +27,8 @@ Parameters:
     Type: String
   ConvertCertsRoleArn:
     Type: String
+  DeleteResourcesRoleArn:
+    Type: String
   SitecorePrefix:
     Type: String
 
@@ -81,6 +83,7 @@ Resources:
       Objects:
       - functions/packages/ConvertCertificate/lambda.zip
       - functions/packages/DeleteBucketContents/lambda.zip
+      - functions/packages/DeleteResources/lambda.zip
   RandomStringFunction:
       Type: AWS::Lambda::Function
       Properties:
@@ -137,8 +140,8 @@ Resources:
       Description: Removes Sitecore Quick Start script generated SSM Parameters and EC2 Sitecore AMI. AMI Snapshot is retained.
       Handler: lambda_function.handler
       MemorySize: 128
-      Role: !Ref DeleteResourcesRoleArn # TODO create role to remove resources : ec2:DeregisterImage , ssm:DeleteParameter , ssm:GetParameter , basiclambdaexe
-      Runtime: python3.8
+      Role: !Ref DeleteResourcesRoleArn
+      Runtime: python3.7
       Timeout: 900
       Code:
         S3Bucket: !Ref LambdaZipsBucketName
@@ -151,21 +154,29 @@ Resources:
       certThumbprint: !Join 
           - ''
           - - '/'
+            - !Ref SitecorePrefix
+            - '-qs-'
             - !GetAtt RandomString.key
             - '/cert/instance/thumbprint'
       rdsSql: !Join 
           - ''
           - - '/'
+            - !Ref SitecorePrefix
+            - '-qs-'
             - !GetAtt RandomString.key
             - '/sql/server'
       amiId: !Join 
           - ''
           - - '/'
+            - !Ref SitecorePrefix
+            - '-qs-'
             - !GetAtt RandomString.key
             - '/instance/ami/customid'
       amiInstanceId: !Join 
           - ''
           - - '/'
+            - !Ref SitecorePrefix
+            - '-qs-'
             - !GetAtt RandomString.key
             - '/instance/image/custom'
 Outputs:
@@ -180,6 +191,5 @@ Outputs:
     Value: !Join 
       - ''
       - - !Ref SitecorePrefix
-        - '-QS-'
-        - !GetAtt RandomString.key
-
+        - '-qs-'
+        - !GetAtt RandomString.key 
