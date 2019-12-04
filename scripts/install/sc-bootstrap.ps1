@@ -104,6 +104,9 @@ Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogSt
 # Install IIS Management Scripting Tools
 Get-WindowsOptionalFeature -Online -FeatureName IIS-ManagementScriptingTools
 Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Installed IIS Management Scripting Tools'
+# Install Web Management Console
+Install-WindowsFeature -Name web-mgmt-console -Confirm:$false
+Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Installed Web Management Console'
 # Install SQL Server Module
 Install-Module SQLServer -Force
 Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Installed SQL Server Module'
