@@ -63,7 +63,7 @@ Parameters:
     Type: String
   LocalQSScripts:
     Type: String
-  RootStackName: 
+  SCQSPrefix: 
     Type: String
   
 Resources:
@@ -372,7 +372,7 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub '{{resolve:ssm:/${RootStackName}/service/cmdns:1}}'
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}/service/cmdns:1}}'
       ListenerArn: !Ref HTTPSListenerExternal
       Priority: 1
   HTTPSListenerExternalRule2:
@@ -384,7 +384,7 @@ Resources:
       Conditions:
         - Field: host-header
           Values:
-            - !Sub '{{resolve:ssm:/${RootStackName}/service/isdns:1}}'
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}/service/isdns:1}}'
       ListenerArn: !Ref HTTPSListenerExternal
       Priority: 2
   #External Target Groups
@@ -444,12 +444,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub ContentDelivery-${RootStackName}
+        Value: !Sub ContentDelivery-${SCQSPrefix}
         PropagateAtLaunch: true
   ContentDeliveryLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -460,19 +460,19 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CD" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CD" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\'
-            - !Sub '{{resolve:ssm:/${RootStackName}user/sitecoreprefix:1}}.CD\Web.config" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\Web.config" -StackName '
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\'
-            - !Sub '{{resolve:ssm:/${RootStackName}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -StackName '
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CD" -StackName '
             - !Sub '"${AWS::StackName}" -Region '
@@ -514,12 +514,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub ContentManagement-${RootStackName}
+        Value: !Sub ContentManagement-${SCQSPrefix}
         PropagateAtLaunch: true
   ContentManagementLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CMInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -530,10 +530,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CM" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CM" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CM" -StackName '
@@ -576,12 +576,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub Collection-${RootStackName}
+        Value: !Sub Collection-${SCQSPrefix}
         PropagateAtLaunch: true
   CollectionLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -592,10 +592,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Collection" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Collection" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Collection" -StackName '
@@ -628,12 +628,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub CollectionSearch-${RootStackName}
+        Value: !Sub CollectionSearch-${SCQSPrefix}
         PropagateAtLaunch: true
   CollectionSearchLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -644,10 +644,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CollectionSearch" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CollectionSearch" -StackName '
@@ -680,12 +680,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub CortexProcessing-${RootStackName}
+        Value: !Sub CortexProcessing-${SCQSPrefix}
         PropagateAtLaunch: true
   CortexProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -696,10 +696,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexProcessing" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CortexProcessing" -StackName '
@@ -732,12 +732,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub CortexReporting-${RootStackName}
+        Value: !Sub CortexReporting-${SCQSPrefix}
         PropagateAtLaunch: true
   CortexReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -748,10 +748,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexReporting" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CortexReporting" -StackName '
@@ -785,12 +785,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub Identity-${RootStackName}
+        Value: !Sub Identity-${SCQSPrefix}
         PropagateAtLaunch: true
   IdentityLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -801,10 +801,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "IdentityServer" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "IdentityServer" -StackName '
@@ -837,12 +837,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub MarketingAutomation-${RootStackName}
+        Value: !Sub MarketingAutomation-${SCQSPrefix}
         PropagateAtLaunch: true
   MarketingAutomationLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -853,10 +853,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomation" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "MarketingAutomation" -StackName '
@@ -889,12 +889,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub MarketingAutomationReporting-${RootStackName}
+        Value: !Sub MarketingAutomationReporting-${SCQSPrefix}
         PropagateAtLaunch: true
   MarketingAutoRepLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -905,10 +905,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "MarketingAutomationReporting" -StackName '
@@ -941,12 +941,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub Processing-${RootStackName}
+        Value: !Sub Processing-${SCQSPrefix}
         PropagateAtLaunch: true
   ProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -957,10 +957,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Prc" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Prc" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Prc" -StackName '
@@ -993,12 +993,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub ReferenceData-${RootStackName}
+        Value: !Sub ReferenceData-${SCQSPrefix}
         PropagateAtLaunch: true
   ReferenceDataLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -1009,10 +1009,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "ReferenceData" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "ReferenceData" -StackName '
@@ -1045,12 +1045,12 @@ Resources:
           - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
-        Value: !Sub Reporting-${RootStackName}
+        Value: !Sub Reporting-${SCQSPrefix}
         PropagateAtLaunch: true
   ReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      ImageId: !Sub '{{resolve:ssm:/${RootStackName}/instance/ami/customid:1}}'
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
       InstanceType: !Ref CDInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
@@ -1061,10 +1061,10 @@ Resources:
           - ''
           - - "<powershell>\n"
             - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Rep" -StackName '
-            - !Sub '"${RootStackName}"'
+            - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Rep" -StackName '
-            - !Sub '"${RootStackName}" -Region '
+            - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Rep" -StackName '

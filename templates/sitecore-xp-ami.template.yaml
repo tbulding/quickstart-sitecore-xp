@@ -30,7 +30,7 @@ Parameters:
     Type: String
 Resources:
   BuildEC2instance:
-    DependsOn: SitecoreSsmAMIBuild
+    DependsOn: SsmAMIBuild
     Type: AWS::EC2::Instance
     CreationPolicy: # This is to stop CFN from showing the instance as completed. The success signal is sent from SSM
       ResourceSignal:
@@ -56,10 +56,10 @@ Resources:
             - "if (Test-Path $path) { }"
             - "\n"
             - "else { Start-SSMAutomationExecution -DocumentName "
-            - !Sub '"${SitecoreSsmAMIBuild}" }'
+            - !Sub '"${SsmAMIBuild}" }'
             - "\n"
             - "</powershell>\n"
-  SitecoreSsmAMIBuild:
+  SsmAMIBuild:
     Type: AWS::SSM::Document
     Properties:
       DocumentType: Automation

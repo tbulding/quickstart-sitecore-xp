@@ -747,6 +747,7 @@ Resources:
 # Create lambda functions
   FunctionsStack:
     Type: "AWS::CloudFormation::Stack"
+    # DependsOn: SecurityStack
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-functions.template.yaml'
       Parameters:
@@ -755,6 +756,7 @@ Resources:
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         CopyZipsRoleArn: !GetAtt SecurityStack.Outputs.CopyZipsRoleArn
         ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
+        DeleteResourcesRoleArn: !GetAtt SecurityStack.Outputs.DeleteResourcesLambdaRoleArn
         SitecorePrefix: !Ref SitecorePrefix
 # Sitecore Parameter Store Stack
   ParamStack:
@@ -764,7 +766,7 @@ Resources:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-parameters.template.yaml'
       Parameters:
         # IntLBDNS: !GetAtt LoadBalancerInternal.DNSName
-        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         SCPrefix: !Ref SitecorePrefix
         SOLRCorePrefix: !Ref SOLRCorePrefix
         SOLRUrl: !Ref SOLRUrl
@@ -797,7 +799,7 @@ Resources:
         VolumeIops: !Ref VolumeIops
         VolumeSize: !Ref VolumeSize
         VolumeType: !Ref VolumeType
-        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         RedisSecurityGroup: !Ref RedisSG
         CacheNodeType: !Ref CacheNodeType
         Engine: 'redis'
@@ -811,21 +813,21 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-ami.template.yaml'
       Parameters:
-        AutomationAssumeRole: !GetAtt SecurityStack.Outputs.SCInstanceRoleARN
+        AutomationAssumeRole: !GetAtt SecurityStack.Outputs.SCAutomationRoleARN
         ImageID: "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base"
         SitecoreKeyPair: !Ref SitecoreKeyPair
         PrivateSubnet1A: !Ref PrivateSubnet1A
-        IamInstanceProfile: !GetAtt SecurityStack.Outputs.SCInstanceProfileName
+        IamInstanceProfile: !GetAtt SecurityStack.Outputs.SCAMIInstanceProfileName
         SecurityGroupIds: !Ref SitecoreInstanceSG
         InstanceType: "t2.large"
         LocalPath: !GetAtt ParamStack.Outputs.SCLocalResourcePath 
-        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath  #'c:\quickstart\scripts'  # this needs to be updated to SSM  -- use a gettatt from parameter outputs for this.
+        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath 
         RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         TargetAmiName: !GetAtt ParamStack.Outputs.CustomAmiName 
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
 
-# Custom Resource to convert and import Instance certificate, as it has the full chain
+# Custom Resource to convert and import Instance certificate, as it has the full certificate chain
   CertConvertACM:
     Type: AWS::CloudFormation::CustomResource
     DependsOn: CustomAMIStack # SecurityStack, CertConvertACM
@@ -844,7 +846,7 @@ Resources:
                   - !GetAtt FunctionsStack.Outputs.SCQSPrefix
                   - '/cert/internal/acm'
 
-#Sitecore ALB Stack
+# Sitecore ALB Stack
   ALBStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: CustomAMIStack # SecurityStack, CertConvertACM
@@ -861,7 +863,7 @@ Resources:
         CDMinSize: !Ref CDMinSize
         CDMaxSize: !Ref CDMaxSize
         CDDesiredCapacity: !Ref CDDesiredCapacity
-        RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         CDInstanceType: !Ref CDInstanceType
         CDScalingMetric: !Ref CDScalingMetric
         CDScalingMetricValue: !Ref CDScalingMetricValue
@@ -873,7 +875,7 @@ Resources:
         SitecoreKeyPair: !Ref SitecoreKeyPair
         CMMinSize: !Ref CMMinSize
         CMMaxSize: !Ref CMMaxSize
-        CMDesiredCapacity: '1' #udpate later
+        CMDesiredCapacity: '1' # TODO udpate later
         IntDNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
         AutoscalingSNS: !Ref AutoscalingSNS
         LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath

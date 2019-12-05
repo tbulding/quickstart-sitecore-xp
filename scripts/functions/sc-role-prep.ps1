@@ -16,7 +16,7 @@ $s3BucketName = (Get-SSMParameter -Name "/$stackName/user/s3bucket/name").Value
 $LicencePrefix = (Get-SSMParameter -Name "/$stackName/user/s3bucket/sclicenseprefix").Value
 $CertificatePrefix = (Get-SSMParameter -Name "/$StackName/user/s3bucket/certificateprefix").Value
 $CertificateName = (Get-SSMParameter -Name "/$StackName/cert/instance/exportname").Value
-$RootCertificateName = (Get-SSMParameter -Name "/$StackNamecert/cert/root/exportname").Value
+$RootCertificateName = (Get-SSMParameter -Name "/$StackName/cert/root/exportname").Value
 $CertPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-certpass").SecretString).password
 $CertSecurePassword = ConvertTo-SecureString $CertPassword -AsPlainText -Force
 
