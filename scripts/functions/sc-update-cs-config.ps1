@@ -4,6 +4,10 @@ param (
     [string]$StackName
 )
 
+# CloudWatch values
+logGroupName  = "$StackName-CD"
+LogStreamName = "update-cs-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+
 $connectionString = (Get-SSMParameter -Name "/$StackName/redis/url").Value
 #$cwScript = (Get-SSMParameter -Name "/$StackName/user/localqsresourcespath").Value
 
@@ -17,14 +21,7 @@ $newnode.name = 'session'
 $newnode.connectionString = $connectionString
 $cs = Select-Xml -Xml $xml -XPath '//connectionStrings'
 $out = ($cs.Node.AppendChild($newnode)*>&1 | Out-String)
-#region  logging
-$parms = @{
-    logGroupName  = "$StackName-CD"
-    LogStreamName = "update-cs-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
-    LogString     = $out
-}
-$scriptPath = Split-Path $MyInvocation.MyCommand.Path
-& "$scriptPath\sc-write-logsentry.ps1" @parms
-#endregion
+
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $out
 
 $xml.Save($filepath)
