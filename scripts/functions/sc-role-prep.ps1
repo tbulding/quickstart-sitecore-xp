@@ -24,54 +24,6 @@ $logGroupName = $StackName+"-"+$Role
 $logStreamLicense = "LicenseFile-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 $logStreamCert = "CertImport-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
-function Write-LogsEntry {
-    [CmdletBinding()]
-    Param(
-        [Parameter(Mandatory = $true)]
-        [string] $logGroupName,
-        [Parameter(Mandatory = $true)]
-        [string] $LogStreamName,
-        [Parameter(Mandatory = $true)]
-        [string] $LogString
-    )
-    Process {
-        #Determine if the LogGroup Exists
-        If (-Not (Get-CWLLogGroup -LogGroupNamePrefix $logGroupName)) {
-            New-CWLLogGroup -LogGroupName $logGroupName
-        }
-        #Determine if the LogStream Exists
-        If (-Not (Get-CWLLogStream -LogGroupName $logGroupName -LogStreamName $LogStreamName)) {
-            $splat = @{
-                LogGroupName  = $logGroupName
-                LogStreamName = $logStreamName
-            }
-            New-CWLLogStream @splat
-        }
-        $logEntry = New-Object -TypeName 'Amazon.CloudWatchLogs.Model.InputLogEvent'
-        $logEntry.Message = $LogString
-        $logEntry.Timestamp = (Get-Date).ToUniversalTime()
-        #Get the next sequence token
-        $SequenceToken = (Get-CWLLogStream -LogGroupName $logGroupName -LogStreamNamePrefix $logStreamName).UploadSequenceToken
-        if ($SequenceToken) {
-            $splat = @{
-                LogEvent      = $logEntry
-                LogGroupName  = $logGroupName
-                LogStreamName = $logStreamName
-                SequenceToken = $SequenceToken
-            }
-            Write-CWLLogEvent @splat
-        }
-        else {
-            $splat = @{
-                LogEvent      = $logEntry
-                LogGroupName  = $logGroupName
-                LogStreamName = $logStreamName
-            }
-            Write-CWLLogEvent @splat
-        }
-    }
-}
-
 function cert_import {
     [CmdletBinding()]
     param (
@@ -96,15 +48,15 @@ function cert_import {
             -LogGroupName $logGroupName -LogStreamName $logStreamCert -LogString (New-Item -Path $CertLocation -ItemType Directory -Verbose)
         }
         else {
-            Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $logStreamCert -LogString "$CertLocation already exists"
+            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString "$CertLocation already exists"
         }
         
         Read-S3Object -BucketName $CertBucketName -Region $CertBucketLocation.value -Key $CertPath -File $LocalCertFile
         Read-S3Object -BucketName $CertBucketName -Region $CertBucketLocation.value -Key $RootCertPath -File $LocalRootCertFile
         $RootImport = Import-PfxCertificate -FilePath $LocalRootCertFile -CertStoreLocation Cert:\LocalMachine\Root -Password $CertPass -Exportable
         $InstanceImport = Import-PfxCertificate -FilePath $LocalCertFile -CertStoreLocation Cert:\LocalMachine\My -Password $CertPass -Exportable
-        Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $logStreamCert -LogString $RootImport
-        Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $logStreamCert -LogString $InstanceImport
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString $RootImport
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString $InstanceImport
     }
     
     end {
@@ -128,12 +80,12 @@ function licence_download {
         $file = Get-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value | Where-Object { ($_.Key -like "$LicenseObjPrefix*license.zip") -or ($_.Key -like "$LicencePrefix*license.xml") }
 
         if (($file.key -like '*license.zip')) {
-            Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value -Key $file.key -File "$LicenseInstance\license.zip" | Out-String)
-            Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Expand-Archive -LiteralPath "$LicenseInstance\license.zip" -DestinationPath $LicenseInstance -Force -Verbose *>&1 | Out-String)
+            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value -Key $file.key -File "$LicenseInstance\license.zip" | Out-String)
+            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Expand-Archive -LiteralPath "$LicenseInstance\license.zip" -DestinationPath $LicenseInstance -Force -Verbose *>&1 | Out-String)
         }
         
         elseif (($file.key -like '*license.xml')) {
-            Write-LogsEntry -LogGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value -Key $file.key -File "$LicenseInstance\license.xml")
+            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value -Key $file.key -File "$LicenseInstance\license.xml")
         }
         
     }

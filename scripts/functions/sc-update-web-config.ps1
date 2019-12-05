@@ -3,6 +3,13 @@ param (
     [string]$filepath,
     [string]$StackName
 )
+
+# CloudWatch values
+$logGroupName  = "$StackName-CD"
+$LogStreamName = "update-web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating web-cinfig file for Redis session state"
+
 #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
 $xml = New-Object -TypeName xml
 $xml.Load($filepath)
@@ -33,14 +40,7 @@ $xml.Save($filepath)
 $sessionState.AppendChild($providers)
 $out = ($xml.configuration.'system.web'.AppendChild($sessionState)*>&1 | Out-String) 
 
-#region  logging
-$parms = @{
-    logGroupName  = "$StackName-CD"
-    LogStreamName = "update-web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
-    LogString     = $out
-}
-$scriptPath = Split-Path $MyInvocation.MyCommand.Path
-& "$scriptPath\sc-write-logsentry.ps1" @parms
-#endregion
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $out
+
 
 $xml.Save($filepath)
