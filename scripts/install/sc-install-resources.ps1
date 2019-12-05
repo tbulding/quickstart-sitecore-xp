@@ -691,5 +691,8 @@ switch ($Role) {
 If ($Role -ne 'DbResources') {
     Push-Location $($parameters.SCInstallRoot)
     Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPathCustom) -Skip $skip -Verbose *>&1 | Tee-Object "$Role.log"
+    $LogGroupName = "$stackName-$Role"
+    $LogStreamName = "$Role-RoleInstallation-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$Role.log" -raw)
     Pop-Location
 }
