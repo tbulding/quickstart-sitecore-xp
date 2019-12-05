@@ -23,55 +23,8 @@ $ExportInstanceCertName = (Get-SSMParameter -Name "/$StackName/cert/instance/exp
 $S3BucketName = (Get-SSMParameter -Name "/$StackName/user/s3bucket/name").Value
 $S3BucketCertificatePrefix = (Get-SSMParameter -Name "/$StackName/user/s3bucket/certificateprefix").Value
 
-#Function to write to CloudWatch
-function Write-LogsEntry {
-    [CmdletBinding()]
-    Param(
-        [Parameter(Mandatory = $true)]
-        [string] $logGroupName,
-        [Parameter(Mandatory = $true)]
-        [string] $LogStreamName,
-        [Parameter(Mandatory = $true)]
-        [string] $LogString
-    )
-    Process {
-        #Determine if the LogGroup Exists
-        If (-Not (Get-CWLLogGroup -LogGroupNamePrefix $logGroupName)) {
-            New-CWLLogGroup -LogGroupName $logGroupName
-        }
-        #Determine if the LogStream Exists
-        If (-Not (Get-CWLLogStream -LogGroupName $logGroupName -LogStreamName $LogStreamName)) {
-            $splat = @{
-                LogGroupName  = $logGroupName
-                LogStreamName = $logStreamName
-            }
-            New-CWLLogStream @splat
-        }
-        $logEntry = New-Object -TypeName 'Amazon.CloudWatchLogs.Model.InputLogEvent'
-        $logEntry.Message = $LogString
-        $logEntry.Timestamp = (Get-Date).ToUniversalTime()
-        #Get the next sequence token
-        $SequenceToken = (Get-CWLLogStream -LogGroupName $logGroupName -LogStreamNamePrefix $logStreamName).UploadSequenceToken
-        if ($SequenceToken) {
-            $splat = @{
-                LogEvent      = $logEntry
-                LogGroupName  = $logGroupName
-                LogStreamName = $logStreamName
-                SequenceToken = $SequenceToken
-            }
-            Write-CWLLogEvent @splat
-        }
-        else {
-            $splat = @{
-                LogEvent      = $logEntry
-                LogGroupName  = $logGroupName
-                LogStreamName = $logStreamName
-            }
-            Write-CWLLogEvent @splat
-        }
-    }
-}
-$logStreamName = "BaseImage-CertificateCreation" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+$logGroupName = "$stackName-ssm-bootstrap"
+$logStreamName = "CertificateCreation" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
 #Create new certificates
 function NewCertificate {
@@ -322,23 +275,39 @@ function WriteToParameterStore {
 }
 
 #Creates the RootCA, moves it to Cert:\LocalMachine\Root and validates that it is correct (Returns True)
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Creating the Sitecore Root cert...'
 $root = NewCertificate `
     -FriendlyName $RootFriendlyName `
     -DNSNames $RootDNSNames `
     -CertStoreLocation $CertStoreLocation `
 
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $root
+
 $ValidateRootCA = ValidateCertificate -Cert $root
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Exporting Root certificate...'
 $ExportRootCA = ExportCert -Cert $root -Path $ExportPath -Name $ExportRootCertName -IncludePrivateKey -Password $ExportPassword
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $ExportRootCA
+
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Copying Root certificate to S3...'
 $RootCAToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $ExportRootCA.certname -localFileName $ExportRootCA.localPath
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $RootCAToS3
 
 #Creates the Sitecore Instance cert based on the RootCA and validates that it is correct (Returns True)
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Creating the Sitecore Instance cert based on the generated RootCA...'
 $signedCertificate = NewCertificate `
     -FriendlyName $InstanceFriendlyName `
     -DNSNames $InstanceDNSNames `
     -Signer $root
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $signedCertificate
 
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Writing Certificate thumbprint to Parameter Store'
 WriteToParameterStore -Cert $signedCertificate
 
 $ValidateInstanceCert = ValidateCertificate -Cert $signedCertificate
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Exporting Instance certificate...'
 $exportinstanceCert = ExportCert -Cert $signedCertificate -Path $ExportPath -Name $ExportInstanceCertName -IncludePrivateKey -Password $ExportPassword
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $exportinstanceCert
+
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Copying Instance certificate to S3...'
 $InstanceCertToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $exportinstanceCert.certname -localFileName $exportinstanceCert.localPath
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $InstanceCertToS3
