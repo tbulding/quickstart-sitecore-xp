@@ -573,6 +573,7 @@ switch ($Role) {
             SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
             XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
             SolrUrl                              = $($parameters.SolrUrl)
+            SolrCorePrefix                       = $($parameters.SolrCorePrefix)
             SitecoreIdentityAuthority            = $($parameters.SitecoreIdentityAuthority)
             SitecoreIdentitySecret               = $($secrets.SitecoreIdentitySecret)
             XConnectCollectionSearchService      = $($parameters.XConnectCollectionSearchService)
