@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Creates the required parameters in Parameter Store"
+Parameters:
+  PrivateSubnet1A:
+    Type: AWS::EC2::Subnet::Id
+  PrivateSubnet2A:
+    Type: AWS::EC2::Subnet::Id
+  SolrInstanceType:
+    Type: String
+  SolrInstanceSG:
+    Type: AWS::EC2::SecurityGroup::Id
+  SolrKeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+  SCQSPrefix:
+    Type: String
+  LocalQSScripts:
+    Type: String
+  R53HostedZoneID:
+    Type: String 
+  S3BucketName:
+    Type: String
+  QSS3BucketName:
+    Type: String
+  
+Resources:
+  SitecoreS3Bucket:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/customsolr
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: 'Quickstart-Solr-Dev' # Corresponds to the sc-role-prep.ps1 script
+# Solr Role for Instances
+  SolrInstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Effect: Allow
+        Version: 2012-10-17
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource: 
+                  - !Sub "arn:aws:s3:::${QSS3BucketName}/*"
+                  - !Sub "arn:aws:s3:::${QSS3BucketName}"
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3BucketName}/*"
+                  - !Sub "arn:aws:s3:::${S3BucketName}"
+        - PolicyName: CWAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+              - Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                Resource: "*"
+        - PolicyName: SSMParameters
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - ssm:GetParameter
+                  - ssm:PutParameter
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+        - PolicyName: SECAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+        - PolicyName: R53Updates
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - route53:ListResourceRecordSets
+                  - route53:ChangeResourceRecordSets
+                Resource:
+                  - !Sub "arn:aws:route53:::hostedzone/${R53HostedZoneID}"
+  SCInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref SolrInstanceRole
+# Solr installation
+  SolrASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy: # Wait for the instance to signal that it is created
+      ResourceSignal:
+        Timeout: PT25M
+        Count: 1
+    Properties:
+      LaunchConfigurationName: !Ref SolrLC
+      MaxSize: '1'
+      MinSize: '1'
+      DesiredCapacity: '1'
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+      # NotificationConfigurations:
+      #   - TopicARN: !Ref AutoscalingSNS
+      #     NotificationTypes:
+      #     - autoscaling:EC2_INSTANCE_LAUNCH
+      #     - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+      #     - autoscaling:EC2_INSTANCE_TERMINATE
+      #     - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+      - Key: Name
+        Value: !Sub Solr-${SCQSPrefix}
+        PropagateAtLaunch: true
+  SolrLC:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
+      InstanceType: !Ref SolrInstanceType
+      SecurityGroups:
+        - !Ref SolrInstanceSG
+      IamInstanceProfile: !Ref SCInstanceProfile
+      KeyName: !Ref SolrKeyPair
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<powershell>\n"
+            - !Sub '${LocalQSScripts}\solr-dev-install.ps1 -SCQSPrefix '
+            - !Sub '"${SCQSPrefix}" -hostedZoneID '
+            - !Sub '"${R53HostedZoneID}"'
+            - "\n"
+            - !Sub 'New-AWSQuickStartResourceSignal -Resource "SolrASG" -Stack '
+            - !Sub '"${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
+            - "</powershell>\n"
