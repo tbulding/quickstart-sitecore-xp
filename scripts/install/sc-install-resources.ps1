@@ -19,7 +19,7 @@ param (
     [string]
     $Role,
     [Parameter(Mandatory)]
-    $StackName,
+    $SCQSPrefix,
     [Parameter(Mandatory)]
     $Region
 )
@@ -29,8 +29,9 @@ If (![Environment]::Is64BitProcess) {
 }
 Import-Module SitecoreInstallFramework
 
-$urlsuffix = (Get-SSMParameter -Name "/$StackName/service/internaldns").Value
-#region Role Mapping
+$DNSSuffix = (Get-SSMParameter -Name "/$SCQSPrefix/service/internaldns").Value
+
+# region Role Mapping
 $roleMapping = @{
     'IdentityServer'               = "identity"
     'Collection'                   = "coll"
@@ -45,101 +46,115 @@ $roleMapping = @{
     'Prc'                          = "proc"
     'Rep'                          = "rep"
 }
-#endregion
+# endregion
 
-#region Parameter Values
+# region Parameter Values
 $parameters = @{
-    Prefix                               = (Get-SSMParameter -Name "/$StackName/user/sitecoreprefix").Value
-    SCInstallRoot                        = (Get-SSMParameter -Name "/$StackName/user/localresourcespath").Value
-    PasswordRecoveryUrl                  = (Get-SSMParameter -Name "/$StackName/service/passwordrecoveryurl").Value
-    allowedCorsOrigins                   = (Get-SSMParameter -Name "/$StackName/service/allowedCorsOrigins").Value
-    Environment                          = (Get-SSMParameter -Name "/$StackName/user/environment").Value
-    LogLevel                             = (Get-SSMParameter -Name "/$StackName/user/logLevel").Value
-    SolrCorePrefix                       = (Get-SSMParameter -Name "/$StackName/user/solrcoreprefix").Value
-    SolrUrl                              = (Get-SSMParameter -Name "/$StackName/user/solruri").Value
-    InstanceCertificateThumbPrint        = (Get-SSMParameter -Name "/$stackName/cert/instance/thumbprint").Value
-    SQLServer                            = (Get-SSMParameter -Name "/$StackName/sql/server").Value
-    # IdentityServerDNS                    = $roleMapping.IdentityServer + '.' + $urlsuffix
-    IdentityServerDNS                    = (Get-SSMParameter -Name "/$StackName/service/isdns").Value
-    CollectionDNS                        = $roleMapping.Collection + '.' + $urlsuffix
-    CollectionSearchDNS                  = $roleMapping.CollectionSearch + '.' + $urlsuffix
-    ReferenceDataDNS                     = $roleMapping.ReferenceData + '.' + $urlsuffix
-    MarketingAutomationDNS               = $roleMapping.MarketingAutomation + '.' + $urlsuffix
-    MarketingAutomationReportingDNS      = $roleMapping.MarketingAutomationReporting + '.' + $urlsuffix
-    CortexProcessingDNS                  = $roleMapping.CortexProcessing + '.' + $urlsuffix
-    CortexReportingDNS                   = $roleMapping.CortexReporting + '.' + $urlsuffix
-    # CMDNS                                = $roleMapping.CM + '.' + $urlsuffix
-    CMDNS                                = (Get-SSMParameter -Name "/$StackName/service/cmdns").Value
-    # CDDNS                                = $roleMapping.CD + '.' + $urlsuffix
-    CDDNS                                = (Get-SSMParameter -Name "/$StackName/service/cddns").Value
-    PrcDNS                               = $roleMapping.Prc + '.' + $urlsuffix
-    RepDNS                               = $roleMapping.Rep + '.' + $urlsuffix
-    XConnectCollectionService            = "https://" + $roleMapping.Collection + '.' + $urlsuffix
-    XConnectSearchService                = "https://" + $roleMapping.Collection + '.' + $urlsuffix
-    XConnectCollectionSearchService      = "https://" + $roleMapping.CollectionSearch + '.' + $urlsuffix
-    XConnectReferenceDataService         = "https://" + $roleMapping.ReferenceData + '.' + $urlsuffix
-    SitecoreIdentityAuthority            = "https://" + (Get-SSMParameter -Name "/$StackName/service/isdns").Value # $roleMapping.IdentityServer + '.' + $urlsuffix
-    MarketingAutomationOperationsService = "https://" + $roleMapping.MarketingAutomation + '.' + $urlsuffix
-    MarketingAutomationReportingService  = "https://" + $roleMapping.MarketingAutomationReporting + '.' + $urlsuffix
-    CortexReportingService               = "https://" + $roleMapping.CortexReporting + '.' + $urlsuffix
-    ProcessingService                    = "https://" + $roleMapping.Prc + '.' + $urlsuffix
-    ReportingService                     = "https://" + $roleMapping.Rep + '.' + $urlsuffix
+    SCPrefix                             = (Get-SSMParameter -Name "/$SCQSPrefix/user/sitecoreprefix").Value
+    SCInstallRoot                        = (Get-SSMParameter -Name "/$SCQSPrefix/user/localresourcespath").Value
+    PasswordRecoveryUrl                  = (Get-SSMParameter -Name "/$SCQSPrefix/service/passwordrecoveryurl").Value
+    allowedCorsOrigins                   = (Get-SSMParameter -Name "/$SCQSPrefix/service/allowedCorsOrigins").Value
+    Environment                          = (Get-SSMParameter -Name "/$SCQSPrefix/user/environment").Value
+    LogLevel                             = (Get-SSMParameter -Name "/$SCQSPrefix/user/logLevel").Value
+    SolrCorePrefix                       = (Get-SSMParameter -Name "/$SCQSPrefix/user/solrcoreprefix").Value
+    SolrUrl                              = (Get-SSMParameter -Name "/$SCQSPrefix/user/solruri").Value
+    InstanceCertificateThumbPrint        = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/thumbprint").Value
+    SQLServer                            = (Get-SSMParameter -Name "/$SCQSPrefix/sql/server").Value
 }
-#endregion
+# endregion
 
-#region Secrets Manager Values
+$DNSNames = @{
+    IdentityServerDNS                    = (Get-SSMParameter -Name "/$SCQSPrefix/service/isdns").Value #$roleMapping.IdentityServer + '.' + $DNSSuffix
+    CMDNS                                = $roleMapping.CM + '.' + $DNSSuffix
+    CDDNS                                = $roleMapping.CD + '.' + $DNSSuffix
+    PrcDNS                               = $roleMapping.Prc + '.' + $DNSSuffix
+    RepDNS                               = $roleMapping.Rep + '.' + $DNSSuffix
+    CollectionDNS                        = $roleMapping.Collection + '.' + $DNSSuffix
+    CollectionSearchDNS                  = $roleMapping.CollectionSearch + '.' + $DNSSuffix
+    MarketingAutomationDNS               = $roleMapping.MarketingAutomation + '.' + $DNSSuffix
+    MarketingAutomationReportingDNS      = $roleMapping.MarketingAutomationReporting + '.' + $DNSSuffix
+    ReferenceDataDNS                     = $roleMapping.ReferenceData + '.' + $DNSSuffix
+    CortexProcessingDNS                  = $roleMapping.CortexProcessing + '.' + $DNSSuffix
+    CortexReportingDNS                   = $roleMapping.CortexReporting + '.' + $DNSSuffix
+}
+
+$ServiceURLs = @{
+    PasswordRecoveryUrl                  = (Get-SSMParameter -Name "/$SCQSPrefix/service/passwordrecoveryurl").Value  # https:// (Host name of CM instance) "https://" + $DNSNames.CMDNS
+    XConnectCollectionService            = "https://" + $DNSNames.CollectionDNS                     # https://XConnectCollection
+    XConnectSearchService                = "https://" + $DNSNames.CollectionSearchDNS               # https://XConnectSearch : The xConnect Search Indexer is bundled with the xConnect Collection Search
+    XConnectCollectionSearchService      = "https://" + $DNSNames.CollectionSearchDNS               # https://XConnectCollectionSearch
+    XConnectReferenceDataService         = "https://" + $DNSNames.ReferenceDataDNS                  # https://XConnectReferenceData
+    SitecoreIdentityAuthority            = "https://" + $DNSNames.IdentityServerDNS                 # https://SitecoreIdentityServerHost
+    MarketingAutomationOperationsService = "https://" + $DNSNames.MarketingAutomationDNS            # https://XConnectMarketingAutomation
+    MarketingAutomationReportingService  = "https://" + $DNSNames.MarketingAutomationReportingDNS   # https://XConnectMarketingAutomationReporting
+    CortexReportingService               = "https://" + $DNSNames.CortexReportingDNS                # https://CortexReporting
+    ProcessingService                    = "https://" + $DNSNames.PrcDNS                            # https://SitecoreProcessing
+    ReportingService                     = "https://" + $DNSNames.RepDNS                            # https://SitecoreReporting
+}
+
+# region Secrets Manager Values
 $secrets = @{
-    #InstanceCertificateThumbPrint  = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-certificate-export").SecretString).thumbprint
-    SitecoreIdentitySecret         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sitecoreidentitysecret").SecretString).secret
-    SitecoreAdminPassword          = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sitecoreadmin").SecretString).password
-    ReportingServiceApiKey         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-reportingserviceapikey").SecretString).apikey
-    ClientSecret                   = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-clientsecret").SecretString).secret
-    SqlAdminUser                   = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqladmin").SecretString).username
-    SqlAdminPassword               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqladmin").SecretString).password
-    SqlSecurityUser                = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlsecurity").SecretString).username
-    SqlSecurityPassword            = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlsecurity").SecretString).password
-    SqlCollectionUser              = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlcollection").SecretString).username
-    SqlCollectionPassword          = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlcollection").SecretString).password
-    SqlMessagingUser               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlmessaging").SecretString).username
-    SqlMessagingPassword           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlmessaging").SecretString).password
-    SqlProcessingEngineUser        = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlprocessingengine").SecretString).username
-    SqlProcessingEnginePassword    = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlprocessingengine").SecretString).password
-    SqlReportingUser               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlreporting").SecretString).username
-    SqlReportingPassword           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlreporting").SecretString).password
-    SqlCoreUser                    = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlcore").SecretString).username
-    SqlCorePassword                = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlcore").SecretString).password
-    SqlMasterUser                  = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlmaster").SecretString).username
-    SqlMasterPassword              = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlmaster").SecretString).password
-    SqlWebUser                     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlweb").SecretString).username
-    SqlWebPassword                 = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlweb").SecretString).password
-    SqlReferenceDataUser           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlreferencedata").SecretString).username
-    SqlReferenceDataPassword       = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlreferencedata").SecretString).password
-    SqlFormsUser                   = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlforms").SecretString).username
-    SqlFormsPassword               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlforms").SecretString).password
-    SqlExmMasterUser               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlexmmaster").SecretString).username
-    SqlExmMasterPassword           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlexmmaster").SecretString).password
-    SqlProcessingPoolsUser         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlprocessingpools").SecretString).username
-    SqlProcessingPoolsPassword     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlprocessingpools").SecretString).password
-    SqlMarketingAutomationUser     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlmarketingautomation").SecretString).username
-    SqlMarketingAutomationPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlmarketingautomation").SecretString).password
-    SqlProcessingTasksUser         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlprocessingtasks").SecretString).username
-    SqlProcessingTasksPassword     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-sqlprocessingtasks").SecretString).password
+    SitecoreIdentitySecret         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sitecoreidentitysecret").SecretString).secret
+    SitecoreAdminPassword          = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sitecoreadmin").SecretString).password
+    ReportingServiceApiKey         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-reportingserviceapikey").SecretString).apikey
+    ClientSecret                   = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-clientsecret").SecretString).secret
+    SqlAdminUser                   = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqladmin").SecretString).username
+    SqlAdminPassword               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqladmin").SecretString).password
+    SqlSecurityUser                = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlsecurity").SecretString).username
+    SqlSecurityPassword            = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlsecurity").SecretString).password
+    SqlCollectionUser              = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlcollection").SecretString).username
+    SqlCollectionPassword          = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlcollection").SecretString).password
+    SqlMessagingUser               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlmessaging").SecretString).username
+    SqlMessagingPassword           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlmessaging").SecretString).password
+    SqlProcessingEngineUser        = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlprocessingengine").SecretString).username
+    SqlProcessingEnginePassword    = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlprocessingengine").SecretString).password
+    SqlReportingUser               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlreporting").SecretString).username
+    SqlReportingPassword           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlreporting").SecretString).password
+    SqlCoreUser                    = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlcore").SecretString).username
+    SqlCorePassword                = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlcore").SecretString).password
+    SqlMasterUser                  = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlmaster").SecretString).username
+    SqlMasterPassword              = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlmaster").SecretString).password
+    SqlWebUser                     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlweb").SecretString).username
+    SqlWebPassword                 = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlweb").SecretString).password
+    SqlReferenceDataUser           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlreferencedata").SecretString).username
+    SqlReferenceDataPassword       = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlreferencedata").SecretString).password
+    SqlFormsUser                   = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlforms").SecretString).username
+    SqlFormsPassword               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlforms").SecretString).password
+    SqlExmMasterUser               = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlexmmaster").SecretString).username
+    SqlExmMasterPassword           = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlexmmaster").SecretString).password
+    SqlProcessingPoolsUser         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlprocessingpools").SecretString).username
+    SqlProcessingPoolsPassword     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlprocessingpools").SecretString).password
+    SqlMarketingAutomationUser     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlmarketingautomation").SecretString).username
+    SqlMarketingAutomationPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlmarketingautomation").SecretString).password
+    SqlProcessingTasksUser         = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlprocessingtasks").SecretString).username
+    SqlProcessingTasksPassword     = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-sqlprocessingtasks").SecretString).password
 }
 
-#endregion
+# Endregion
 
-#region local values
+# Region local values
 $local = @{
     ComputerName            = $(Invoke-RestMethod -uri http://169.254.169.254/latest/meta-data/hostname)
-    SiteName                = "$($parameters.prefix).$Role"
+    SiteName                = "$($parameters.SCPrefix).$Role"
     Package                 = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)" -Filter "*$Role.scwdp.zip").FullName
     jsonPath                = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)" -Filter "*$Role.json").FullName
     jsonPathCustom          = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)/aws-custom" -Filter "*$Role.json").FullName
     CustomConfigurationFile = "$Role.json"
     LicenseFile             = "$($parameters.SCInstallRoot)\license.xml"
+    SkipDBInstallOnRoles    = $true
+}
+# Endregion
+
+# CW Logging
+$localLogPath = "$($parameters.SCInstallRoot)\logs" # Path on the instance where the log files will be located
+$LogGroupName = "$SCQSPrefix-$Role"
+$LogStreamName = "$Role-RoleInstallation-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
+
+If(!(test-path $localLogPath))
+{
+      New-Item -ItemType Directory -Force -Path $localLogPath
 }
 
-#endregion
 
 $skip = @()
 
@@ -154,7 +169,7 @@ switch ($Role) {
             'Prc'
         )
         foreach ($dbRole in $dbRoles) {
-            $local.SiteName = "$($parameters.prefix).$dbRole"
+            $local.SiteName = "$($parameters.SCPrefix).$dbRole"
             $local.Package = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)" -Filter "*$DbRole.scwdp.zip").FullName
             $local.jsonPath = (Get-ChildItem -LiteralPath "$($parameters.SCInstallRoot)" -Filter "*$DbRole.json").FullName
             $appCmd = "C:\windows\system32\inetsrv\appcmd.exe"
@@ -164,7 +179,7 @@ switch ($Role) {
                         Package                        = $($local.Package)
                         XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
                         SiteName                       = $($local.SiteName)
-                        SqlDbPrefix                    = $($parameters.prefix)
+                        SqlDbPrefix                    = $($parameters.SCPrefix)
                         SqlServer                      = $($parameters.SQLServer)
                         SqlAdminUser                   = $($secrets.SqlAdminUser)
                         SqlAdminPassword               = $($secrets.SqlAdminPassword)
@@ -178,7 +193,11 @@ switch ($Role) {
                         SqlMessagingPassword           = $($secrets.SqlMessagingPassword)
                     }
                     $skip = @(
+                        # 'DownloadWDP'
+                        # 'CreatePaths'
+                        # 'CreateAppPool'
                         'SetAppPoolCertStorePermissions'
+                        # 'CreateWebsite'
                         'StopWebsite'
                         'StopAppPool'
                         'RemoveDefaultBinding'
@@ -187,9 +206,15 @@ switch ($Role) {
                         'SupportListManagerLargeUpload'
                         'CreateHostHeader'
                         'SetPermissions'
+                        # 'InstallWDP'
                         'SetLicense'
                         'CreateBindingsWithDevelopmentThumbprint'
                         'CleanShards'
+                        # 'CreateShards'
+                        # 'CreateShardApplicationDatabaseServerLoginInvokeSqlCmd'
+                        # 'CreateShardManagerApplicationDatabaseUserInvokeSqlCmd'
+                        # 'CreateShard0ApplicationDatabaseUserInvokeSqlCmd'
+                        # 'CreateShard1ApplicationDatabaseUserInvokeSqlCmd'
                         'StartAppPool'
                         'StartWebsite'
                     )
@@ -200,7 +225,7 @@ switch ($Role) {
                         LicenseFile              = $($local.LicenseFile)
                         SiteName                 = $($local.SiteName)
                         XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
-                        SqlDbPrefix              = $($parameters.prefix)
+                        SqlDbPrefix              = $($parameters.SCPrefix)
                         SqlServer                = $($parameters.SQLServer)
                         SqlAdminUser             = $($secrets.SqlAdminUser)
                         SqlAdminPassword         = $($secrets.SqlAdminPassword)
@@ -208,7 +233,11 @@ switch ($Role) {
                         SqlReferenceDataPassword = $($secrets.SqlReferenceDataPassword)
                     }
                     $skip = @(
+                        # 'DownloadWDP'
+                        # 'CreatePaths'
+                        # 'CreateAppPool'
                         'SetAppPoolCertStorePermissions'
+                        # 'CreateWebsite'
                         'StopWebsite'
                         'StopAppPool'
                         'RemoveDefaultBinding'
@@ -216,6 +245,7 @@ switch ($Role) {
                         'SetClientCertificatePermissions'
                         'CreateHostHeader'
                         'SetPermissions'
+                        # 'InstallWDP'
                         'SetLicense'
                         'CreateBindingsWithDevelopmentThumbprint'
                         'StartAppPool'
@@ -229,7 +259,7 @@ switch ($Role) {
                         SiteName                    = $($local.SiteName)
                         SSLCert                     = $($parameters.InstanceCertificateThumbPrint)
                         XConnectCert                = $($parameters.InstanceCertificateThumbPrint)
-                        SqlDbPrefix                 = $($parameters.prefix)
+                        SqlDbPrefix                 = $($parameters.SCPrefix)
                         SqlServer                   = $($parameters.SQLServer)
                         SqlAdminUser                = $($secrets.SqlAdminUser)
                         SqlAdminPassword            = $($secrets.SqlAdminPassword)
@@ -241,14 +271,21 @@ switch ($Role) {
                         SqlReportingPassword        = $($secrets.SqlReportingPassword)
                     }
                     $skip = @(
+                        # 'DownloadWDP'
+                        # 'CreatePaths'
+                        # 'CreateAppPool'
                         'SetAppPoolCertStorePermissions'
+                        # 'CreateWebsite'
                         'StopWebsite'
                         'StopAppPool'
+                        # 'StopService'
+                        # 'RemoveService'
                         'RemoveDefaultBinding'
                         'CreateBindingsWithThumbprint'
                         'SetClientCertificatePermissions'
                         'CreateHostHeader'
                         'SetPermissions'
+                        # 'InstallWDP'
                         'SetLicense'
                         'CreateBindingsWithDevelopmentThumbprint'
                         'StartAppPool'
@@ -268,7 +305,7 @@ switch ($Role) {
                         SiteName             = $($local.SiteName)
                         SSLCert              = $($parameters.InstanceCertificateThumbPrint)
                         XConnectCert         = $($parameters.InstanceCertificateThumbPrint)
-                        SqlDbPrefix          = $($parameters.prefix)
+                        SqlDbPrefix          = $($parameters.SCPrefix)
                         SqlServer            = $($parameters.SQLServer)
                         SqlAdminUser         = $($secrets.SqlAdminUser)
                         SqlAdminPassword     = $($secrets.SqlAdminPassword)
@@ -276,7 +313,11 @@ switch ($Role) {
                         SqlReportingPassword = $($secrets.SqlReportingPassword)
                     }
                     $skip = @(
+                        # 'DownloadWDP'
+                        # 'CreatePaths'
+                        # 'CreateAppPool'
                         'SetAppPoolCertStorePermissions'
+                        # 'CreateWebsite'
                         'StopWebsite'
                         'StopAppPool'
                         'RemoveDefaultBinding'
@@ -284,6 +325,7 @@ switch ($Role) {
                         'SetClientCertificatePermissions'
                         'CreateHostHeader'
                         'SetPermissions'
+                        # 'InstallWDP'
                         'SetLicense'
                         'CreateBindingsWithDevelopmentThumbprint'
                         'StartAppPool'
@@ -297,7 +339,7 @@ switch ($Role) {
                         SiteName                 = $($local.SiteName)
                         SSLCert                  = $($parameters.InstanceCertificateThumbPrint)
                         XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
-                        SqlDbPrefix              = $($parameters.prefix)
+                        SqlDbPrefix              = $($parameters.SCPrefix)
                         SqlServer                = $($parameters.SQLServer)
                         SqlAdminUser             = $($secrets.SqlAdminUser)
                         SqlAdminPassword         = $($secrets.SqlAdminPassword)
@@ -321,6 +363,10 @@ switch ($Role) {
                         SqlMessagingPassword     = $($secrets.SqlMessagingPassword)
                     }
                     $skip = @(
+                        # 'DownloadWDP'
+                        # 'CreatePaths'
+                        # 'CreateAppPool'
+                        # 'CreateWebsite'
                         'StopWebsite'
                         'StopAppPool'
                         'RemoveDefaultBinding'
@@ -328,11 +374,13 @@ switch ($Role) {
                         'CreateHostHeader'
                         'SetPermissions'
                         'SetCertStorePermissions'
-                        'SetLicense'
+                        # 'InstallWDP'
                         'CreateBindingsWithDevelopmentThumbprint'
+                        'SetLicense'
                         'StartAppPool'
                         'StartWebsite'
                         'UpdateSolrSchema'
+                        # 'DisplayPassword'
                     )
                 }
                 'Prc' {
@@ -342,7 +390,7 @@ switch ($Role) {
                         SiteName                   = $($local.SiteName)
                         SSLCert                    = $($parameters.InstanceCertificateThumbPrint)
                         XConnectCert               = $($parameters.InstanceCertificateThumbPrint)
-                        SqlDbPrefix                = $($parameters.prefix)
+                        SqlDbPrefix                = $($parameters.SCPrefix)
                         SqlServer                  = $($parameters.SQLServer)
                         SqlAdminUser               = $($secrets.SqlAdminUser)
                         SqlAdminPassword           = $($secrets.SqlAdminPassword)
@@ -362,6 +410,10 @@ switch ($Role) {
                         SqlProcessingTasksPassword = $($secrets.SqlProcessingTasksPassword)
                     }
                     $skip = @(
+                        # 'DownloadWDP'
+                        # 'CreatePaths'
+                        # 'CreateAppPool'
+                        # 'CreateWebsite'
                         'StopWebsite'
                         'StopAppPool'
                         'RemoveDefaultBinding'
@@ -369,8 +421,9 @@ switch ($Role) {
                         'CreateHostHeader'
                         'SetPermissions'
                         'SetCertStorePermissions'
-                        'SetLicense'
+                        # 'InstallWDP'
                         'CreateBindingsWithDevelopmentThumbprint'
+                        'SetLicense'
                         'StartAppPool'
                         'StartWebsite'
                     )
@@ -379,7 +432,8 @@ switch ($Role) {
             }
 
             Push-Location $($parameters.SCInstallRoot)
-            Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPath) -Skip $skip -Verbose *>&1 | Tee-Object "$DbRole.log"
+            Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPath) -Skip $skip -Verbose *>&1 | Tee-Object "$localLogPath\$DbRole.log"
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\$DbRole.log" -raw)
             & $appcmd delete site $($local.SiteName)
             & $appcmd delete apppool$($local.SiteName)
             Pop-Location
@@ -391,202 +445,33 @@ switch ($Role) {
             SitecoreIdentityCert    = $($parameters.InstanceCertificateThumbPrint)
             LicenseFile             = $($local.LicenseFile)
             SiteName                = $($local.SiteName)
-            PasswordRecoveryUrl     = $($parameters.PasswordRecoveryUrl)
+            SqlServer               = $($parameters.SQLServer)
+            SqlDbPrefix             = $($parameters.SCPrefix)
+            SqlSecurityPassword     = $($secrets.SqlSecurityPassword)
+            PasswordRecoveryUrl     = $($ServiceURLs.PasswordRecoveryUrl)
             AllowedCorsOrigins      = $($parameters.allowedCorsOrigins)
             ClientSecret            = $($secrets.ClientSecret)
             CustomConfigurationFile = $($local.CustomConfigurationFile)
-            DnsName                 = $($parameters.IdentityServerDNS)
-            SqlServer               = $($parameters.SQLServer)
-            SqlDbPrefix             = $($parameters.prefix)
+            HostMappingName         = $($DNSNames.IdentityServerDNS)
+            DnsName                 = $($DNSNames.IdentityServerDNS)
+            # SitePhysicalRoot        = ""
+            # SqlSecurityDbName       = ""
             SqlSecurityUser         = $($secrets.SqlSecurityUser)
-            SqlSecurityPassword     = $($secrets.SqlSecurityPassword)
-        }
-    }
-    'Collection' {
-        $DeploymentParameters = @{
-            Package                        = $($local.Package)
-            LicenseFile                    = $($local.LicenseFile)
-            SiteName                       = $($local.SiteName)
-            SSLCert                        = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
-            XConnectEnvironment            = $($parameters.Environment)
-            XConnectLogLevel               = $($parameters.LogLevel)
-            DnsName                        = $($parameters.CollectionDNS)
-            SqlDbPrefix                    = $($parameters.prefix)
-            SqlServer                      = $($parameters.SQLServer)
-            SqlAdminUser                   = $($secrets.SqlAdminUser)
-            SqlAdminPassword               = $($secrets.SqlAdminPassword)
-            SqlCollectionUser              = $($secrets.SqlCollectionUser)
-            SqlCollectionPassword          = $($secrets.SqlCollectionPassword)
-            SqlProcessingPoolsUser         = $($secrets.SqlProcessingPoolsUser)
-            SqlProcessingPoolsPassword     = $($secrets.SqlProcessingPoolsPassword)
-            SqlMarketingAutomationUser     = $($secrets.SqlMarketingAutomationUser)
-            SqlMarketingAutomationPassword = $($secrets.SqlMarketingAutomationPassword)
-            SqlMessagingUser               = $($secrets.SqlMessagingUser)
-            SqlMessagingPassword           = $($secrets.SqlMessagingPassword)
-        }
-        $skip = @(
-            'CreateShards'
-            'CleanShards'
-            'CreateShardApplicationDatabaseServerLoginSqlCmd'
-            'CreateShardManagerApplicationDatabaseUserSqlCmd'
-            'CreateShard0ApplicationDatabaseUserSqlCmd'
-            'CreateShard1ApplicationDatabaseUserSqlCmd'
-        )
-    }
-    'CollectionSearch' {
-        $DeploymentParameters = @{
-            Package                        = $($local.Package)
-            LicenseFile                    = $($local.LicenseFile)
-            SiteName                       = $($local.SiteName)
-            SSLCert                        = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
-            SolrCorePrefix                 = $($parameters.SolrCorePrefix)
-            SolrUrl                        = $($parameters.SolrUrl)
-            XConnectEnvironment            = $($parameters.Environment)
-            XConnectLogLevel               = $($parameters.LogLevel)
-            DnsName                        = $($parameters.CollectionSearchDNS)
-            SqlDbPrefix                    = $($parameters.prefix)
-            SqlServer                      = $($parameters.SQLServer)
-            SqlCollectionUser              = $($secrets.SqlCollectionUser)
-            SqlCollectionPassword          = $($secrets.SqlCollectionPassword)
-            SqlProcessingPoolsUser         = $($secrets.SqlProcessingPoolsUser)
-            SqlProcessingPoolsPassword     = $($secrets.SqlProcessingPoolsPassword)
-            SqlMarketingAutomationUser     = $($secrets.SqlMarketingAutomationUser)
-            SqlMarketingAutomationPassword = $($secrets.SqlMarketingAutomationPassword)
-            SqlMessagingUser               = $($secrets.SqlMessagingUser)
-            SqlMessagingPassword           = $($secrets.SqlMessagingPassword)
-        }
-    }
-    'ReferenceData' {
-        $DeploymentParameters = @{
-            Package                  = $($local.Package)
-            LicenseFile              = $($local.LicenseFile)
-            SiteName                 = $($local.SiteName)
-            XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
-            XConnectEnvironment      = $($parameters.Environment)
-            XConnectLogLevel         = $($parameters.LogLevel)
-            DnsName                  = $($parameters.ReferenceDataDNS)
-            SqlDbPrefix              = $($parameters.prefix)
-            SqlServer                = $($parameters.SQLServer)
-            SqlAdminUser             = $($secrets.SqlAdminUser)
-            SqlAdminPassword         = $($secrets.SqlAdminPassword)
-            SqlReferenceDataUser     = $($secrets.SqlReferenceDataUser)
-            SqlReferenceDataPassword = $($secrets.SqlReferenceDataPassword)
-        }
-    }
-    'MarketingAutomation' {
-        $DeploymentParameters = @{
-            Package                         = $($local.Package)
-            LicenseFile                     = $($local.LicenseFile)
-            SiteName                        = $($local.SiteName)
-            SSLCert                         = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                    = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCollectionSearchService = $($parameters.XConnectCollectionSearchService)
-            XConnectReferenceDataService    = $($parameters.XConnectReferenceDataService)
-            XConnectEnvironment             = $($parameters.Environment)
-            XConnectLogLevel                = $($parameters.LogLevel)
-            DnsName                         = $($parameters.MarketingAutomationDNS)
-            SqlServer                       = $($parameters.SQLServer)
-            SqlDbPrefix                     = $($parameters.prefix)
-            SqlAdminUser                    = $($secrets.SqlAdminUser)
-            SqlAdminPassword                = $($secrets.SqlAdminPassword)
-            SqlCollectionUser               = $($secrets.SqlCollectionUser)
-            SqlCollectionPassword           = $($secrets.SqlCollectionPassword)
-            SqlProcessingPoolsUser          = $($secrets.SqlProcessingPoolsUser)
-            SqlProcessingPoolsPassword      = $($secrets.SqlProcessingPoolsPassword)
-            SqlReferenceDataUser            = $($secrets.SqlReferenceDataUser)
-            SqlReferenceDataPassword        = $($secrets.SqlReferenceDataPassword)
-            SqlMarketingAutomationUser      = $($secrets.SqlMarketingAutomationUser)
-            SqlMarketingAutomationPassword  = $($secrets.SqlMarketingAutomationPassword)
-            SqlMessagingUser                = $($secrets.SqlMessagingUser)
-            SqlMessagingPassword            = $($secrets.SqlMessagingPassword)
-
-        }
-    }
-    'MarketingAutomationReporting' {
-        $DeploymentParameters = @{
-            Package                        = $($local.Package)
-            LicenseFile                    = $($local.LicenseFile)
-            SiteName                       = $($local.SiteName)
-            SSLCert                        = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
-            XConnectEnvironment            = $($parameters.Environment)
-            XConnectLogLevel               = $($parameters.LogLevel)
-            DnsName                        = $($parameters.MarketingAutomationReportingDNS)
-            SqlDbPrefix                    = $($parameters.prefix)
-            SqlServer                      = $($parameters.SQLServer)
-            SqlReferenceDataUser           = $($secrets.SqlReferenceDataUser)
-            SqlReferenceDataPassword       = $($secrets.SqlReferenceDataPassword)
-            SqlMarketingAutomationUser     = $($secrets.SqlMarketingAutomationUser)
-            SqlMarketingAutomationPassword = $($secrets.SqlMarketingAutomationPassword)
-        }
-    }
-    'CortexProcessing' {
-        $DeploymentParameters = @{
-            Package                     = $($local.Package)
-            LicenseFile                 = $($local.LicenseFile)
-            SiteName                    = $($local.SiteName)
-            SSLCert                     = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCollectionService   = $($parameters.XConnectCollectionService)
-            XConnectSearchService       = $($parameters.XConnectSearchService)
-            XConnectEnvironment         = $($parameters.Environment)
-            XConnectLogLevel            = $($parameters.LogLevel)
-            DnsName                     = $($parameters.CortexProcessingDNS)
-            SqlDbPrefix                 = $($parameters.prefix)
-            SqlServer                   = $($parameters.SQLServer)
-            SqlAdminUser                = $($secrets.SqlAdminUser)
-            SqlAdminPassword            = $($secrets.SqlAdminPassword)
-            SqlMessagingUser            = $($secrets.SqlMessagingUser)
-            SqlMessagingPassword        = $($secrets.SqlMessagingPassword)
-            SqlProcessingEngineUser     = $($secrets.SqlProcessingEngineUser)
-            SqlProcessingEnginePassword = $($secrets.SqlProcessingEnginePassword)
-            SqlReportingUser            = $($secrets.SqlReportingUser)
-            SqlReportingPassword        = $($secrets.SqlReportingPassword)
-        }
-    }
-    'CortexReporting' {
-        $DeploymentParameters = @{
-            Package              = $($local.Package)
-            LicenseFile          = $($local.LicenseFile)
-            SiteName             = $($local.SiteName)
-            SSLCert              = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert         = $($parameters.InstanceCertificateThumbPrint)
-            XConnectEnvironment  = $($parameters.Environment)
-            XConnectLogLevel     = $($parameters.LogLevel)
-            DnsName              = $($parameters.CortexReportingDNS)
-            SqlDbPrefix          = $($parameters.prefix)
-            SqlServer            = $($parameters.SQLServer)
-            SqlAdminUser         = $($secrets.SqlAdminUser)
-            SqlAdminPassword     = $($secrets.SqlAdminPassword)
-            SqlReportingUser     = $($secrets.SqlReportingUser)
-            SqlReportingPassword = $($secrets.SqlReportingPassword)
+            # PackagesTempLocation    = ""
+            # DownloadLocations       = ""
         }
     }
     'CM' {
         $DeploymentParameters = @{
             Package                              = $($local.Package)
             LicenseFile                          = $($local.LicenseFile)
-            SiteName                             = $($local.SiteName)
-            SitecoreAdminPassword                = $($secrets.SitecoreAdminPassword)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
+            SolrCorePrefix                       = $($parameters.SolrCorePrefix)
             SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
             XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
-            SolrUrl                              = $($parameters.SolrUrl)
-            SolrCorePrefix                       = $($parameters.SolrCorePrefix)
-            SitecoreIdentityAuthority            = $($parameters.SitecoreIdentityAuthority)
-            SitecoreIdentitySecret               = $($secrets.SitecoreIdentitySecret)
-            XConnectCollectionSearchService      = $($parameters.XConnectCollectionSearchService)
-            XConnectReferenceDataService         = $($parameters.XConnectReferenceDataService)
-            MarketingAutomationOperationsService = $($parameters.MarketingAutomationOperationsService)
-            MarketingAutomationReportingService  = $($parameters.MarketingAutomationReportingService)
-            CortexReportingService               = $($parameters.CortexReportingService)
-            ProcessingService                    = $($parameters.ProcessingService)
-            ReportingService                     = $($parameters.ReportingService)
-            ReportingServiceApiKey               = $($secrets.ReportingServiceApiKey)
-            DnsName                              = $($parameters.CMDNS)
-            SqlDbPrefix                          = $($parameters.prefix)
-            SqlServer                            = $($parameters.SQLServer)
+            SiteName                             = $($local.SiteName)
+            # SitePhysicalRoot
+            SitecoreAdminPassword                = $($secrets.SitecoreAdminPassword)
             SqlAdminUser                         = $($secrets.SqlAdminUser)
             SqlAdminPassword                     = $($secrets.SqlAdminPassword)
             SqlCoreUser                          = $($secrets.SqlCoreUser)
@@ -607,23 +492,44 @@ switch ($Role) {
             SqlExmMasterPassword                 = $($secrets.SqlExmMasterPassword)
             SqlMessagingUser                     = $($secrets.SqlMessagingUser)
             SqlMessagingPassword                 = $($secrets.SqlMessagingPassword)
+            SqlServer                            = $($parameters.SQLServer)
+            # ExmEdsProvider
+            SolrUrl                              = $($parameters.SolrUrl)
+            ProcessingService                    = $($ServiceURLs.ProcessingService)
+            ReportingService                     = $($ServiceURLs.ReportingService)
+            ReportingServiceApiKey               = $($secrets.ReportingServiceApiKey)
+            XConnectCollectionSearchService      = $($ServiceURLs.XConnectCollectionSearchService)
+            XConnectReferenceDataService         = $($ServiceURLs.XConnectReferenceDataService)
+            MarketingAutomationOperationsService = $($ServiceURLs.MarketingAutomationOperationsService)
+            MarketingAutomationReportingService  = $($ServiceURLs.MarketingAutomationReportingService)
+            CortexReportingService               = $($ServiceURLs.CortexReportingService)
+            # EXMCryptographicKey
+            # EXMAuthenticationKey
+            SitecoreIdentityAuthority            = $($ServiceURLs.SitecoreIdentityAuthority)
+            SitecoreIdentitySecret               = $($secrets.SitecoreIdentitySecret)
+            # TelerikEncryptionKey
+            HostMappingName                      = $($DNSNames.CMDNS)
+            DnsName                              = $($DNSNames.CMDNS)
+            SkipDatabaseInstallation             = $($local.SkipDBInstallOnRoles)
+            # PackagesTempLocation
+            # DownloadLocations
         }
     }
     'CD' {
         $DeploymentParameters = @{
             Package                              = $($local.Package)
             LicenseFile                          = $($local.LicenseFile)
-            SiteName                             = $($local.SiteName)
-            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
-            SolrUrl                              = $($parameters.SolrUrl)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
             SolrCorePrefix                       = $($parameters.SolrCorePrefix)
-            SitecoreIdentityAuthority            = $($parameters.SitecoreIdentityAuthority)
-            XConnectCollectionService            = $($parameters.XConnectCollectionService)
-            XConnectReferenceDataService         = $($parameters.XConnectReferenceDataService)
-            MarketingAutomationOperationsService = $($parameters.MarketingAutomationOperationsService)
-            MarketingAutomationReportingService  = $($parameters.MarketingAutomationReportingService)
-            DnsName                              = $($parameters.CDDNS)
-            SqlDbPrefix                          = $($parameters.prefix)
+            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            SiteName                             = $($local.SiteName)
+            # SitePhysicalRoot
+            SolrUrl                              = $($parameters.SolrUrl)
+            XConnectCollectionService            = $($ServiceURLs.XConnectCollectionService)
+            XConnectReferenceDataService         = $($ServiceURLs.XConnectReferenceDataService)
+            MarketingAutomationOperationsService = $($ServiceURLs.MarketingAutomationOperationsService)
+            MarketingAutomationReportingService  = $($ServiceURLs.MarketingAutomationReportingService)
+            itecoreIdentityAuthority            = $($ServiceURLs.SitecoreIdentityAuthority)
             SqlServer                            = $($parameters.SQLServer)
             SqlSecurityUser                      = $($secrets.SqlSecurityUser)
             SqlSecurityPassword                  = $($secrets.SqlSecurityPassword)
@@ -635,65 +541,275 @@ switch ($Role) {
             SqlExmMasterPassword                 = $($secrets.SqlExmMasterPassword)
             SqlMessagingUser                     = $($secrets.SqlMessagingUser)
             SqlMessagingPassword                 = $($secrets.SqlMessagingPassword)
+            # EXMCryptographicKey
+            # EXMAuthenticationKey
+            HostMappingName                      = $($DNSNames.CDDNS)
+            DnsName                              = $($DNSNames.CDDNS)
+            # PackagesTempLocation
+            # DownloadLocations
         }
     }
     'Prc' {
         $DeploymentParameters = @{
-            Package                    = $($local.Package)
-            LicenseFile                = $($local.LicenseFile)
-            SiteName                   = $($local.SiteName)
-            SSLCert                    = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert               = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCollectionService  = $($parameters.XConnectCollectionService)
+            Package                              = $($local.Package)
+            LicenseFile                          = $($local.LicenseFile)
+            SiteName                             = $($local.SiteName)
+            SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCollectionService  = $($ServiceURLs.XConnectCollectionService)
             ReportingServiceApiKey     = $($secrets.ReportingServiceApiKey)
-            DnsName                    = $($parameters.PrcDNS)
-            SqlDbPrefix                = $($parameters.prefix)
-            SqlServer                  = $($parameters.SQLServer)
-            SqlAdminUser               = $($secrets.SqlAdminUser)
-            SqlAdminPassword           = $($secrets.SqlAdminPassword)
-            SqlCoreUser                = $($secrets.SqlCoreUser)
-            SqlCorePassword            = $($secrets.SqlCorePassword)
-            SqlSecurityUser            = $($secrets.SqlSecurityUser)
-            SqlSecurityPassword        = $($secrets.SqlSecurityPassword)
-            SqlMasterUser              = $($secrets.SqlMasterUser)
-            SqlMasterPassword          = $($secrets.SqlMasterPassword)
-            SqlReportingUser           = $($secrets.SqlReportingUser)
-            SqlReportingPassword       = $($secrets.SqlReportingPassword)
-            SqlReferenceDataUser       = $($secrets.SqlReferenceDataUser)
-            SqlReferenceDataPassword   = $($secrets.SqlReferenceDataPassword)
-            SqlProcessingPoolsUser     = $($secrets.SqlProcessingPoolsUser)
-            SqlProcessingPoolsPassword = $($secrets.SqlProcessingPoolsPassword)
-            SqlProcessingTasksUser     = $($secrets.SqlProcessingTasksUser)
-            SqlProcessingTasksPassword = $($secrets.SqlProcessingTasksPassword)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
+            SqlServer                            = $($parameters.SQLServer)
+            SqlAdminUser                         = $($secrets.SqlAdminUser)
+            SqlAdminPassword                     = $($secrets.SqlAdminPassword)
+            SqlCoreUser                          = $($secrets.SqlCoreUser)
+            SqlCorePassword                      = $($secrets.SqlCorePassword)
+            SqlSecurityUser                      = $($secrets.SqlSecurityUser)
+            SqlSecurityPassword                  = $($secrets.SqlSecurityPassword)
+            SqlMasterUser                        = $($secrets.SqlMasterUser)
+            SqlMasterPassword                    = $($secrets.SqlMasterPassword)
+            SqlReportingUser                     = $($secrets.SqlReportingUser)
+            SqlReportingPassword                 = $($secrets.SqlReportingPassword)
+            SqlReferenceDataUser                 = $($secrets.SqlReferenceDataUser)
+            SqlReferenceDataPassword             = $($secrets.SqlReferenceDataPassword)
+            SqlProcessingPoolsUser               = $($secrets.SqlProcessingPoolsUser)
+            SqlProcessingPoolsPassword           = $($secrets.SqlProcessingPoolsPassword)
+            SqlProcessingTasksUser               = $($secrets.SqlProcessingTasksUser)
+            SqlProcessingTasksPassword           = $($secrets.SqlProcessingTasksPassword)
+            # SitePhysicalRoot
+            HostMappingName                      = $($DNSNames.PrcDNS)
+            DnsName                              = $($DNSNames.PrcDNS)
+            SkipDatabaseInstallation             = $($local.SkipDBInstallOnRoles)
+            # PackagesTempLocation
+            # DownloadLocations
         }
     }
     'Rep' {
         $DeploymentParameters = @{
-            Package                = $($local.Package)
-            LicenseFile            = $($local.LicenseFile)
-            SiteName               = $($local.SiteName)
-            SSLCert                = $($parameters.InstanceCertificateThumbPrint)
-            ReportingServiceApiKey = $($secrets.ReportingServiceApiKey)
-            DnsName                = $($parameters.RepDNS)
-            SqlDbPrefix            = $($parameters.prefix)
-            SqlServer              = $($parameters.SQLServer)
-            SqlCoreUser            = $($secrets.SqlCoreUser)
-            SqlCorePassword        = $($secrets.SqlCorePassword)
-            SqlSecurityUser        = $($secrets.SqlSecurityUser)
-            SqlSecurityPassword    = $($secrets.SqlSecurityPassword)
-            SqlMasterUser          = $($secrets.SqlMasterUser)
-            SqlMasterPassword      = $($secrets.SqlMasterPassword)
-            SqlReportingUser       = $($secrets.SqlReportingUser)
-            SqlReportingPassword   = $($secrets.SqlReportingPassword)
+            Package                              = $($local.Package)
+            LicenseFile                          = $($local.LicenseFile)
+            SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
+            SiteName                             = $($local.SiteName)
+            # SitePhysicalRoot
+            SqlCoreUser                          = $($secrets.SqlCoreUser)
+            SqlCorePassword                      = $($secrets.SqlCorePassword)
+            SqlSecurityUser                      = $($secrets.SqlSecurityUser)
+            SqlSecurityPassword                  = $($secrets.SqlSecurityPassword)
+            SqlMasterUser                        = $($secrets.SqlMasterUser)
+            SqlMasterPassword                    = $($secrets.SqlMasterPassword)
+            SqlReportingUser                     = $($secrets.SqlReportingUser)
+            SqlReportingPassword                 = $($secrets.SqlReportingPassword)
+            SqlServer                            = $($parameters.SQLServer)
+            ReportingServiceApiKey               = $($secrets.ReportingServiceApiKey)
+            HostMappingName                      = $($DNSNames.RepDNS)
+            DnsName                              = $($DNSNames.RepDNS)
+            # PackagesTempLocation
+            # DownloadLocations
+
+        }
+    }
+    'Collection' {
+        $DeploymentParameters = @{
+            Package                              = $($local.Package)
+            LicenseFile                          = $($local.LicenseFile)
+            SiteName                             = $($local.SiteName)
+            # SitePhysicalRoot
+            SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
+            SqlAdminUser                         = $($secrets.SqlAdminUser)
+            SqlAdminPassword                     = $($secrets.SqlAdminPassword)
+            SqlCollectionUser                    = $($secrets.SqlCollectionUser)
+            SqlCollectionPassword                = $($secrets.SqlCollectionPassword)
+            SqlProcessingPoolsUser               = $($secrets.SqlProcessingPoolsUser)
+            SqlProcessingPoolsPassword           = $($secrets.SqlProcessingPoolsPassword)
+            SqlMarketingAutomationUser           = $($secrets.SqlMarketingAutomationUser)
+            SqlMarketingAutomationPassword       = $($secrets.SqlMarketingAutomationPassword)
+            SqlMessagingUser                     = $($secrets.SqlMessagingUser)
+            SqlMessagingPassword                 = $($secrets.SqlMessagingPassword)
+            SqlServer                            = $($parameters.SQLServer)
+            XConnectEnvironment                  = $($parameters.Environment)
+            XConnectLogLevel                     = $($parameters.LogLevel)
+            HostMappingName                      = $($DNSNames.CollectionDNS)
+            DnsName                              = $($DNSNames.CollectionDNS)
+            SkipDatabaseInstallation             = $($local.SkipDBInstallOnRoles)
+            # PackagesTempLocation
+            # DownloadLocations
+        }
+        $skip = @(
+            'CreateShards'
+            'CleanShards'
+            'CreateShardApplicationDatabaseServerLoginSqlCmd'
+            'CreateShardManagerApplicationDatabaseUserSqlCmd'
+            'CreateShard0ApplicationDatabaseUserSqlCmd'
+            'CreateShard1ApplicationDatabaseUserSqlCmd'
+        )
+    }
+    'CollectionSearch' {
+        $DeploymentParameters = @{
+            Package                              = $($local.Package)
+            LicenseFile                          = $($local.LicenseFile)
+            SiteName                             = $($local.SiteName)
+            # SitePhysicalRoot
+            SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
+            SolrCorePrefix                       = $($parameters.SolrCorePrefix)
+            SqlCollectionUser                    = $($secrets.SqlCollectionUser)
+            SqlCollectionPassword                = $($secrets.SqlCollectionPassword)
+            SqlProcessingPoolsUser               = $($secrets.SqlProcessingPoolsUser)
+            SqlProcessingPoolsPassword           = $($secrets.SqlProcessingPoolsPassword)
+            SqlMarketingAutomationUser           = $($secrets.SqlMarketingAutomationUser)
+            SqlMarketingAutomationPassword       = $($secrets.SqlMarketingAutomationPassword)
+            SqlMessagingUser                     = $($secrets.SqlMessagingUser)
+            SqlMessagingPassword                 = $($secrets.SqlMessagingPassword)
+            SqlServer                            = $($parameters.SQLServer)
+            SolrUrl                              = $($parameters.SolrUrl)
+            XConnectEnvironment                  = $($parameters.Environment)
+            XConnectLogLevel                     = $($parameters.LogLevel)
+            HostMappingName                      = $($DNSNames.CollectionSearchDNS)
+            DnsName                              = $($DNSNames.CollectionSearchDNS)
+            # PackagesTempLocation
+            # DownloadLocations
+        }
+    }
+    'MarketingAutomationReporting' {
+        $DeploymentParameters = @{
+            Package                              = $($local.Package)
+            LicenseFile                          = $($local.LicenseFile)
+            SiteName                             = $($local.SiteName)
+            # SitePhysicalRoot
+            SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
+            SqlReferenceDataUser                 = $($secrets.SqlReferenceDataUser)
+            SqlReferenceDataPassword             = $($secrets.SqlReferenceDataPassword)
+            SqlMarketingAutomationUser           = $($secrets.SqlMarketingAutomationUser)
+            SqlMarketingAutomationPassword       = $($secrets.SqlMarketingAutomationPassword)
+            SqlServer                            = $($parameters.SQLServer)
+            XConnectEnvironment                  = $($parameters.Environment)
+            XConnectLogLevel                     = $($parameters.LogLevel)
+            HostMappingName                      = $($DNSNames.MarketingAutomationReportingDNS)
+            DnsName                              = $($DNSNames.MarketingAutomationReportingDNS)
+            # PackagesTempLocation
+            # DownloadLocations
+        }
+    }
+    'MarketingAutomation' {
+        $DeploymentParameters = @{
+            Package                              = $($local.Package)
+            LicenseFile                          = $($local.LicenseFile)
+            SiteName                             = $($local.SiteName)
+            # SitePhysicalRoot
+            SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            SqlDbPrefix                          = $($parameters.SCPrefix)
+            SqlAdminUser                         = $($secrets.SqlAdminUser)
+            SqlAdminPassword                     = $($secrets.SqlAdminPassword)
+            SqlCollectionUser                    = $($secrets.SqlCollectionUser)
+            SqlCollectionPassword                = $($secrets.SqlCollectionPassword)
+            SqlProcessingPoolsUser               = $($secrets.SqlProcessingPoolsUser)
+            SqlProcessingPoolsPassword           = $($secrets.SqlProcessingPoolsPassword)
+            SqlReferenceDataUser                 = $($secrets.SqlReferenceDataUser)
+            SqlReferenceDataPassword             = $($secrets.SqlReferenceDataPassword)
+            SqlMarketingAutomationUser           = $($secrets.SqlMarketingAutomationUser)
+            SqlMarketingAutomationPassword       = $($secrets.SqlMarketingAutomationPassword)
+            SqlMessagingUser                     = $($secrets.SqlMessagingUser)
+            SqlMessagingPassword                 = $($secrets.SqlMessagingPassword)
+            SqlServer                            = $($parameters.SQLServer)
+            XConnectCollectionSearchService      = $($ServiceURLs.XConnectCollectionSearchService) # "https://XConnectCollectionSearch"
+            XConnectReferenceDataService         = $($ServiceURLs.XConnectReferenceDataService) # "https://XConnectReferenceData"
+            XConnectEnvironment                  = $($parameters.Environment)
+            XConnectLogLevel                     = $($parameters.LogLevel)
+            HostMappingName                      = $($DNSNames.MarketingAutomationDNS)
+            DnsName                              = $($DNSNames.MarketingAutomationDNS)
+            # PackagesTempLocation
+            # DownloadLocations
+        }
+    }
+    'ReferenceData' {
+        $DeploymentParameters = @{
+            Package                  = $($local.Package)
+            LicenseFile              = $($local.LicenseFile)
+            SiteName                 = $($local.SiteName)
+            XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
+            XConnectEnvironment      = $($parameters.Environment)
+            XConnectLogLevel         = $($parameters.LogLevel)
+            DnsName                  = $($DNSNames.ReferenceDataDNS)
+            SqlDbPrefix              = $($parameters.SCPrefix)
+            SqlServer                = $($parameters.SQLServer)
+            SqlAdminUser             = $($secrets.SqlAdminUser)
+            SqlAdminPassword         = $($secrets.SqlAdminPassword)
+            SqlReferenceDataUser     = $($secrets.SqlReferenceDataUser)
+            SqlReferenceDataPassword = $($secrets.SqlReferenceDataPassword)
+        }
+    }
+    'CortexProcessing' {
+        $DeploymentParameters = @{
+            Package                    = $($local.Package)
+            LicenseFile                = $($local.LicenseFile)
+            SiteName                   = $($local.SiteName)
+            # SitePhysicalRoot
+            SSLCert                     = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                = $($parameters.InstanceCertificateThumbPrint)
+            SqlDbPrefix                 = $($parameters.SCPrefix)
+            SqlAdminUser                = $($secrets.SqlAdminUser)
+            SqlAdminPassword            = $($secrets.SqlAdminPassword)
+            SqlMessagingUser            = $($secrets.SqlMessagingUser)
+            SqlMessagingPassword        = $($secrets.SqlMessagingPassword)
+            SqlProcessingEngineUser     = $($secrets.SqlProcessingEngineUser)
+            SqlProcessingEnginePassword = $($secrets.SqlProcessingEnginePassword)
+            SqlReportingUser            = $($secrets.SqlReportingUser)
+            SqlReportingPassword        = $($secrets.SqlReportingPassword)
+            SqlServer                   = $($parameters.SQLServer)
+            XConnectCollectionService   = $($ServiceURLs.XConnectCollectionService)
+            XConnectSearchService       = $($ServiceURLs.XConnectSearchService)
+            XConnectEnvironment         = $($parameters.Environment)
+            XConnectLogLevel            = $($parameters.LogLevel)
+            # MachineLearningServerUrl
+            # MachineLearningServerBlobEndpointCertificatePath
+            # MachineLearningServerBlobEndpointCertificatePassword
+            # MachineLearningServerTableEndpointCertificatePath
+            # MachineLearningServerTableEndpointCertificatePassword
+            # MachineLearningServerEndpointCertificationAuthorityCertificatePath
+            HostMappingName             = $($DNSNames.CortexProcessingDNS)
+            DnsName                     = $($DNSNames.CortexProcessingDNS)
+            SkipDatabaseInstallation    = $($local.SkipDBInstallOnRoles)
+            # PackagesTempLocation
+            # DownloadLocations
+        }
+    }
+    'CortexReporting' {
+        $DeploymentParameters = @{
+            Package                     = $($local.Package)
+            LicenseFile                 = $($local.LicenseFile)
+            SiteName                    = $($local.SiteName)
+            # SitePhysicalRoot
+            SSLCert                     = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                = $($parameters.InstanceCertificateThumbPrint)
+            SqlDbPrefix                 = $($parameters.SCPrefix)
+            SqlAdminUser                = $($secrets.SqlAdminUser)
+            SqlAdminPassword            = $($secrets.SqlAdminPassword)
+            SqlReportingUser            = $($secrets.SqlReportingUser)
+            SqlReportingPassword        = $($secrets.SqlReportingPassword)
+            SqlServer                   = $($parameters.SQLServer)
+            XConnectEnvironment         = $($parameters.Environment)
+            XConnectLogLevel            = $($parameters.LogLevel)
+            HostMappingName             = $($DNSNames.CortexReportingDNS)
+            DnsName                     = $($DNSNames.CortexReportingDNS)
+            SkipDatabaseInstallation    = $($local.SkipDBInstallOnRoles)
+            # PackagesTempLocation
+            # DownloadLocations
         }
     }
 }
 
 If ($Role -ne 'DbResources') {
     Push-Location $($parameters.SCInstallRoot)
-    Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPathCustom) -Skip $skip -Verbose *>&1 | Tee-Object "$Role.log"
-    $LogGroupName = "$stackName-$Role"
+    Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPath) -Skip $skip -Verbose *>&1 | Tee-Object "$localLogPath\$Role.log"
+    $LogGroupName = "$SCQSPrefix-$Role"
     $LogStreamName = "$Role-RoleInstallation-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
-    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$Role.log" -raw)
+    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\$Role.log" -raw)
     Pop-Location
 }
