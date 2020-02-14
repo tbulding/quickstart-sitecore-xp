@@ -459,19 +459,19 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CD" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CD" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CD" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CD" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\'
-            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\Web.config" -StackName '
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\Web.config" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\'
-            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -StackName '
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CD" -StackName '
@@ -529,10 +529,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CM" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CM" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CM" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CM" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -591,10 +591,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Collection" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Collection" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Collection" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Collection" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -643,10 +643,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CollectionSearch" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CollectionSearch" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CollectionSearch" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -695,10 +695,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexProcessing" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexProcessing" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexProcessing" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -747,10 +747,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "CortexReporting" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "CortexReporting" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -800,10 +800,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "IdentityServer" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "IdentityServer" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "IdentityServer" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -852,10 +852,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomation" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomation" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomation" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -904,10 +904,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "MarketingAutomationReporting" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomationReporting" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -956,10 +956,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Prc" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Prc" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Prc" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Prc" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -1008,10 +1008,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "ReferenceData" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "ReferenceData" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "ReferenceData" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
@@ -1060,10 +1060,10 @@ Resources:
         Fn::Join:
           - ''
           - - "<powershell>\n"
-            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Rep" -StackName '
+            - !Sub '${LocalQSScripts}\sc-role-prep.ps1 -Role "Rep" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Rep" -StackName '
+            - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "Rep" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
