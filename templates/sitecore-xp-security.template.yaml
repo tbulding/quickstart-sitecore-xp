@@ -259,6 +259,11 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
                   - !Sub "arn:aws:s3:::${SitecoreS3Bucket}"
+              - Effect: "Allow"
+                Action:
+                  - s3:GetBucketLocation
+                Resource:
+                  - "arn:aws:s3:::*"
         - PolicyName: CWAccess
           PolicyDocument:
             Version: "2012-10-17"

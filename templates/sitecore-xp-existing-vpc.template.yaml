@@ -46,7 +46,7 @@ Metadata:
       - Label:
           default: SQL Server configuration
         Parameters:
-          - PubliclyAccessible
+          # - PubliclyAccessible
           - DBInstanceClass
           - DBAutoMinorVersionUpgrade
           - SQLEngineEdition
@@ -65,7 +65,6 @@ Metadata:
         Parameters:
           - QSS3BucketName
           - QSS3KeyPrefix
-          - RDGWSecurityGroup
     ParameterLabels:
     # VPC
       VPCID:
@@ -138,8 +137,8 @@ Metadata:
       LambdaZipsBucketName:
         default: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
     # RDS Configuration
-      PubliclyAccessible:
-        default: Publically Accessible
+      # PubliclyAccessible:
+      #   default: Publically Accessible
       DBInstanceClass:
         default: To be udpated
       DBAutoMinorVersionUpgrade:
@@ -166,8 +165,6 @@ Metadata:
         default: Quick Start S3 bucket name
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
-      RDGWSecurityGroup:
-        default: Default SG #Remove later
 Parameters:
   VPCID:
     Description: ID of the VPC (e.g., vpc-0343606e)
@@ -375,13 +372,13 @@ Parameters:
     Default: "false"
     Description: Select true/false to setup Auto Minor Version upgrade.
     Type: String
-  PubliclyAccessible: 
-    AllowedValues: 
-      - "true"
-      - "false"
-    Default: "false"
-    Description: Select whether DB instance is internet-facing.
-    Type: String
+  # PubliclyAccessible: 
+  #   AllowedValues: 
+  #     - "true"
+  #     - "false"
+  #   Default: "false"
+  #   Description: Select whether DB instance is internet-facing.
+  #   Type: String
   DBInstanceClass:
     AllowedValues:
       - db.m5.large
@@ -455,20 +452,20 @@ Parameters:
   CacheNodeType:
     Description: The instance type the nodes will launch under.
     Type: String
-    Default: cache.m3.large
+    Default: cache.m4.large
     AllowedValues:
       - cache.t2.micro
       - cache.t2.small
       - cache.t2.medium
-      - cache.m3.medium
-      - cache.m3.large
-      - cache.m3.xlarge
-      - cache.m3.2xlarge
-      - cache.r3.large
-      - cache.r3.xlarge
-      - cache.r3.2xlarge
-      - cache.r3.4xlarge
-      - cache.r3.8xlarge
+      - cache.m4.large
+      - cache.m4.xlarge
+      - cache.m4.xlarge
+      - cache.m4.4xlarge
+      - cache.r4.large
+      - cache.r4.xlarge
+      - cache.r4.2xlarge
+      - cache.r4.4xlarge
+      - cache.r4.8xlarge
   RedisPort:
     Type: Number
     Default: 6379
@@ -492,13 +489,11 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
     Type: String
-# Remove Later
-  RDGWSecurityGroup:
-    Type: AWS::EC2::SecurityGroup::Id
 
 Conditions:
   CreateLambdaZipsBucket: !Equals [!Ref 'LambdaZipsBucketName', '']
   InternalDNSName: !Equals [!Ref 'IntDNS', '']
+  CreateDevSolr: !Equals [!Ref 'SOLRUrl', ''] 
 
 Resources:
 # Local region S3 bucket for Lambda functions
@@ -523,8 +518,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3389
           ToPort: 3389
-          SourceSecurityGroupId: !Ref RDGWSecurityGroup
-          Description: RDP from Remote Desktop Gateway 
+          CidrIp: !Ref VPCCIDR
+          Description: RDP Traffic from within the VPC
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
@@ -550,6 +545,11 @@ Resources:
         - IpProtocol: tcp 
           FromPort: 80
           ToPort: 80
+          SourceSecurityGroupId: !Ref SitecoreInstanceSG
+          Description: HTTPS Traffic from within the VPC
+        - IpProtocol: tcp 
+          FromPort: 8983
+          ToPort: 8983
           SourceSecurityGroupId: !Ref SitecoreInstanceSG
           Description: HTTPS Traffic from within the VPC
   LoadBalancerExternalSG:
@@ -789,7 +789,7 @@ Resources:
       Parameters:
         PrivateSubnet1AID: !Ref PrivateSubnet1A
         PrivateSubnet2AID: !Ref PrivateSubnet2A
-        PubliclyAccessible: !Ref PubliclyAccessible
+        # PubliclyAccessible: !Ref PubliclyAccessible
         DBInstanceClass:  !Ref DBInstanceClass
         SQLEngineEdition: !Ref SQLEngineEdition
         SQLEngineVersion: !Ref SQLEngineVersion
@@ -846,10 +846,29 @@ Resources:
                   - !GetAtt FunctionsStack.Outputs.SCQSPrefix
                   - '/cert/internal/acm'
 
+# Sitecore AMI Build Stack
+  SolrStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateDevSolr
+    DependsOn: CustomAMIStack # [SecurityStack, ParamStack]
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-solrdev.template.template.yaml'
+      Parameters:
+        PrivateSubnet1A: !Ref PrivateSubnet1A
+        PrivateSubnet2A: !Ref PrivateSubnet2A
+        SolrInstanceType: !Ref CDInstanceType
+        SolrInstanceSG: !Ref SitecoreInstanceSG
+        SolrKeyPair: !Ref SitecoreKeyPair
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
+        R53HostedZoneID: !Ref InternalR53
+        S3BucketName: !Ref SitecoreS3Bucket
+        QSS3BucketName: !Ref QSS3BucketName
+
 # Sitecore ALB Stack
   ALBStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: CustomAMIStack # SecurityStack, CertConvertACM
+    DependsOn: SolrStack # CustomAMIStack, SecurityStack, CertConvertACM
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-alb.template.yaml'
       Parameters:

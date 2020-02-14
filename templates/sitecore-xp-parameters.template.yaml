@@ -29,6 +29,8 @@ Parameters:
     Type: String
   IntDNS:
     Type: String
+Conditions:
+  CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
 Resources:
 # Sitecore Installation
   CustomAmiName:
@@ -201,20 +203,20 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !Ref SOLRCorePrefix
-  SolrUrl:
+  SolrUrl: # The full URL for the Solr Server
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub /${SCQSPrefix}/user/solruri
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
-      Value: !Ref SOLRUrl
-  prefix: # this should be able to be removed
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub /${SCQSPrefix}/user/s3bucket/prefix
-      Description: Parameter for the Sitecore XP1 Quick Start
-      Type: String 
-      Value: "/"
+      Value: !If [CreateDevSolr, !Sub 'https://solrdev.${IntDNS}:8983/solr', !Ref 'SOLRUrl']  # If no Solr URL provided, then create URL https:\\solrdev.internaldns, else use provided url
+  # prefix: # this should be able to be removed
+  #   Type: AWS::SSM::Parameter
+  #   Properties:
+  #     Name: !Sub /${SCQSPrefix}/user/s3bucket/prefix
+  #     Description: Parameter for the Sitecore XP1 Quick Start
+  #     Type: String 
+  #     Value: "/"
 # Secrets Manager entries
   SQLAdminUser: # Used for RDS Master user
     Type: AWS::SecretsManager::Secret
@@ -396,7 +398,7 @@ Resources:
         ExcludeCharacters: '"@/\'
         ExcludePunctuation: true
         IncludeSpace: false
-  ReportingServiceAPIKey: ###########################################  ?????
+  ReportingServiceAPIKey: 
     Type: 'AWS::SecretsManager::Secret'
     Properties:
       Name: !Sub sitecore-quickstart-${SCQSPrefix}-reportingserviceapikey
@@ -407,7 +409,7 @@ Resources:
         PasswordLength: 20
         ExcludePunctuation: true
         IncludeSpace: false
-  ClientSecret: ###########################################  ?????
+  ClientSecret: 
     Type: 'AWS::SecretsManager::Secret'
     Properties:
       Name: !Sub sitecore-quickstart-${SCQSPrefix}-clientsecret
@@ -418,7 +420,7 @@ Resources:
         PasswordLength: 20
         ExcludePunctuation: true
         IncludeSpace: false
-  SitecoreIdentitySecret: ###########################################  ?????
+  SitecoreIdentitySecret: 
     Type: 'AWS::SecretsManager::Secret'
     Properties:
       Name: !Sub sitecore-quickstart-${SCQSPrefix}-sitecoreidentitysecret
