@@ -7,23 +7,23 @@
 
 [CmdletBinding()]
 param (
-    [string]$StackName
+    [string]$SCQSPrefix
 )
 #Certificate Requirments
-$RootFriendlyName = (Get-SSMParameter -Name "/$StackName/cert/root/friendlyname").Value
-$RootDNSNames = ((Get-SSMParameter -Name "/$StackName/cert/root/dnsnames").Value).Split(",").Trim()
-$InstanceFriendlyName = (Get-SSMParameter -Name "/$StackName/cert/instance/friendlyname").Value
-$InstanceDNSNames = ((Get-SSMParameter -Name "/$StackName/cert/instance/dnsnames").Value).Split(",").Trim()
-$CertStoreLocation = (Get-SSMParameter -Name "/$StackName/cert/storelocation").Value
-$RawPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$StackName-certpass").SecretString).password
+$RootFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/root/friendlyname").Value
+$RootDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/root/dnsnames").Value).Split(",").Trim()
+$InstanceFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/friendlyname").Value
+$InstanceDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/dnsnames").Value).Split(",").Trim()
+$CertStoreLocation = (Get-SSMParameter -Name "/$SCQSPrefix/cert/storelocation").Value
+$RawPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-certpass").SecretString).password
 $ExportPassword = ConvertTo-SecureString $RawPassword -AsPlainText -Force
-$ExportPath = (Get-SSMParameter -Name "/$StackName/user/localresourcespath").Value
-$ExportRootCertName = (Get-SSMParameter -Name "/$StackName/cert/root/exportname").Value
-$ExportInstanceCertName = (Get-SSMParameter -Name "/$StackName/cert/instance/exportname").Value
-$S3BucketName = (Get-SSMParameter -Name "/$StackName/user/s3bucket/name").Value
-$S3BucketCertificatePrefix = (Get-SSMParameter -Name "/$StackName/user/s3bucket/certificateprefix").Value
+$ExportPath = (Get-SSMParameter -Name "/$SCQSPrefix/user/localresourcespath").Value
+$ExportRootCertName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/root/exportname").Value
+$ExportInstanceCertName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/exportname").Value
+$S3BucketName = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/name").Value
+$S3BucketCertificatePrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/certificateprefix").Value
 
-$logGroupName = "$stackName-ssm-bootstrap"
+$logGroupName = "$SCQSPrefix-ssm-bootstrap"
 $logStreamName = "CertificateCreation" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
 #Create new certificates
@@ -264,14 +264,14 @@ function CopyToS3Bucket {
     $key = $bucketPrefix + $objectName
     Write-S3Object -BucketName $bucketName -File $localFileName -Key $key
 
-    Return "$bucketName\$key"
+    Return "$bucketName/$key"
 }
 
 function WriteToParameterStore {
     Param (
         [System.Security.Cryptography.X509Certificates.X509Certificate2]$Cert
     )
-    Write-SSMParameter -Name "/$stackName/cert/instance/thumbprint" -Type "String" -Value $cert.Thumbprint
+    Write-SSMParameter -Name "/$SCQSPrefix/cert/instance/thumbprint" -Type "String" -Value $cert.Thumbprint
 }
 
 #Creates the RootCA, moves it to Cert:\LocalMachine\Root and validates that it is correct (Returns True)
