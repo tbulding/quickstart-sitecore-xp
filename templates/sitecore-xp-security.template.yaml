@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment"
+Description: 'This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment'
 Parameters:
   SitecoreS3Bucket:
     Type: String
@@ -11,12 +11,12 @@ Parameters:
     Type: String
 
 Resources:
-# Lambda IAM Policies
+  # Lambda IAM Policies
   ConvertCertificatesLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
@@ -27,42 +27,42 @@ Resources:
       Policies:
         - PolicyName: Get-Certificate-S3
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
+                Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
         - PolicyName: Import-Delete-ACM
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - acm:ImportCertificate
                   - acm:DeleteCertificate
-                Resource: "*"
+                Resource: '*'
         - PolicyName: Get-Secret-Value
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action: secretsmanager:GetSecretValue
-                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:*:secret:*"
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:*:secret:*'
         - PolicyName: Put-Delete-SSM-Parameter
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - ssm:PutParameter
                   - ssm:GetParameter
                   - ssm:DeleteParameter
-                Resource: !Sub "arn:aws:ssm:${AWS::Region}:*:parameter/*"
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:*:parameter/*'
   DeleteResourcesLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
@@ -73,26 +73,26 @@ Resources:
       Policies:
         - PolicyName: Ec2-RemoveAMI
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - ec2:DeregisterImage
-                Resource: "*"
+                Resource: '*'
         - PolicyName: SSM-ParameterStore
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - ssm:DeleteParameter
                   - ssm:GetParameter
-                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
   CopyZipsRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
@@ -103,24 +103,24 @@ Resources:
       Policies:
         - PolicyName: lambda-copier
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
+                Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
-                Resource: !Sub "arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*"
-# IAM Role AMI Instance
+                Resource: !Sub 'arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*'
+  # IAM Role AMI Instance
   SCAMIInstanceRole:
-    Type: "AWS::IAM::Role"
+    Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
         Statement:
           - Action:
-              - "sts:AssumeRole"
+              - 'sts:AssumeRole'
             Principal:
               Service:
                 - ec2.amazonaws.com
@@ -128,56 +128,56 @@ Resources:
             Effect: Allow
         Version: 2012-10-17
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole"
+        - 'arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole'
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               # CodeDeploy Access
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub "arn:aws:s3:::aws-codedeploy-${AWS::Region}/latest/codedeploy-agent.msi"
+                  - !Sub 'arn:aws:s3:::aws-codedeploy-${AWS::Region}/latest/codedeploy-agent.msi'
               # Quick Start bucket Access
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*"
-              - Effect: "Allow"
+                  - !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+              - Effect: 'Allow'
                 Action: s3:ListBucket
-                Resource: !Sub "arn:aws:s3:::${QSS3BucketName}"
+                Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}'
               # Customer's S3 Bucket Access
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                 Resource:
-                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
-              - Effect: "Allow"
+                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
+              - Effect: 'Allow'
                 Action:
                   - s3:ListBucket
                 Resource:
-                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}"
+                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}'
         - PolicyName: SSMAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action: ssm:StartAutomationExecution
                 Resource:
-                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/*:VersionId}"
-                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*"
-              - Effect: "Allow"
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/*:VersionId}'
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*'
+              - Effect: 'Allow'
                 Action: ssm:GetAutomationExecution
-                Resource: "*"
+                Resource: '*'
         - PolicyName: CWAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
@@ -185,55 +185,55 @@ Resources:
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
         - PolicyName: SECAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
         - PolicyName: EC2MessagesAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - ec2messages:*
-                Resource: "*"
+                Resource: '*'
         - PolicyName: KMSAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - kms:Encrypt
                 Resource:
-                  - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+                  - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
         - PolicyName: SSMMessagesAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - ssmmessages:*
                 Resource:
-                  - "*"
+                  - '*'
   SCAMIInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
         - !Ref SCAMIInstanceRole
-# IAM Role for Instances
+  # IAM Role for Instances
   SCInstanceRole:
-    Type: "AWS::IAM::Role"
+    Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
         Statement:
           - Action:
-              - "sts:AssumeRole"
+              - 'sts:AssumeRole'
             Principal:
               Service:
                 - ec2.amazonaws.com
@@ -242,117 +242,121 @@ Resources:
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                   - s3:ListBucket
-                Resource: 
-                  - !Sub "arn:aws:s3:::${QSS3BucketName}/*"
-                  - !Sub "arn:aws:s3:::${QSS3BucketName}"
-              - Effect: "Allow"
+                Resource:
+                  - !Sub 'arn:aws:s3:::${QSS3BucketName}/*'
+                  - !Sub 'arn:aws:s3:::${QSS3BucketName}'
+              - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:ListBucket
                 Resource:
-                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}/*"
-                  - !Sub "arn:aws:s3:::${SitecoreS3Bucket}"
-              - Effect: "Allow"
+                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
+                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}'
+              - Effect: 'Allow'
                 Action:
                   - s3:GetBucketLocation
                 Resource:
-                  - "arn:aws:s3:::*"
+                  - 'arn:aws:s3:::*'
         - PolicyName: CWAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - logs:CreateLogStream
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                   - logs:PutLogEvents
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*"
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
-              - Effect: "Allow"
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+              - Effect: 'Allow'
                 Action:
                   - logs:CreateLogGroup
-                Resource: "*"
+                Resource: '*'
         - PolicyName: SSMParameters
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - ssm:GetParameter
-                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
+              - Effect: 'Allow'
+                Action:
+                  - ssm:DescribeParameters
+                Resource: '*'
         - PolicyName: SECAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
   SCInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
         - !Ref SCInstanceRole
-# Create IAM Role for SSM Automation
+  # Create IAM Role for SSM Automation
   SCAutomationRole:
-    Type: "AWS::IAM::Role"
+    Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
         Statement:
           - Action:
-              - "sts:AssumeRole"
+              - 'sts:AssumeRole'
             Principal:
               Service:
                 - ssm.amazonaws.com
             Effect: Allow
         Version: 2012-10-17
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole"
+        - 'arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole'
       Policies:
         - PolicyName: EC2Access
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - ec2:RebootInstances
                 Resource:
-                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
-              - Effect: "Allow"
+                  - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
+              - Effect: 'Allow'
                 Action:
                   - ec2:DescribeInstances
                   - ec2:DescribeInstanceStatus
-                Resource: "*"
+                Resource: '*'
         - PolicyName: RDSAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
-                Action: ["rds:DescribeDBInstances"]
-                Resource: "*"
+              - Effect: 'Allow'
+                Action: ['rds:DescribeDBInstances']
+                Resource: '*'
         - PolicyName: SSMAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
-                Action: ["ssm:PutParameter", "ssm:GetParameter"]
+              - Effect: 'Allow'
+                Action: ['ssm:PutParameter', 'ssm:GetParameter']
                 Resource:
-                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
         - PolicyName: CWAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
@@ -360,16 +364,16 @@ Resources:
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
         - PolicyName: CFNAccess
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
-              - Effect: "Allow"
+              - Effect: 'Allow'
                 Action:
                   - cloudformation:SignalResource
                 Resource:
-                  - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*/*"
+                  - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*/*'
 Outputs:
   SCAMIInstanceRoleARN:
     Description: ARN for the Instance Role.

@@ -65,8 +65,8 @@ $parameters = @{
 
 $DNSNames = @{
     IdentityServerDNS                    = (Get-SSMParameter -Name "/$SCQSPrefix/service/isdns").Value #$roleMapping.IdentityServer + '.' + $DNSSuffix
-    CMDNS                                = $roleMapping.CM + '.' + $DNSSuffix
-    CDDNS                                = $roleMapping.CD + '.' + $DNSSuffix
+    CMDNS                                = (Get-SSMParameter -Name "/$SCQSPrefix/service/cmdns").Value 
+    CDDNS                                = (Get-SSMParameter -Name "/$SCQSPrefix/service/cddns").Value 
     PrcDNS                               = $roleMapping.Prc + '.' + $DNSSuffix
     RepDNS                               = $roleMapping.Rep + '.' + $DNSSuffix
     CollectionDNS                        = $roleMapping.Collection + '.' + $DNSSuffix
