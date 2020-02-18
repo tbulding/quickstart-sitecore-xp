@@ -20,7 +20,7 @@ $RootCertificateName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/root/exportnam
 $CertPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-certpass").SecretString).password
 $CertSecurePassword = ConvertTo-SecureString $CertPassword -AsPlainText -Force
 
-$logGroupName = $SCQSPrefix+"-"+$Role
+$logGroupName = $SCQSPrefix + "-" + $Role
 $logStreamLicense = "LicenseFile-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 $logStreamCert = "CertImport-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
@@ -78,6 +78,7 @@ function cert_import {
     
     begin {
         $CertBucketLocation = Get-S3BucketLocation -BucketName $CertBucketName
+        if ($CertBucketLocation -eq '') { $CertBucketLocation = 'us-east-1' } # Get-S3BucketLocation returns Null when the bucket is located in us-east-1
         $CertPath = $CertPrefix + $CertName + '.pfx'
         $CertLocation = 'c:\certificates'
         $LocalCertFile = "$CertLocation\$CertName.pfx"
@@ -112,6 +113,7 @@ function licence_download {
     
     begin {
         $bucketlocation = Get-S3BucketLocation -BucketName $LicenseBucketName
+        if ($bucketlocation -eq '') { $bucketlocation = 'us-east-1' } # Get-S3BucketLocation returns Null when the bucket is located in us-east-1
     }
     
     process {
@@ -141,7 +143,10 @@ cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertNa
 licence_download -LicenseBucketName $s3BucketName -LicenseObjPrefix $LicencePrefix -LicenseInstance $SCInstallRoot
 
 # Download Solr Cert if developer Solr Build by Quick Start
-$SDevSolrBuild = (Get-SSMParameter -Name "/${SCQSPrefix}/service/customsolr").Value
+# Check to see if the parameter exists
+if ((Get-SSMParameterList).Name.Contains("/${SCQSPrefix}/service/customsolr")) {
+    $SDevSolrBuild = (Get-SSMParameter -Name "/${SCQSPrefix}/service/customsolr").Value
+}
 if ($SDevSolrBuild -eq "Quickstart-Solr-Dev") {
     cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertName 'solrdev' -CertStoreLocation 'Cert:\LocalMachine\Root' -CertPass $CertSecurePassword
 }
