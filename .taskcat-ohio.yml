@@ -26,8 +26,6 @@ project:
     CDInstanceType: m4.large
     CDScalingMetric: ASGAverageCPUUtilization
     CDScalingMetricValue: '50'
-    CMMinSize: override
-    CMMaxSize: override
     CMInstanceType: override
     CMScalingMetric: ASGAverageCPUUtilization
     CMScalingMetricValue: '50'

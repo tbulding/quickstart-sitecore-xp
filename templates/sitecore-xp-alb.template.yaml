@@ -1,61 +1,61 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Deploys the Auto Scaling Groups, Target Groups, Listners and rules for the Load balancers. These launch the instances for the Sitecore roles"
+Description: 'Deploys the Auto Scaling Groups, Target Groups, Listners and rules for the Load balancers. These launch the instances for the Sitecore roles'
 Parameters:
-  PrivateSubnet1A: 
+  PrivateSubnet1A:
     Type: String
-  PrivateSubnet2A: 
+  PrivateSubnet2A:
     Type: String
-  VPCID: 
+  VPCID:
     Type: String
-  LoadBalancerInternal: 
+  LoadBalancerInternal:
     Type: String
-  LoadBalancerExternal: 
+  LoadBalancerExternal:
     Type: String
-  InternalCertificateARN: 
+  InternalCertificateARN:
     Type: String
-  ExternalCertificateARN: 
+  ExternalCertificateARN:
     Type: String
-  CDMinSize: 
+  CDMinSize:
     Type: String
-  CDMaxSize: 
+  CDMaxSize:
     Type: String
-  CDDesiredCapacity: 
+  CDDesiredCapacity:
     Type: String
-  CDInstanceType: 
+  CDInstanceType:
     Type: String
   CDScalingMetric:
     Type: String
     Default: ASGAverageCPUUtilization
     AllowedValues:
-      - ASGAverageCPUUtilization 
-      - ASGAverageNetworkIn 
-      - ALBRequestCountPerTarget 
+      - ASGAverageCPUUtilization
+      - ASGAverageNetworkIn
+      - ALBRequestCountPerTarget
   CDScalingMetricValue:
     Type: String
     Default: 5
   CMInstanceType:
     Type: String
-  CMMinSize: 
-    Type: String
-  CMMaxSize: 
-    Type: String
-  CMDesiredCapacity: 
-    Type: String
+  CMMinSize:
+    Type: Number
+  CMMaxSize:
+    Type: Number
+  CMDesiredCapacity:
+    Type: Number
   CMScalingMetric:
     Type: String
     Default: ASGAverageCPUUtilization
     AllowedValues:
-      - ASGAverageCPUUtilization 
-      - ASGAverageNetworkIn 
-      - ALBRequestCountPerTarget 
+      - ASGAverageCPUUtilization
+      - ASGAverageNetworkIn
+      - ALBRequestCountPerTarget
   CMScalingMetricValue:
     Type: String
     Default: 5
-  SitecoreInstanceSG: 
+  SitecoreInstanceSG:
     Type: AWS::EC2::SecurityGroup::Id
-  SCInstanceProfile: 
+  SCInstanceProfile:
     Type: String
-  SitecoreKeyPair: 
+  SitecoreKeyPair:
     Type: String
   IntDNS:
     Type: String
@@ -63,11 +63,11 @@ Parameters:
     Type: String
   LocalQSScripts:
     Type: String
-  SCQSPrefix: 
+  SCQSPrefix:
     Type: String
-  
+
 Resources:
-#--- Internal ALB Config ---#
+  #--- Internal ALB Config ---#
   HTTPSListenerInternal:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -79,7 +79,7 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancerInternal
       Port: 443
       Protocol: HTTPS
-#Internal Target Groups
+  #Internal Target Groups
   # CDIntTargetGroup:
   #   Type: AWS::ElasticLoadBalancingV2::TargetGroup
   #   Properties:
@@ -342,7 +342,7 @@ Resources:
             - !Sub collsearch.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 11
-#--- External ALB Config ---#
+  #--- External ALB Config ---#
   HTTPSListenerExternal:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -357,7 +357,7 @@ Resources:
   HTTPListenerExternal:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      DefaultActions: 
+      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref CDExtTargetGroup
       LoadBalancerArn: !Ref LoadBalancerExternal
@@ -430,7 +430,7 @@ Resources:
       MaxSize: !Ref CDMinSize
       MinSize: !Ref CDMaxSize
       DesiredCapacity: !Ref CDDesiredCapacity
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -438,14 +438,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub ContentDelivery-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub ContentDelivery-${SCQSPrefix}
+          PropagateAtLaunch: true
   ContentDeliveryLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -497,10 +497,10 @@ Resources:
         Count: !Ref CMDesiredCapacity
     Properties:
       LaunchConfigurationName: !Ref ContentManagementLC
-      MaxSize: !Ref CMMinSize
-      MinSize: !Ref CMMaxSize
+      MaxSize: !Ref CMMaxSize
+      MinSize: !Ref CMMinSize
       DesiredCapacity: !Ref CMDesiredCapacity
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -508,14 +508,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub ContentManagement-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub ContentManagement-${SCQSPrefix}
+          PropagateAtLaunch: true
   ContentManagementLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -562,7 +562,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -570,14 +570,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub Collection-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub Collection-${SCQSPrefix}
+          PropagateAtLaunch: true
   CollectionLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -614,7 +614,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -622,14 +622,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub CollectionSearch-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub CollectionSearch-${SCQSPrefix}
+          PropagateAtLaunch: true
   CollectionSearchLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -666,7 +666,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -674,14 +674,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub CortexProcessing-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub CortexProcessing-${SCQSPrefix}
+          PropagateAtLaunch: true
   CortexProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -718,7 +718,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -726,14 +726,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub CortexReporting-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub CortexReporting-${SCQSPrefix}
+          PropagateAtLaunch: true
   CortexReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -770,7 +770,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -779,14 +779,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub Identity-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub Identity-${SCQSPrefix}
+          PropagateAtLaunch: true
   IdentityLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -823,7 +823,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -831,14 +831,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub MarketingAutomation-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub MarketingAutomation-${SCQSPrefix}
+          PropagateAtLaunch: true
   MarketingAutomationLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -875,7 +875,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -883,14 +883,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub MarketingAutomationReporting-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub MarketingAutomationReporting-${SCQSPrefix}
+          PropagateAtLaunch: true
   MarketingAutoRepLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -927,7 +927,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -935,14 +935,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub Processing-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub Processing-${SCQSPrefix}
+          PropagateAtLaunch: true
   ProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -979,7 +979,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -987,14 +987,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub ReferenceData-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub ReferenceData-${SCQSPrefix}
+          PropagateAtLaunch: true
   ReferenceDataLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -1031,7 +1031,7 @@ Resources:
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
-      VPCZoneIdentifier: 
+      VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
       TargetGroupARNs:
@@ -1039,14 +1039,14 @@ Resources:
       NotificationConfigurations:
         - TopicARN: !Ref AutoscalingSNS
           NotificationTypes:
-          - autoscaling:EC2_INSTANCE_LAUNCH
-          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-          - autoscaling:EC2_INSTANCE_TERMINATE
-          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
-      - Key: Name
-        Value: !Sub Reporting-${SCQSPrefix}
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: !Sub Reporting-${SCQSPrefix}
+          PropagateAtLaunch: true
   ReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:

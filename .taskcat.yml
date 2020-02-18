@@ -1,7 +1,7 @@
 project:
   name: sitecore-xp
   regions:
-  - us-east-2
+    - us-east-2
   parameters:
     VPCCIDR: 10.0.0.0/16
     PrivateSubnet1ACIDR: 10.0.0.0/19
@@ -12,13 +12,13 @@ project:
     AdminUser: StackAdmin
     AdminPassword: "$[taskcat_genpass_16]"
     DomainDNSName: example.com
-    NumberOfRDGWHosts: '1'
-    RDGWInstanceType: 't2.large'
+    NumberOfRDGWHosts: 1
+    RDGWInstanceType: "t2.large"
     RDGWCIDR: 0.0.0.0/0
     KeyPairName: override
-    CDMinSize: '1'
-    CDMaxSize: '1'
-    CDDesiredCapacity: '1'
+    CDMinSize: 1
+    CDMaxSize: 1
+    CDDesiredCapacity: 1
     SitecoreInstanceType: m4.large
     SitecoreKeyPair: override
     SitecorePrefix: sc
@@ -30,14 +30,14 @@ project:
     EnvironmentType: Production
     SCLogLevel: Information
     CorsOrigins: replace
-    PubliclyAccessible: 'false'
+    PubliclyAccessible: "false"
     DBInstanceClass: db.m5.xlarge
-    DBAutoMinorVersionUpgrade: 'false'
+    DBAutoMinorVersionUpgrade: "false"
     SQLEngineEdition: sqlserver-se
     SQLEngineVersion: 14.00.3192.2.v1
-    VolumeSize: '500'
+    VolumeSize: "500"
     VolumeType: gp2
-    BackupRetentionPeriod: '1'
+    BackupRetentionPeriod: 1
     QSS3BucketName: "$[taskcat_autobucket]"
     QSS3KeyPrefix: quickstart-sitecore-xp/
     ExternalCertificateARN: arn:aws:acm:your cert arn
@@ -53,4 +53,3 @@ tests:
     template: ./templates/sitecore-xp-master.template.yaml
     regions:
       - us-east-2
-  
