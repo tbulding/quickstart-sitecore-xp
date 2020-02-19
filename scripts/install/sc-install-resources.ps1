@@ -693,6 +693,34 @@ switch ($Role) {
             # PackagesTempLocation
             # DownloadLocations
         }
+        $skip = @(
+            # 'DownloadWDP'
+            # 'CreatePaths'
+            # 'CreateAppPool'
+            # 'SetAppPoolCertStorePermissions'
+            # 'CreateWebsite'
+            # 'StopWebsite'
+            # 'StopAppPool'
+            # 'StopService'
+            # 'RemoveService'
+            # 'RemoveDefaultBinding' 
+            # 'CreateBindingsWithThumbprint'
+            # 'SetClientCertificatePermissions'
+            # 'CreateHostHeader'
+            # 'SetPermissions'
+            # 'InstallWDP'
+            # 'SetLicense'
+            # 'CreateBindingsWithDevelopmentThumbprint'
+            # 'StartAppPool'
+            # 'StartWebsite'
+            # 'SetServicesCertStorePermissions'
+            # 'CreateServiceLogPath'
+            # 'SetIndexWorkerServiceLicense'
+            # 'SetServicePermissions'
+            # 'InstallService'
+            # 'StartService'
+            'UpdateSolrSchema'
+        )
     }
     'MarketingAutomationReporting' {
         $DeploymentParameters = @{
