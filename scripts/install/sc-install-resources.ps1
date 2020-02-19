@@ -432,8 +432,8 @@ switch ($Role) {
             }
 
             Push-Location $($parameters.SCInstallRoot)
-            Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPath) -Skip $skip -Verbose *>&1 | Tee-Object "$localLogPath\$DbRole.log"
-            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\$DbRole.log" -raw)
+            Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPath) -Skip $skip -Verbose *>&1 | Tee-Object "$localLogPath\db-$DbRole.log"
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\db-$DbRole.log" -raw)
             & $appcmd delete site $($local.SiteName)
             & $appcmd delete apppool$($local.SiteName)
             Pop-Location
@@ -529,7 +529,7 @@ switch ($Role) {
             XConnectReferenceDataService         = $($ServiceURLs.XConnectReferenceDataService)
             MarketingAutomationOperationsService = $($ServiceURLs.MarketingAutomationOperationsService)
             MarketingAutomationReportingService  = $($ServiceURLs.MarketingAutomationReportingService)
-            itecoreIdentityAuthority            = $($ServiceURLs.SitecoreIdentityAuthority)
+            SitecoreIdentityAuthority            = $($ServiceURLs.SitecoreIdentityAuthority)
             SqlServer                            = $($parameters.SQLServer)
             SqlSecurityUser                      = $($secrets.SqlSecurityUser)
             SqlSecurityPassword                  = $($secrets.SqlSecurityPassword)
