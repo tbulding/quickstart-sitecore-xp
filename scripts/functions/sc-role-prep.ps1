@@ -86,7 +86,7 @@ function cert_import {
     
     process {
         if (-not (Test-Path -LiteralPath $CertLocation)) {
-            -LogGroupName $logGroupName -LogStreamName $logStreamCert -LogString (New-Item -Path $CertLocation -ItemType Directory -Verbose)
+            Write-AWSQuickStartCWLogsEntry -LogGroupName $logGroupName -LogStreamName $logStreamCert -LogString (New-Item -Path $CertLocation -ItemType Directory -Verbose)
         }
         else {
             Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString "$CertLocation already exists"
