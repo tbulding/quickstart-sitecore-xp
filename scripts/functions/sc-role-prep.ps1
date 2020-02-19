@@ -150,3 +150,5 @@ if ((Get-SSMParameterList).Name.Contains("/${SCQSPrefix}/service/customsolr")) {
 if ($SDevSolrBuild -eq "Quickstart-Solr-Dev") {
     cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertName 'solrdev' -CertStoreLocation 'Cert:\LocalMachine\Root' -CertPass $CertSecurePassword
 }
+
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString "Preperation completed for installation of role : $Role"
