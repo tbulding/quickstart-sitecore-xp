@@ -938,7 +938,7 @@ Resources:
   # Sitecore ALB Stack
   ALBStack:
     Type: AWS::CloudFormation::Stack
-    # DependsOn: SolrStack # CustomAMIStack, SecurityStack, CertConvertACM
+    DependsOn: SolrStack #CustomAMIStack, SecurityStack, CertConvertACM
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-alb.template.yaml'
       Parameters:
