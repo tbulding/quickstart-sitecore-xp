@@ -514,6 +514,26 @@ switch ($Role) {
             # PackagesTempLocation
             # DownloadLocations
         }
+        $skip = @(
+            # 'DownloadWDP'
+            # 'CreatePaths'
+            # 'CreateAppPool'
+            # 'CreateWebsite'
+            # 'StopWebsite'
+            # 'StopAppPool'
+            # 'RemoveDefaultBinding' 
+            # 'CreateBindingsWithThumbprint'
+            # 'CreateHostHeader'
+            # 'SetPermissions'
+            # 'SetCertStorePermissions'
+            # 'InstallWDP'
+            # 'CreateBindingsWithDevelopmentThumbprint'
+            # 'SetLicense'
+            # 'StartAppPool'
+            # 'StartWebsite'
+            'UpdateSolrSchema'
+            'DisplayPassword'
+        )
     }
     'CD' {
         $DeploymentParameters = @{
