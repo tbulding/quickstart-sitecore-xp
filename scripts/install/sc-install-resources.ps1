@@ -513,6 +513,26 @@ switch ($Role) {
             # PackagesTempLocation
             # DownloadLocations
         }
+        $skip = @(
+            # 'DownloadWDP'
+            # 'CreatePaths'
+            # 'CreateAppPool'
+            # 'CreateWebsite'
+            # 'StopWebsite'
+            # 'StopAppPool'
+            # 'RemoveDefaultBinding' 
+            # 'CreateBindingsWithThumbprint'
+            # 'CreateHostHeader'
+            # 'SetPermissions'
+            # 'SetCertStorePermissions'
+            # 'InstallWDP'
+            # 'CreateBindingsWithDevelopmentThumbprint'
+            # 'SetLicense'
+            # 'StartAppPool'
+            # 'StartWebsite'
+            'UpdateSolrSchema'
+            'DisplayPassword'
+        )
     }
     'CD' {
         $DeploymentParameters = @{
@@ -528,7 +548,7 @@ switch ($Role) {
             XConnectReferenceDataService         = $($ServiceURLs.XConnectReferenceDataService)
             MarketingAutomationOperationsService = $($ServiceURLs.MarketingAutomationOperationsService)
             MarketingAutomationReportingService  = $($ServiceURLs.MarketingAutomationReportingService)
-            itecoreIdentityAuthority             = $($ServiceURLs.SitecoreIdentityAuthority)
+            SitecoreIdentityAuthority            = $($ServiceURLs.SitecoreIdentityAuthority)
             SqlServer                            = $($parameters.SQLServer)
             SqlSecurityUser                      = $($secrets.SqlSecurityUser)
             SqlSecurityPassword                  = $($secrets.SqlSecurityPassword)
@@ -672,6 +692,34 @@ switch ($Role) {
             # PackagesTempLocation
             # DownloadLocations
         }
+        $skip = @(
+            # 'DownloadWDP'
+            # 'CreatePaths'
+            # 'CreateAppPool'
+            # 'SetAppPoolCertStorePermissions'
+            # 'CreateWebsite'
+            # 'StopWebsite'
+            # 'StopAppPool'
+            # 'StopService'
+            # 'RemoveService'
+            # 'RemoveDefaultBinding' 
+            # 'CreateBindingsWithThumbprint'
+            # 'SetClientCertificatePermissions'
+            # 'CreateHostHeader'
+            # 'SetPermissions'
+            # 'InstallWDP'
+            # 'SetLicense'
+            # 'CreateBindingsWithDevelopmentThumbprint'
+            # 'StartAppPool'
+            # 'StartWebsite'
+            # 'SetServicesCertStorePermissions'
+            # 'CreateServiceLogPath'
+            # 'SetIndexWorkerServiceLicense'
+            # 'SetServicePermissions'
+            # 'InstallService'
+            # 'StartService'
+            'UpdateSolrSchema'
+        )
     }
     'MarketingAutomationReporting' {
         $DeploymentParameters = @{
