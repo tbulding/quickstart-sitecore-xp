@@ -719,7 +719,7 @@ switch ($Role) {
             # 'SetServicePermissions'
             # 'InstallService'
             # 'StartService'
-            'UpdateSolrSchema'
+            'ConfigureSolrSchemas'
         )
     }
     'MarketingAutomationReporting' {
