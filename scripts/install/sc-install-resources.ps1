@@ -790,7 +790,27 @@ switch ($Role) {
             SqlAdminPassword         = $($secrets.SqlAdminPassword)
             SqlReferenceDataUser     = $($secrets.SqlReferenceDataUser)
             SqlReferenceDataPassword = $($secrets.SqlReferenceDataPassword)
+            SkipDatabaseInstallation = $($local.SkipDBInstallOnRoles)
         }
+        $skip = @(
+            # 'DownloadWDP'
+            # 'CreatePaths'
+            # 'CreateAppPool'
+            # 'SetAppPoolCertStorePermissions'
+            # 'CreateWebsite'
+            # 'StopWebsite'
+            # 'StopAppPool'
+            # 'RemoveDefaultBinding'
+            # 'CreateBindingsWithThumbprint'
+            # 'SetClientCertificatePermissions'
+            # 'CreateHostHeader'
+            # 'SetPermissions'
+            # 'InstallWDP'
+            # 'SetLicense'
+            # 'CreateBindingsWithDevelopmentThumbprint'
+            # 'StartAppPool'
+            # 'StartWebsite'
+        )
     }
     'CortexProcessing' {
         $DeploymentParameters = @{
