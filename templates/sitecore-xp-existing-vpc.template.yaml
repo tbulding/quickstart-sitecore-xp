@@ -935,14 +935,27 @@ Resources:
         S3BucketName: !Ref SitecoreS3Bucket
         QSS3BucketName: !Ref QSS3BucketName
 
+  # The following 3 stacks are used to introduce an if statement into the depends of the Sitecore ALB Stack
+  # The dependency varies depending on the condition where SOLR is to be deployed or not.
+  SOLRWaitHandle:
+    Condition: CreateDevSolr
+    DependsOn: SolrStack
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  SOLRDependencyCheck:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !If [CreateDevSolr, !Ref SOLRWaitHandle, !Ref WaitHandle]
+      Timeout: '1'
+      Count: 0
+
   # Sitecore ALB Stack
   ALBStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: !If [
-            CreateDevSolr,
-            SolrStack,
-            CustomAMIStack,
-          ]
+    DependsOn: SOLRDependencyCheck #[SolrStack, CustomAMIStack]
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-alb.template.yaml'
       Parameters:
