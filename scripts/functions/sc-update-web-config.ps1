@@ -1,14 +1,19 @@
 [CmdletBinding()]
 param (
-    [string]$filepath,
-    [string]$StackName
+    [string]$SCQSPrefix
 )
 
+
+$SCPrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/sitecoreprefix").Value
+$LocalQSResources = (Get-SSMParameter -Name "/$SCQSPrefix/user/localqsresourcespath").Value # c:\quickstart\scripts
+$filepath = "C:\inetpub\wwwroot\$SCPrefix.CD\Web.config"
+
+
 # CloudWatch values
-$logGroupName  = "$StackName-CD"
+$logGroupName  = "$SCQSPrefix-CD"
 $LogStreamName = "update-web-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating web-cinfig file for Redis session state"
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating web-config file for Redis session state"
 
 #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
 $xml = New-Object -TypeName xml

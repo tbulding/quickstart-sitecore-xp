@@ -466,14 +466,12 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -filepath "C:\inetpub\wwwroot\'
-            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\Web.config" -SCQSPrefix '
+            - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -filepath "C:\inetpub\wwwroot\'
-            - !Sub '{{resolve:ssm:/${SCQSPrefix}user/sitecoreprefix:1}}.CD\App_Config\ConnectionStrings.config" -SCQSPrefix '
-            - !Sub '"${SCQSPrefix}"'
-            - "\n"
+            # - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -SCQSPrefix '
+            # - !Sub '"${SCQSPrefix}"'
+            # - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CD" -StackName '
             - !Sub '"${AWS::StackName}" -Region '
             - !Sub '"${AWS::Region}"'

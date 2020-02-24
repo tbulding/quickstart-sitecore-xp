@@ -1,15 +1,19 @@
 [CmdletBinding()]
 param (
-    [string]$filepath,
-    [string]$StackName
+    [string]$SCQSPrefix
 )
 
+$SCPrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/sitecoreprefix").Value
+$filepath = "C:\inetpub\wwwroot\$SCPrefix.CD\App_Config\ConnectionStrings.config"
+
 # CloudWatch values
-logGroupName  = "$StackName-CD"
+logGroupName  = "$SCQSPrefix-CD"
 LogStreamName = "update-cs-config-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
-$connectionString = (Get-SSMParameter -Name "/$StackName/redis/url").Value
-#$cwScript = (Get-SSMParameter -Name "/$StackName/user/localqsresourcespath").Value
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating ConnectionStrings.config file for Solr Search"
+
+$connectionString = (Get-SSMParameter -Name "/$SCQSPrefix/user/solruri").Value
+#$cwScript = (Get-SSMParameter -Name "/$SCQSPrefix/user/localqsresourcespath").Value
 
 #$filepath = '/c/dev/resourcefiles/configfiles/ConnectionStrings.config'
 $xml = New-Object -TypeName xml
