@@ -535,6 +535,11 @@ Resources:
           ToPort: 80
           CidrIp: !Ref VPCCIDR
           Description: HTTP Traffic from within the VPC
+        - IpProtocol: tcp # TODO Add conditional for this rule
+          FromPort: 8983
+          ToPort: 8983
+          CidrIp: !Ref VPCCIDR
+          Description: HTTPS Traffic from within the VPC
   LoadBalancerInternalSG:
     # DependsOn: SitecoreInstanceSG
     Type: AWS::EC2::SecurityGroup
