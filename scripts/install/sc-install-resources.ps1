@@ -878,5 +878,9 @@ If ($Role -ne 'DbResources') {
     $LogGroupName = "$SCQSPrefix-$Role"
     $LogStreamName = "$Role-RoleInstallation-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
     Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\$Role.log" -raw)
+    if ($Role -ne 'CD') {
+        Set-WebConfiguration -Location $local.SiteName -Filter 'system.webserver/security/access' -Value 'Ssl'
+        Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Set SSL Settings to Require SSL and Ignore Client certificates"
+    }
     Pop-Location
 }
