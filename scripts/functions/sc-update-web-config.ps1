@@ -25,7 +25,7 @@ $null = $item.Node.ParentNode.RemoveChild($item.Node)
 
 #Create the replacement node
 $sessionState = $xml.CreateElement("sessionState")
-$sessionState.SetAttribute("mode", "custom")
+$sessionState.SetAttribute("mode", "Custom")
 $sessionState.SetAttribute("customProvider", "redis")
 $sessionState.SetAttribute("timeout", "20")
 
