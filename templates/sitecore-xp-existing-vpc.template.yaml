@@ -921,7 +921,7 @@ Resources:
           - !GetAtt FunctionsStack.Outputs.SCQSPrefix
           - '/cert/internal/acm'
 
-  # Sitecore AMI Build Stack
+  # Sitecore SOLR Stack
   SolrStack:
     Type: AWS::CloudFormation::Stack
     Condition: CreateDevSolr
