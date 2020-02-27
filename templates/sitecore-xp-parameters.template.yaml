@@ -406,7 +406,7 @@ Resources:
       GenerateSecretString:
         SecretStringTemplate: '{"username": "none"}'
         GenerateStringKey: "APIKey"
-        PasswordLength: 20
+        PasswordLength: 32
         ExcludePunctuation: true
         IncludeSpace: false
   ClientSecret: 
