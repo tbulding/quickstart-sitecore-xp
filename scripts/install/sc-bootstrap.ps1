@@ -43,17 +43,6 @@ foreach ($file in $files) {
         Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString (Expand-Archive -LiteralPath "$localpath\$filename" -DestinationPath $localpath -Force -Verbose *>&1 | Out-String)
     }
 }
-# Change SSL Flag in json files
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Changing SSL Flag in JSON files'
-$files = Get-ChildItem -Path $localpath -Recurse -ErrorAction SilentlyContinue -Filter *.json | Where-Object { ($_.Name -like 'IdentityServer*') -or ($_.Name -like 'sitecore-xp1*') -or ($_.Name -like 'xconnect-xp1*') }
-foreach ($file in $files) {
-    Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString (((Get-Content -Path "$localpath\$file" -Raw) -replace '"SSLFlags": 1,', '"SSLFlags": 0,') | Set-Content -Path "$localpath\$file")
-}
-
-#Get AWS Custom install JSON Role files
-#$customjson = $QSS3KeyPrefix + "scripts/custom/"
-#Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Initiating AWS Custom install JSON Role files download'
-#Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString (Read-S3Object -BucketName $QSS3BucketName -KeyPrefix $customjson -Folder "$localpath\aws-custom")
 
 # Install NuGet provider
 Install-PackageProvider -Name NuGet -Force
