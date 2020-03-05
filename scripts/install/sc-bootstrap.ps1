@@ -44,6 +44,14 @@ foreach ($file in $files) {
     }
 }
 
+# Change SSL Flag in json files this disables SNI in IIS
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Changing SSL Flag in JSON files'
+$files = Get-ChildItem -Path $localpath -Recurse -ErrorAction SilentlyContinue -Filter *.json | Where-Object { ($_.Name -like 'IdentityServer*') -or ($_.Name -like 'sitecore-xp1*') -or ($_.Name -like 'xconnect-xp1*') }
+foreach ($file in $files) {
+    Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString (((Get-Content -Path "$localpath\$file" -Raw) -replace '"SSLFlags": 1,', '"SSLFlags": 0,') | Set-Content -Path "$localpath\$file")
+}
+
+
 # Install NuGet provider
 Install-PackageProvider -Name NuGet -Force
 if ($? -eq 'true') {
