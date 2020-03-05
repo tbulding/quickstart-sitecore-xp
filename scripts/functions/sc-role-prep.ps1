@@ -15,6 +15,7 @@ $SCInstallRoot = (Get-SSMParameter -Name "/$SCQSPrefix/user/localresourcespath")
 $s3BucketName = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/name").Value # The Sitecore resources bucket
 $LicencePrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/sclicenseprefix").Value # The prefix in the bucket where the Sitecore License is kept
 $CertificatePrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/certificateprefix").Value # The prefix in the bucket where the certificate is kept (both Sitecore and SolrDev)
+$CollSearchCertificateName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/collsearch/exportname").Value # The Sitecore Collection Search exported Client Authentication certificate name
 $CertificateName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/exportname").Value # The Sitecore instance exported Instance certificate name
 $RootCertificateName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/root/exportname").Value# The Sitecore instance exported Root certificate name
 $CertPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-certpass").SecretString).password
@@ -139,6 +140,8 @@ function licence_download {
 cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertName $RootCertificateName -CertStoreLocation 'Cert:\LocalMachine\Root' -CertPass $CertSecurePassword
 # Import Instance Cert
 cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertName $CertificateName -CertStoreLocation 'Cert:\LocalMachine\My' -CertPass $CertSecurePassword
+# Import Collection Search Cert
+cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertName $CollSearchCertificateName -CertStoreLocation 'Cert:\LocalMachine\My' -CertPass $CertSecurePassword
 # Download Sitecore License
 licence_download -LicenseBucketName $s3BucketName -LicenseObjPrefix $LicencePrefix -LicenseInstance $SCInstallRoot
 

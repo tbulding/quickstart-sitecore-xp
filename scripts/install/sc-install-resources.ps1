@@ -59,6 +59,7 @@ $parameters = @{
     SolrCorePrefix                = (Get-SSMParameter -Name "/$SCQSPrefix/user/solrcoreprefix").Value
     SolrUrl                       = (Get-SSMParameter -Name "/$SCQSPrefix/user/solruri").Value
     InstanceCertificateThumbPrint = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/thumbprint").Value
+    xConnectCertificateThumbPrint = (Get-SSMParameter -Name "/$SCQSPrefix/cert/collsearch/thumbprint").Value
     SQLServer                     = (Get-SSMParameter -Name "/$SCQSPrefix/sql/server").Value
 }
 # endregion
@@ -176,7 +177,7 @@ switch ($Role) {
                 'Collection' {
                     $DeploymentParameters = @{
                         Package                        = $($local.Package)
-                        XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
+                        XConnectCert                   = $($parameters.xConnectCertificateThumbPrint)
                         SiteName                       = $($local.SiteName)
                         SqlDbPrefix                    = $($parameters.SCPrefix)
                         SqlServer                      = $($parameters.SQLServer)
@@ -223,7 +224,7 @@ switch ($Role) {
                         Package                  = $($local.Package)
                         LicenseFile              = $($local.LicenseFile)
                         SiteName                 = $($local.SiteName)
-                        XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
+                        XConnectCert             = $($parameters.xConnectCertificateThumbPrint)
                         SqlDbPrefix              = $($parameters.SCPrefix)
                         SqlServer                = $($parameters.SQLServer)
                         SqlAdminUser             = $($secrets.SqlAdminUser)
@@ -257,7 +258,7 @@ switch ($Role) {
                         LicenseFile                 = $($local.LicenseFile)
                         SiteName                    = $($local.SiteName)
                         SSLCert                     = $($parameters.InstanceCertificateThumbPrint)
-                        XConnectCert                = $($parameters.InstanceCertificateThumbPrint)
+                        XConnectCert                = $($parameters.xConnectCertificateThumbPrint)
                         SqlDbPrefix                 = $($parameters.SCPrefix)
                         SqlServer                   = $($parameters.SQLServer)
                         SqlAdminUser                = $($secrets.SqlAdminUser)
@@ -303,7 +304,7 @@ switch ($Role) {
                         LicenseFile          = $($local.LicenseFile)
                         SiteName             = $($local.SiteName)
                         SSLCert              = $($parameters.InstanceCertificateThumbPrint)
-                        XConnectCert         = $($parameters.InstanceCertificateThumbPrint)
+                        XConnectCert         = $($parameters.xConnectCertificateThumbPrint)
                         SqlDbPrefix          = $($parameters.SCPrefix)
                         SqlServer            = $($parameters.SQLServer)
                         SqlAdminUser         = $($secrets.SqlAdminUser)
@@ -337,7 +338,7 @@ switch ($Role) {
                         LicenseFile              = $($local.LicenseFile)
                         SiteName                 = $($local.SiteName)
                         SSLCert                  = $($parameters.InstanceCertificateThumbPrint)
-                        XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
+                        XConnectCert             = $($parameters.xConnectCertificateThumbPrint)
                         SqlDbPrefix              = $($parameters.SCPrefix)
                         SqlServer                = $($parameters.SQLServer)
                         SqlAdminUser             = $($secrets.SqlAdminUser)
@@ -388,7 +389,7 @@ switch ($Role) {
                         LicenseFile                = $($local.LicenseFile)
                         SiteName                   = $($local.SiteName)
                         SSLCert                    = $($parameters.InstanceCertificateThumbPrint)
-                        XConnectCert               = $($parameters.InstanceCertificateThumbPrint)
+                        XConnectCert               = $($parameters.xConnectCertificateThumbPrint)
                         SqlDbPrefix                = $($parameters.SCPrefix)
                         SqlServer                  = $($parameters.SQLServer)
                         SqlAdminUser               = $($secrets.SqlAdminUser)
@@ -467,7 +468,7 @@ switch ($Role) {
             SqlDbPrefix                          = $($parameters.SCPrefix)
             SolrCorePrefix                       = $($parameters.SolrCorePrefix)
             SSLCert                              = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                         = $($parameters.xConnectCertificateThumbPrint)
             SiteName                             = $($local.SiteName)
             # SitePhysicalRoot
             SitecoreAdminPassword                = $($secrets.SitecoreAdminPassword)
@@ -540,7 +541,7 @@ switch ($Role) {
             LicenseFile                          = $($local.LicenseFile)
             SqlDbPrefix                          = $($parameters.SCPrefix)
             SolrCorePrefix                       = $($parameters.SolrCorePrefix)
-            XConnectCert                         = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                         = $($parameters.xConnectCertificateThumbPrint)
             SiteName                             = $($local.SiteName)
             # SitePhysicalRoot
             SolrUrl                              = $($parameters.SolrUrl)
@@ -574,7 +575,7 @@ switch ($Role) {
             LicenseFile                = $($local.LicenseFile)
             SiteName                   = $($local.SiteName)
             SSLCert                    = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert               = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert               = $($parameters.xConnectCertificateThumbPrint)
             XConnectCollectionService  = $($ServiceURLs.XConnectCollectionService)
             ReportingServiceApiKey     = $($secrets.ReportingServiceApiKey)
             SqlDbPrefix                = $($parameters.SCPrefix)
@@ -635,7 +636,7 @@ switch ($Role) {
             SiteName                       = $($local.SiteName)
             # SitePhysicalRoot
             SSLCert                        = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                   = $($parameters.xConnectCertificateThumbPrint)
             SqlDbPrefix                    = $($parameters.SCPrefix)
             SqlAdminUser                   = $($secrets.SqlAdminUser)
             SqlAdminPassword               = $($secrets.SqlAdminPassword)
@@ -672,7 +673,7 @@ switch ($Role) {
             SiteName                       = $($local.SiteName)
             # SitePhysicalRoot
             SSLCert                        = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                   = $($parameters.xConnectCertificateThumbPrint)
             SqlDbPrefix                    = $($parameters.SCPrefix)
             SolrCorePrefix                 = $($parameters.SolrCorePrefix)
             SqlCollectionUser              = $($secrets.SqlCollectionUser)
@@ -728,7 +729,7 @@ switch ($Role) {
             SiteName                       = $($local.SiteName)
             # SitePhysicalRoot
             SSLCert                        = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                   = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                   = $($parameters.xConnectCertificateThumbPrint)
             SqlDbPrefix                    = $($parameters.SCPrefix)
             SqlReferenceDataUser           = $($secrets.SqlReferenceDataUser)
             SqlReferenceDataPassword       = $($secrets.SqlReferenceDataPassword)
@@ -750,7 +751,7 @@ switch ($Role) {
             SiteName                        = $($local.SiteName)
             # SitePhysicalRoot
             SSLCert                         = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                    = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                    = $($parameters.xConnectCertificateThumbPrint)
             SqlDbPrefix                     = $($parameters.SCPrefix)
             SqlAdminUser                    = $($secrets.SqlAdminUser)
             SqlAdminPassword                = $($secrets.SqlAdminPassword)
@@ -780,7 +781,7 @@ switch ($Role) {
             Package                  = $($local.Package)
             LicenseFile              = $($local.LicenseFile)
             SiteName                 = $($local.SiteName)
-            XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert             = $($parameters.xConnectCertificateThumbPrint)
             XConnectEnvironment      = $($parameters.Environment)
             XConnectLogLevel         = $($parameters.LogLevel)
             DnsName                  = $($DNSNames.ReferenceDataDNS)
@@ -819,7 +820,7 @@ switch ($Role) {
             SiteName                    = $($local.SiteName)
             # SitePhysicalRoot
             SSLCert                     = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert                = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert                = $($parameters.xConnectCertificateThumbPrint)
             SqlDbPrefix                 = $($parameters.SCPrefix)
             SqlAdminUser                = $($secrets.SqlAdminUser)
             SqlAdminPassword            = $($secrets.SqlAdminPassword)
@@ -854,7 +855,7 @@ switch ($Role) {
             SiteName                 = $($local.SiteName)
             # SitePhysicalRoot
             SSLCert                  = $($parameters.InstanceCertificateThumbPrint)
-            XConnectCert             = $($parameters.InstanceCertificateThumbPrint)
+            XConnectCert             = $($parameters.xConnectCertificateThumbPrint)
             SqlDbPrefix              = $($parameters.SCPrefix)
             SqlAdminUser             = $($secrets.SqlAdminUser)
             SqlAdminPassword         = $($secrets.SqlAdminPassword)

@@ -96,6 +96,13 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: "Sitecore-QuickStart-InstanceCertificate"
+  ExportCollectionSearchCertName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/collsearch/exportname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: "Sitecore-QuickStart-CollSearchCertificate"
   RootCertFriendlyName:
     Type: AWS::SSM::Parameter
     Properties:
@@ -117,6 +124,13 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: "Sitecore-QuickStart-InstanceCertificate"
+  CollSearchCertFriendlyName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/collsearch/friendlyname
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: "Sitecore-QuickStart-CollSearchCertificate"
   InstanceCertDnsNames:
     Type: AWS::SSM::Parameter
     Properties:
@@ -124,6 +138,14 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: !Sub '*.${IntDNS},127.0.0.1'
+      # Value: !Sub "*.${AWS::Region}.sitecore.internal"
+  CollSearchCertDnsNames:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/cert/collsearch/dnsnames
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String 
+      Value: !Sub 'collsearch.${IntDNS},127.0.0.1'
       # Value: !Sub "*.${AWS::Region}.sitecore.internal"
   CertStoreLocation:
     Type: AWS::SSM::Parameter
