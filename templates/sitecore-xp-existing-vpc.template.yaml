@@ -623,6 +623,19 @@ Resources:
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
+  # XConnect NLB
+  XConnectNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+
+
   # Parameter entries for internal & External ALB - put here so that Parameter Stack not waiting
   InternalALBURL:
     Type: AWS::SSM::Parameter
@@ -646,6 +659,17 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String
       Value: !GetAtt LoadBalancerExternal.DNSName
+  XConnectALBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/xconnect/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt XConnectNLB.DNSName
   # Internal DNS Configuration
   InternalR53:
     Type: AWS::Route53::HostedZone
@@ -695,7 +719,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
+        - !GetAtt XConnectNLB.DNSName
   RDRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -969,6 +993,7 @@ Resources:
         VPCID: !Ref VPCID
         LoadBalancerInternal: !Ref LoadBalancerInternal
         LoadBalancerExternal: !Ref LoadBalancerExternal
+        XConnectNLB: !Ref XConnectNLB
         InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
         ExternalCertificateARN: !Ref ExternalCertificateARN
         CDMinSize: !Ref CDMinSize
@@ -1002,6 +1027,9 @@ Outputs:
   ALBExternalDNS:
     Description: DNS name of the external facing ALB. This will be used for the Content Delivery, Content Management & Identity Server DNS CNAME's
     Value: !GetAtt LoadBalancerExternal.DNSName
+  XConnectInternalDNS:
+    Description: Internal DNS name of the XConnect NLB
+    Value: !GetAtt XConnectNLB.DNSName
   ContentDelivery:
     Description: The website name for the Content Delivery role. A CNAME entry needs to be added pointing to the 'ALBExternalDNS'
     Value: !Ref CDDNSName

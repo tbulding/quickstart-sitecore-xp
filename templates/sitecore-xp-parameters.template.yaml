@@ -96,13 +96,13 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
       Value: "Sitecore-QuickStart-InstanceCertificate"
-  ExportCollectionSearchCertName:
+  ExportxconnectCertName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub /${SCQSPrefix}/cert/collsearch/exportname
+      Name: !Sub /${SCQSPrefix}/cert/xconnect/exportname
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
-      Value: "Sitecore-QuickStart-CollSearchCertificate"
+      Value: "Sitecore-QuickStart-xconnectCertificate"
   RootCertFriendlyName:
     Type: AWS::SSM::Parameter
     Properties:
@@ -127,10 +127,10 @@ Resources:
   CollSearchCertFriendlyName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub /${SCQSPrefix}/cert/collsearch/friendlyname
+      Name: !Sub /${SCQSPrefix}/cert/xconnect/friendlyname
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String 
-      Value: "Sitecore-QuickStart-CollSearchCertificate"
+      Value: "Sitecore-QuickStart-XConnectCertificate"
   InstanceCertDnsNames:
     Type: AWS::SSM::Parameter
     Properties:

@@ -11,6 +11,8 @@ Parameters:
     Type: String
   LoadBalancerExternal:
     Type: String
+  XConnectNLB:
+    Type: String
   InternalCertificateARN:
     Type: String
   ExternalCertificateARN:
@@ -114,10 +116,10 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
+      HealthCheckProtocol: TCP
       Name: Int-CollectionSearch
       Port: 443
-      Protocol: HTTPS
+      Protocol: TCP
       TargetType: instance
       VpcId: !Ref VPCID
   CPIntTargetGroup:
@@ -201,6 +203,15 @@ Resources:
       TargetType: instance
       VpcId: !Ref VPCID
 
+  XConnectListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref CSIntTargetGroup
+      LoadBalancerArn: !Ref XConnectNLB
+      Port: 443
+      Protocol: TCP
   # HTTPSListenerInternalRule1:
   #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
   #   Properties:
@@ -329,19 +340,19 @@ Resources:
             - !Sub coll.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 10
-  HTTPSListenerInternalRule11:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref CSIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            # - !Sub collsearch.${AWS::Region}.sitecore.internal
-            - !Sub collsearch.${IntDNS}
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 11
+  # HTTPSListenerInternalRule11:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref CSIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           # - !Sub collsearch.${AWS::Region}.sitecore.internal
+  #           - !Sub collsearch.${IntDNS}
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 11
   #--- External ALB Config ---#
   HTTPSListenerExternal:
     Type: AWS::ElasticLoadBalancingV2::Listener
