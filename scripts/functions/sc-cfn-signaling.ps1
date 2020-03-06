@@ -12,6 +12,8 @@ param (
     [string]$Region
 )
 
+# This is used for the final step on the instance userdata to signal back to the CFN stack
+
 $asgMapping = @{
     'IdentityServer'               = "IdentityASG"
     'Collection'                   = "CollectionASG"
