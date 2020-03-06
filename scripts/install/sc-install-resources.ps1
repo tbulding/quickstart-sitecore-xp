@@ -879,5 +879,8 @@ If ($Role -ne 'DbResources') {
     $LogGroupName = "$SCQSPrefix-$Role"
     $LogStreamName = "$Role-RoleInstallation-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
     Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\$Role.log" -raw)
+    # Setting permissions for AppPool Identity in Administrators
+    $AppPoolSiteName = $DeploymentParameters.SiteName
+    Add-LocalGroupMember -Group "Administrators" -Member "IIS AppPool\$AppPoolSiteName"
     Pop-Location
 }
