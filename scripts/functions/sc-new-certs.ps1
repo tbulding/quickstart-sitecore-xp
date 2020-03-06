@@ -14,7 +14,7 @@ $RootFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/root/friendlyname
 $RootDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/root/dnsnames").Value).Split(",").Trim()
 $InstanceFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/friendlyname").Value
 $InstanceDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/dnsnames").Value).Split(",").Trim()
-$CollSearchFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/collsearch/friendlyname").Value
+$XConnectFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/xconnect/friendlyname").Value
 $CollSearchDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/collsearch/dnsnames").Value).Split(",").Trim()
 $CertStoreLocation = (Get-SSMParameter -Name "/$SCQSPrefix/cert/storelocation").Value
 $RawPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-certpass").SecretString).password
@@ -22,7 +22,7 @@ $ExportPassword = ConvertTo-SecureString $RawPassword -AsPlainText -Force
 $ExportPath = (Get-SSMParameter -Name "/$SCQSPrefix/user/localresourcespath").Value
 $ExportRootCertName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/root/exportname").Value
 $ExportInstanceCertName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/exportname").Value
-$ExportCollSearchCertName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/collsearch/exportname").Value
+$ExportXConnectCertName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/xconnect/exportname").Value
 $S3BucketName = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/name").Value
 $S3BucketCertificatePrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/certificateprefix").Value
 
@@ -278,7 +278,7 @@ function WriteToParameterStore {
     Write-SSMParameter -Name "/$SCQSPrefix/cert/$type/thumbprint" -Type "String" -Value $cert.Thumbprint
 }
 
-#Creates the RootCA, moves it to Cert:\LocalMachine\Root and validates that it is correct (Returns True)
+# Creates the RootCA, moves it to Cert:\LocalMachine\Root and validates that it is correct (Returns True)
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Creating the Sitecore Root cert...'
 $root = NewCertificate `
     -FriendlyName $RootFriendlyName `
@@ -296,7 +296,7 @@ Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logSt
 $RootCAToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $ExportRootCA.certname -localFileName $ExportRootCA.localPath
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $RootCAToS3
 
-#Creates the Sitecore Instance cert based on the RootCA and validates that it is correct (Returns True)
+# Creates the Sitecore Instance cert based on the RootCA and validates that it is correct (Returns True)
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Creating the Sitecore Instance cert based on the generated RootCA...'
 $signedCertificate = NewCertificate `
     -FriendlyName $InstanceFriendlyName `
@@ -304,6 +304,7 @@ $signedCertificate = NewCertificate `
     -Signer $root
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $signedCertificate
 
+# Create Parameter entry for instance certificate thumbprint
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Writing Certificate thumbprint to Parameter Store'
 WriteToParameterStore -Cert $signedCertificate -type 'instance'
 
@@ -316,21 +317,22 @@ Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logSt
 $InstanceCertToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $exportinstanceCert.certname -localFileName $exportinstanceCert.localPath
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $InstanceCertToS3
 
-#Creates the Sitecore CollectionSearch cert based on the RootCA and validates that it is correct (Returns True)
+# Creates the Sitecore XConnect cert based on the RootCA and validates that it is correct (Returns True)
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Creating the Sitecore Collection Search cert based on the generated RootCA...'
 $signedCertificate = NewCertificate `
-    -FriendlyName $CollSearchFriendlyName `
+    -FriendlyName $XConnectFriendlyName `
     -DNSNames $CollSearchDNSNames `
     -Signer $root
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $signedCertificate
 
+# Create Parameter entry for xconnect certificate thumbprint
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Writing Certificate thumbprint to Parameter Store'
-WriteToParameterStore -Cert $signedCertificate -type 'collsearch'
+WriteToParameterStore -Cert $signedCertificate -type 'xconnect'
 
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Exporting Collection Search certificate...'
-$exportcollsearchCert = ExportCert -Cert $signedCertificate -Path $ExportPath -Name $ExportCollSearchCertName -IncludePrivateKey -Password $ExportPassword
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $exportcollsearchCert
+$exportxconnectCert = ExportCert -Cert $signedCertificate -Path $ExportPath -Name $ExportXConnectCertName -IncludePrivateKey -Password $ExportPassword
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $exportxconnectCert
 
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Copying Collection Search  certificate to S3...'
-$CollSearchCertToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $exportcollsearchCert.certname -localFileName $exportcollsearchCert.localPath
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $CollSearchCertToS3
+$XconnectCertToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $exportxconnectCert.certname -localFileName $exportxconnectCert.localPath
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $XconnectCertToS3
