@@ -15,7 +15,7 @@ $RootDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/root/dnsnames").Valu
 $InstanceFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/friendlyname").Value
 $InstanceDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/dnsnames").Value).Split(",").Trim()
 $XConnectFriendlyName = (Get-SSMParameter -Name "/$SCQSPrefix/cert/xconnect/friendlyname").Value
-$CollSearchDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/collsearch/dnsnames").Value).Split(",").Trim()
+$xConnectDNSNames = ((Get-SSMParameter -Name "/$SCQSPrefix/cert/xconnect/dnsnames").Value).Split(",").Trim()
 $CertStoreLocation = (Get-SSMParameter -Name "/$SCQSPrefix/cert/storelocation").Value
 $RawPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-certpass").SecretString).password
 $ExportPassword = ConvertTo-SecureString $RawPassword -AsPlainText -Force
@@ -193,7 +193,7 @@ function ExportCert {
         [switch]$IncludePrivateKey,
         [securestring]$Password
     )
-    $CertificatePath = $path+'\certificates'
+    $CertificatePath = $path + '\certificates'
     if (-not (Test-Path -LiteralPath $CertificatePath)) {
         New-Item -Path $CertificatePath -ItemType Directory
     }
@@ -321,7 +321,7 @@ Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logSt
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Creating the Sitecore Collection Search cert based on the generated RootCA...'
 $signedCertificate = NewCertificate `
     -FriendlyName $XConnectFriendlyName `
-    -DNSNames $CollSearchDNSNames `
+    -DNSNames $xConnectDNSNames `
     -Signer $root
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $signedCertificate
 

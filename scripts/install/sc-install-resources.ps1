@@ -59,7 +59,7 @@ $parameters = @{
     SolrCorePrefix                = (Get-SSMParameter -Name "/$SCQSPrefix/user/solrcoreprefix").Value
     SolrUrl                       = (Get-SSMParameter -Name "/$SCQSPrefix/user/solruri").Value
     InstanceCertificateThumbPrint = (Get-SSMParameter -Name "/$SCQSPrefix/cert/instance/thumbprint").Value
-    xConnectCertificateThumbPrint = (Get-SSMParameter -Name "/$SCQSPrefix/cert/collsearch/thumbprint").Value
+    xConnectCertificateThumbPrint = (Get-SSMParameter -Name "/$SCQSPrefix/cert/xconnect/thumbprint").Value
     SQLServer                     = (Get-SSMParameter -Name "/$SCQSPrefix/sql/server").Value
 }
 # endregion
