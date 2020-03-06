@@ -25,48 +25,6 @@ $logGroupName = $SCQSPrefix + "-" + $Role
 $logStreamLicense = "LicenseFile-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 $logStreamCert = "CertImport-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
-# function cert_import {
-#     [CmdletBinding()]
-#     param (
-#         [string] $CertBucketName,
-#         [string] $CertPrefix,
-#         [string] $CertName,
-#         [string] $RootCertName,
-#         [securestring] $CertPass
-#     )
-    
-#     begin {
-#         $CertBucketLocation = Get-S3BucketLocation -BucketName $CertBucketName
-#         $CertPath = $CertPrefix + $CertName + '.pfx'
-#         $RootCertPath = $CertPrefix + $RootCertificateName + '.pfx'
-#         $CertLocation = 'c:\certificates'
-#         $LocalCertFile = "$CertLocation\$CertName.pfx"
-#         $LocalRootCertFile = "$CertLocation\$RootCertName.pfx"
-#     }
-    
-#     process {
-#         if (-not (Test-Path -LiteralPath $CertLocation)) {
-#             -LogGroupName $logGroupName -LogStreamName $logStreamCert -LogString (New-Item -Path $CertLocation -ItemType Directory -Verbose)
-#         }
-#         else {
-#             Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString "$CertLocation already exists"
-#         }
-        
-#         Read-S3Object -BucketName $CertBucketName -Region $CertBucketLocation.value -Key $CertPath -File $LocalCertFile
-#         Read-S3Object -BucketName $CertBucketName -Region $CertBucketLocation.value -Key $RootCertPath -File $LocalRootCertFile
-#         $RootImport = Import-PfxCertificate -FilePath $LocalRootCertFile -CertStoreLocation Cert:\LocalMachine\Root -Password $CertPass -Exportable
-#         $InstanceImport = Import-PfxCertificate -FilePath $LocalCertFile -CertStoreLocation Cert:\LocalMachine\My -Password $CertPass -Exportable
-#         Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString $RootImport
-#         Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString $InstanceImport
-#     }
-    
-#     end {
-        
-#     }
-# }
-
-# cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertName $CertificateName -RootCertName $RootCertificateName -CertPass $CertSecurePassword
-
 function cert_import {
     [CmdletBinding()]
     param (
