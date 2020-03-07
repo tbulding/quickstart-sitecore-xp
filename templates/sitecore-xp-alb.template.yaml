@@ -480,9 +480,6 @@ Resources:
             - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            # - !Sub '${LocalQSScripts}\sc-update-cs-config.ps1 -SCQSPrefix '
-            # - !Sub '"${SCQSPrefix}"'
-            # - "\n"
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CD" -StackName '
             - !Sub '"${AWS::StackName}" -Region '
             - !Sub '"${AWS::Region}"'
@@ -822,6 +819,7 @@ Resources:
             - "\n"
             - "</powershell>\n"
   MarketingAutomationASG:
+    DependsOn: CollectionSearchASG # Marketing Automation requires that Collection Search be running or the services will not start, and the template will fail
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
