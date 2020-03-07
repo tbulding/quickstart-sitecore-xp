@@ -58,7 +58,7 @@ function redisConnectionString {
     
     $xml = New-Object -TypeName xml
     $xml.Load($constringfilepath)
-    $item = Select-Xml -Xml $xml -XPath '//add[@name="session"]'
+    $item = Select-Xml -Xml $xml -XPath '//add[@name="xconnect.collection"]'
     $newnode = $item.Node.CloneNode($true)
 
     $newnode.name = 'session'
