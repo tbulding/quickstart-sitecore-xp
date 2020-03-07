@@ -56,7 +56,6 @@ Metadata:
       - Label:
           default: SQL Server configuration
         Parameters:
-          # - PubliclyAccessible
           - DBInstanceClass
           - DBAutoMinorVersionUpgrade
           - SQLEngineEdition
@@ -161,9 +160,6 @@ Metadata:
         default: The email address for receiving notifications on instance scaling.
       LambdaZipsBucketName:
         default: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
-    # RDS Configuration
-      # PubliclyAccessible:
-      #   default: Publically Accessible
       DBInstanceClass:
         default: To be udpated
       DBAutoMinorVersionUpgrade:
@@ -468,13 +464,6 @@ Parameters:
     Default: 'true'
     Description: Select true/false to setup Auto Minor Version upgrade.
     Type: String
-  # PubliclyAccessible: 
-  #   AllowedValues: 
-  #     - 'true'
-  #     - 'false'
-  #   Default: 'false'
-  #   Description: Select whether DB instance is internet-facing.
-  #   Type: String
   DBInstanceClass:
     AllowedValues:
       - db.m5.large
@@ -659,7 +648,6 @@ Resources:
         CorsOrigins: !Ref CorsOrigins
         EmailNotifications: !Ref EmailNotifications
         LambdaZipsBucketName: !Ref LambdaZipsBucketName
-        # PubliclyAccessible: !Ref PubliclyAccessible
         DBInstanceClass: !Ref DBInstanceClass
         DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
         SQLEngineEdition: !Ref SQLEngineEdition
@@ -670,6 +658,5 @@ Resources:
         BackupRetentionPeriod: !Ref BackupRetentionPeriod
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        RDGWSecurityGroup: !GetAtt RDGWStack.Outputs.RemoteDesktopGatewaySGID
         CacheNodeType: !Ref CacheNodeType
         RedisPort: !Ref RedisPort
