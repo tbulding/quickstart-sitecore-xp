@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Creates the required parameters in Parameter Store"
+Description: "Creates the development (Non-Production) Solr Instance"
 Parameters:
   PrivateSubnet1A:
     Type: AWS::EC2::Subnet::Id
@@ -47,8 +47,11 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
+                - lambda.amazonaws.com
             Effect: Allow
-        Version: 2012-10-17
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
@@ -134,13 +137,6 @@ Resources:
       VPCZoneIdentifier: 
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
-      # NotificationConfigurations:
-      #   - TopicARN: !Ref AutoscalingSNS
-      #     NotificationTypes:
-      #     - autoscaling:EC2_INSTANCE_LAUNCH
-      #     - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
-      #     - autoscaling:EC2_INSTANCE_TERMINATE
-      #     - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Solr-${SCQSPrefix}
