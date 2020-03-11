@@ -13,6 +13,8 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   SCQSPrefix:
     Type: String
+  SCQSRandomString:
+    Type: String
   LocalQSScripts:
     Type: String
   R53HostedZoneID:
@@ -21,9 +23,13 @@ Parameters:
     Type: String
   QSS3BucketName:
     Type: String
+  QSS3KeyPrefix:
+    Type: String
+  LambdaZipsBucketName:
+    Type: String
   
 Resources:
-  SitecoreS3Bucket:
+  SitecoreCustomSolrSSM:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub /${SCQSPrefix}/service/customsolr
@@ -163,3 +169,23 @@ Resources:
             - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
+  # Create Lambda cleanup function
+  DeleteSolrResourcesLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Removes resources created by the Solr server installation
+      Handler: lambda_function.handler
+      MemorySize: 128
+      Role: !GetAtt SolrInstanceRole.Arn
+      Runtime: python3.6
+      Timeout: 900
+      Code:
+        S3Bucket: !Ref LambdaZipsBucketName
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/DeleteSolrResources/lambda.zip'
+  DeleteSCResources:
+    Type: Custom::CopyZips
+    Properties:
+      ServiceToken: !GetAtt 'DeleteSolrResourcesLambda.Arn'
+      SCQSPrefix: !Ref SCQSPrefix
+      SCQSRandomString: !Ref SCQSRandomString
+      R53HostedZoneID: !Ref R53HostedZoneID

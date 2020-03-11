@@ -948,10 +948,17 @@ Resources:
         SolrInstanceSG: !Ref SitecoreInstanceSG
         SolrKeyPair: !Ref SitecoreKeyPair
         SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+        SCQSRandomString: !GetAtt FunctionsStack.Outputs.SitecoreRandomString
         LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
         R53HostedZoneID: !Ref InternalR53
         S3BucketName: !Ref SitecoreS3Bucket
         QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        LambdaZipsBucketName: !If [
+            CreateLambdaZipsBucket,
+            !Ref LambdaZipsBucket,
+            !Ref LambdaZipsBucketName,
+          ]
 
   # The following 3 stacks are used to introduce an if statement into the depends of the Sitecore ALB Stack
   # The dependency varies depending on the condition where SOLR is to be deployed or not.
