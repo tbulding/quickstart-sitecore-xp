@@ -438,8 +438,8 @@ Resources:
         Count: !Ref CDDesiredCapacity
     Properties:
       LaunchConfigurationName: !Ref ContentDeliveryLC
-      MaxSize: !Ref CDMinSize
-      MinSize: !Ref CDMaxSize
+      MaxSize: !Ref CDMaxSize
+      MinSize: !Ref CDMinSize
       DesiredCapacity: !Ref CDDesiredCapacity
       VPCZoneIdentifier:
         - !Ref PrivateSubnet1A
