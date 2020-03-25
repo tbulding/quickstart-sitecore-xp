@@ -85,7 +85,7 @@ def remove_resources(event, context):
     scqs_prefix = event['ResourceProperties']['SCQSPrefix']
     scqs_string = event['ResourceProperties']['SCQSRandomString']
     R53_hosted_zone = event['ResourceProperties']['R53HostedZoneID'] # The R53 Hosted Zone
-    ssm_internal_dns = '/' + scqs_prefix + '/service/customsolr'
+    ssm_internal_dns = '/' + scqs_prefix + '/service/internaldns'
 
     clean_r53 = solr_r53(R53_hosted_zone, ssm_internal_dns)
     print(clean_r53)
