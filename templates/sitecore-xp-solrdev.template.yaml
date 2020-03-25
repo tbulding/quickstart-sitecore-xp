@@ -178,7 +178,7 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaZipsBucketName
         S3Key: !Sub '${QSS3KeyPrefix}functions/packages/DeleteSolrResources/lambda.zip'
-  DeleteSCResources:
+  DeleteSolrResources:
     Type: Custom::CopyZips
     Properties:
       ServiceToken: !GetAtt 'DeleteSolrResourcesLambda.Arn'
