@@ -12,14 +12,19 @@ Metadata:
           - PrivateSubnet2A
           - PublicSubnet1
           - PublicSubnet2
-          - ExternalCertificateARN
       - Label:
-          default: Sitecore Configuration
+          default: Sitecore Networking Configuration
         Parameters:
           - CDDNSName
           - CMDNSName
           - ISDNSName
           - IntDNS
+          - IntVPCR53Zone
+          - VPCPrivateDNS # true/false - this is here for instances where deploying into a VPC that has DHCP Option Sets that utilize private (non-Route53) DNS servers. EX: Active Directory provided DNS
+          - ExternalCertificateARN
+      - Label:
+          default: Sitecore Configuration
+        Parameters:
           - CDMinSize
           - CDMaxSize
           - CDDesiredCapacity
@@ -89,6 +94,10 @@ Metadata:
         default: DNS name for Identity Server Role
       IntDNS:
         default: '[OPTIONAL] Internal DNS suffix for the Sitecore installation'
+      IntVPCR53Zone:
+        default: The internal Route53 hosted zone ID
+      VPCPrivateDNS:
+        default: Private (Non-Route53) DNS
       CDMinSize:
         default: Min number of Content Delivery instances # Currently applied to all instances
       CDMaxSize:
@@ -183,9 +192,7 @@ Parameters:
   PublicSubnet2:
     Type: AWS::EC2::Subnet::Id
     Description: The public subnet in Availability Zone 2
-  ExternalCertificateARN:
-    Type: String
-  # Sitecore
+  # Sitecore Networking Configuration
   CDDNSName:
     Type: String
     Description: DNS name for Content Delivery Role. An alias for the ELB should be created after the stack creation
@@ -198,7 +205,26 @@ Parameters:
   IntDNS:
     Type: String
     Default: ''
-    Description: Internal DNS name. If left blank, one will be generated for you
+    Description: Internal DNS name. If left blank, one will be generated for you. If you have a private Route53 hosted zone or a private managed DNS connected to your VPC, please provide the DNS suffix of the hosted zone.
+  IntVPCR53Zone:
+    Type: String
+    Default: ''
+    Description: "[OPTIONAL] If you already have a private Route53 hosted zone connected to your VPC, please provide the Route53 Hosted Zone ID"
+  VPCPrivateDNS:
+    Type: String
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'False'
+    Description: "Select 'True' if you have your own provided DNS servers for your VPC. Should you have your own DNS servers, 
+                  you will need to create cname entries for the sitecore roles. Please see the deloyment guide for details.
+                  Leave as 'False' if you have a private Route53 hosted zone connected to your VPC."
+  
+  ExternalCertificateARN: # TODO add in functionality for creating certificate in ACM
+    Type: String
+    Description: "[OPTIONAL] Provide the ARN of the wildcard certificate (E.g: *.example.com) created in Amazon Certificate Manager. If not provided, 
+                  a wildcard certificate will be created for you. "
+  #Sitecore Configuration
   CDMinSize:
     Type: Number
     Default: 1
@@ -488,6 +514,7 @@ Conditions:
   CreateLambdaZipsBucket: !Equals [!Ref 'LambdaZipsBucketName', '']
   InternalDNSName: !Equals [!Ref 'IntDNS', '']
   CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
+  CreateInternalR53: !Equals [!Ref 'VPCPrivateDNS', 'False'] # If there is no provided internal DNS, then create a R53 hosted Zone
 
 Resources:
   # Local region S3 bucket for Lambda functions
@@ -659,154 +686,20 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String
       Value: !GetAtt XConnectNLB.DNSName
-  # Internal DNS Configuration
-  InternalR53:
-    Type: AWS::Route53::HostedZone
+  # Sitecore SRoute 53 Stack
+  R53Stack:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateInternalR53
     Properties:
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub '${AWS::Region}.sitecore.internal',
-          !Ref IntDNS,
-        ]
-      VPCs:
-        - VPCId: !Ref VPCID
-          VPCRegion: !Sub ${AWS::Region}
-  # IDRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: !Ref InternalR53
-  #     Name: !If [InternalDNSName, !Sub 'identity.${AWS::Region}.sitecore.internal', !Sub 'identity.${IntDNS}]
-  #     Type: CNAME
-  #     TTL: '900'
-  #     ResourceRecords:
-  #       - !GetAtt LoadBalancerInternal.DNSName
-  CollRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'coll.${AWS::Region}.sitecore.internal',
-          !Sub 'coll.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
-  CSRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'collsearch.${AWS::Region}.sitecore.internal',
-          !Sub 'collsearch.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt XConnectNLB.DNSName
-  RDRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'refdata.${AWS::Region}.sitecore.internal',
-          !Sub 'refdata.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
-  MARecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'mktauto.${AWS::Region}.sitecore.internal',
-          !Sub 'mktauto.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
-  MARRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'mktautorep.${AWS::Region}.sitecore.internal',
-          !Sub 'mktautorep.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
-  CPRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'cortexproc.${AWS::Region}.sitecore.internal',
-          !Sub 'cortexproc.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
-  CRRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'cortexrep.${AWS::Region}.sitecore.internal',
-          !Sub 'cortexrep.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
-  PRCRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'proc.${AWS::Region}.sitecore.internal',
-          !Sub 'proc.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
-  RepRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref InternalR53
-      Name:
-        !If [
-          InternalDNSName,
-          !Sub 'rep.${AWS::Region}.sitecore.internal',
-          !Sub 'rep.${IntDNS}',
-        ]
-      Type: CNAME
-      TTL: '900'
-      ResourceRecords:
-        - !GetAtt LoadBalancerInternal.DNSName
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-r53.template.yaml'
+      Parameters:
+        InternalR53DNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
+        VPCID: !Ref VPCID
+        LoadBalancerInternalDNS: !GetAtt LoadBalancerInternal.DNSName
+        XConnectNLBDNS: !GetAtt XConnectNLB.DNSName
+        IntVPCR53Zone: !Ref IntVPCR53Zone
+        SOLRUrl: !Ref SOLRUrl
+        
   # Sitecore Security Stack
   SecurityStack:
     Type: AWS::CloudFormation::Stack
@@ -933,6 +826,22 @@ Resources:
         - - '/'
           - !GetAtt FunctionsStack.Outputs.SCQSPrefix
           - '/cert/internal/acm'
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    # DependsOn:
+    #   - CertConvertACM
+    #   - FunctionsStack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-networking.template.yaml'
+      Parameters:
+        LoadBalancerInternal: !Ref LoadBalancerInternal
+        InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
+        LoadBalancerExternal: !Ref LoadBalancerExternal
+        ExternalCertificateARN: !Ref ExternalCertificateARN
+        XConnectNLB: !Ref XConnectNLB
+        VPCID: !Ref VPCID
+        IntDNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref 'IntDNS']
+        SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
 
   # Sitecore SOLR Stack
   SolrStack:
@@ -948,17 +857,19 @@ Resources:
         SolrInstanceSG: !Ref SitecoreInstanceSG
         SolrKeyPair: !Ref SitecoreKeyPair
         SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
-        SCQSRandomString: !GetAtt FunctionsStack.Outputs.SitecoreRandomString
         LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
-        R53HostedZoneID: !Ref InternalR53
+        R53HostedZoneID: !If [
+            CreateInternalR53,
+            !GetAtt R53Stack.Outputs.R53IntHostedID,
+            '',
+          ] # If VPCPrivateDNS is True, this will be '' and no record for solr will be created.
         S3BucketName: !Ref SitecoreS3Bucket
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
-        LambdaZipsBucketName: !If [
-            CreateLambdaZipsBucket,
-            !Ref LambdaZipsBucket,
-            !Ref LambdaZipsBucketName,
-          ]
+        AutoscalingSNS: !Ref AutoscalingSNS
+        LoadBalancerInternalDNS: !GetAtt LoadBalancerInternal.DNSName
+        VPCID: !Ref VPCID
+        InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
+        LoadBalancerInternal: !Ref LoadBalancerInternal
 
   # The following 3 stacks are used to introduce an if statement into the depends of the Sitecore ALB Stack
   # The dependency varies depending on the condition where SOLR is to be deployed or not.
@@ -986,12 +897,6 @@ Resources:
       Parameters:
         PrivateSubnet1A: !Ref PrivateSubnet1A
         PrivateSubnet2A: !Ref PrivateSubnet2A
-        VPCID: !Ref VPCID
-        LoadBalancerInternal: !Ref LoadBalancerInternal
-        LoadBalancerExternal: !Ref LoadBalancerExternal
-        XConnectNLB: !Ref XConnectNLB
-        InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
-        ExternalCertificateARN: !Ref ExternalCertificateARN
         CDMinSize: !Ref CDMinSize
         CDMaxSize: !Ref CDMaxSize
         CDDesiredCapacity: !Ref CDDesiredCapacity
@@ -1008,14 +913,20 @@ Resources:
         CMMinSize: !Ref CMMinSize
         CMMaxSize: !Ref CMMaxSize
         CMDesiredCapacity: '1' # TODO udpate later
-        IntDNS:
-          !If [
-            InternalDNSName,
-            !Sub '${AWS::Region}.sitecore.internal',
-            !Ref IntDNS,
-          ]
         AutoscalingSNS: !Ref AutoscalingSNS
         LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
+        CDExtTargetGroup: !GetAtt NetworkStack.Outputs.CDTargetGroup
+        CMExtTargetGroup: !GetAtt NetworkStack.Outputs.CMTargetGroup
+        ISExtTargetGroup: !GetAtt NetworkStack.Outputs.ISTargetGroup
+        ColIntTargetGroup: !GetAtt NetworkStack.Outputs.CollectionTargetGroup
+        CSIntTargetGroup: !GetAtt NetworkStack.Outputs.ColSearchTargetGroup
+        CPIntTargetGroup: !GetAtt NetworkStack.Outputs.CortProcTargetGroup
+        CRIntTargetGroup: !GetAtt NetworkStack.Outputs.CortRepTargetGroup
+        MAIntTargetGroup: !GetAtt NetworkStack.Outputs.MarkAutoTargetGroup
+        MARIntTargetGroup: !GetAtt NetworkStack.Outputs.MarkAutoRepTargetGroup
+        PrcIntTargetGroup: !GetAtt NetworkStack.Outputs.ProcessingTargetGroup
+        RDIntTargetGroup: !GetAtt NetworkStack.Outputs.RefDataTargetGroup
+        RepIntTargetGroup: !GetAtt NetworkStack.Outputs.ReportingDataTargetGroup
 Outputs:
   ALBInternalDNS:
     Description: Internal DNS name of the ALB
