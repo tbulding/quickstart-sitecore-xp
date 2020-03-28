@@ -38,81 +38,97 @@ Resources:
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-Collection
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Collection Role"
   CPIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-CortexProcessing
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Cortex Processing Role"
   CRIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-CortexReporting
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Cortex Reporting Role"
   MAIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-MarketingAutomation
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Marketing Automation Role"
   MARIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-MarketingAutomationReporting
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Marketing Automation Reporting Role"
   PrcIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-PRC
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Processing Role"
   RDIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-ReferenceData
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Reference Data Role"
   RepIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Int-REP
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Reporting Role"
 
   # CollSearch / xConnect (Target Group / Internal NLB)
   CSIntTargetGroup:
@@ -120,11 +136,13 @@ Resources:
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: TCP
-      Name: Int-CollectionSearch
       Port: 443
       Protocol: TCP
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Collection Search Role"
 
   XConnectListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -287,31 +305,37 @@ Resources:
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Ext-Content-Delivery
       Port: 80
       Protocol: HTTP
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Content Delivery Role"
   CMExtTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Ext-Content-Management
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Content Management Role"
   ISExtTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
       HealthCheckProtocol: HTTP
-      Name: Ext-Identity-Server
       Port: 443
       Protocol: HTTPS
       TargetType: instance
       VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Identity Server Role"
 
 Outputs:
   InternalALBListner:
