@@ -236,13 +236,15 @@ Resources:
           !Sub 'https://solrdev.${IntDNS}:8983/solr',
           !Ref 'SOLRUrl',
         ] # If no Solr URL provided, then create URL https:\\solrdev.internaldns, else use provided url
-  # prefix: # this should be able to be removed
-  #   Type: AWS::SSM::Parameter
-  #   Properties:
-  #     Name: !Sub /${SCQSPrefix}/user/s3bucket/prefix
-  #     Description: Parameter for the Sitecore XP1 Quick Start
-  #     Type: String
-  #     Value: "/"
+  SolrDevFQDN: # The FQDN to use for the solrdev installation
+    Type: AWS::SSM::Parameter
+    Condition: CreateDevSolr
+    Properties:
+      Name: !Sub /${SCQSPrefix}/service/solrdevfqdn
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Sub 'solrdev.${IntDNS}' # If no Solr URL provided, then create solrdev.internaldns, else use provided url
+  
   # Secrets Manager entries
   SQLAdminUser: # Used for RDS Master user
     Type: AWS::SecretsManager::Secret

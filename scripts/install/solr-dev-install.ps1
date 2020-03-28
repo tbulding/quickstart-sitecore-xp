@@ -6,7 +6,7 @@ param (
 )
 
 $urlsuffix = (Get-SSMParameter -Name "/$SCQSPrefix/service/internaldns").Value 
-$SolrDNS = 'solrdev.' + $urlsuffix
+$SolrDNS = (Get-SSMParameter -Name "/$SCQSPrefix/service/solrdevfqdn").Value  # 'solrdev.' + $urlsuffix 
 $SolrURL = (Get-SSMParameter -Name "/${SCQSPrefix}/user/solruri").Value
 $SolrVersion = "8.1.1"
 $SolrPort = 8983
@@ -15,9 +15,9 @@ $localPath = (Get-SSMParameter -Name "/$SCQSPrefix/user/localresourcespath").Val
 $localLogPath = "$localPath\logs" # Path on the instance where the log files will be located
 $qslocalPath = (Get-SSMParameter -Name "/$SCQSPrefix/user/localqsresourcespath").Value # Path on the instance where the Quick Start files will be located
 # Route53 variables
-$recordType = 'CNAME'
-$recordTTL = '300'
-$hostname = Invoke-RestMethod -uri http://169.254.169.254/latest/meta-data/hostname
+# $recordType = 'CNAME'
+# $recordTTL = '300'
+# $hostname = Invoke-RestMethod -uri http://169.254.169.254/latest/meta-data/hostname
 # Certificate Export Parameters
 $localCertpath = "$localPath\certificates" # Path on the instance where the log files will be located
 $RawPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-certpass").SecretString).password
@@ -41,33 +41,36 @@ $logStreamName = "Solr-Install-" + (Get-Date (Get-Date).ToUniversalTime() -Forma
 
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Starting deployment of Solr Dev server'
 
-# Adding / Updating R53 entry for Solr instance
-$RecordSetsResponse = (Get-R53ResourceRecordSet -HostedZoneId $hostedZoneID -StartRecordName $SolrDNS -StartRecordType $recordType).ResourceRecordSets
-if (-not $RecordSetsResponse) {
-    Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'R53 Record for ' + $SolrDNS + 'does not exist. Creating.'
-    $R53Comment = "Creating new R53 CNAME record for Solr Developer instance"
-}
-else {
-    Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'R53 Record for ' + $SolrDNS + 'exists. Updating.' 
-    $R53Comment = "Updating existing R53 CNAME record for Solr Developer instance"
-}
+# # Adding / Updating R53 entry for Solr instance
+# $RecordSetsResponse = (Get-R53ResourceRecordSet -HostedZoneId $hostedZoneID -StartRecordName $SolrDNS -StartRecordType $recordType).ResourceRecordSets
+# if (-not $RecordSetsResponse) {
+#     Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'R53 Record for ' + $SolrDNS + 'does not exist. Creating.'
+#     $R53Comment = "Creating new R53 CNAME record for Solr Developer instance"
+# }
+# else {
+#     Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'R53 Record for ' + $SolrDNS + 'exists. Updating.' 
+#     $R53Comment = "Updating existing R53 CNAME record for Solr Developer instance"
+# }
 
-$Change = New-Object Amazon.Route53.Model.Change
-$Change.Action = "UPSERT"
-$Change.ResourceRecordSet = New-Object Amazon.Route53.Model.ResourceRecordSet
-$Change.ResourceRecordSet.Name = "$SolrDNS"
-$Change.ResourceRecordSet.TTL = "$recordTTL"
-$Change.ResourceRecordSet.Type = "$recordType"
-$Change.ResourceRecordSet.ResourceRecords.Add(@{Value="$hostname"})
+# $Change = New-Object Amazon.Route53.Model.Change
+# $Change.Action = "UPSERT"
+# $Change.ResourceRecordSet = New-Object Amazon.Route53.Model.ResourceRecordSet
+# $Change.ResourceRecordSet.Name = "$SolrDNS"
+# $Change.ResourceRecordSet.TTL = "$recordTTL"
+# $Change.ResourceRecordSet.Type = "$recordType"
+# $Change.ResourceRecordSet.ResourceRecords.Add(@{Value="$hostname"})
 
-$R53Params = @{
-    HostedZoneId = $hostedZoneID
-    ChangeBatch_Comment = $R53Comment
-    ChangeBatch_Change = $Change
-    Force = $Force
-}
-$R53Response = Edit-R53ResourceRecordSet @R53Params
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $R53Response
+# $R53Params = @{
+#     HostedZoneId = $hostedZoneID
+#     ChangeBatch_Comment = $R53Comment
+#     ChangeBatch_Change = $Change
+#     Force = $Force
+# }
+# $R53Response = Edit-R53ResourceRecordSet @R53Params
+# Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $R53Response
+
+
+
 # Write new Solr URL to Parameter Store
 # $SolrURL = "https://" + $SolrDNS + ":" + $SolrPort + "/solr"
 # Write-SSMParameter -Name "/$SCQSPrefix/user/solruri" -Type "String" -Value $SolrURL -Overwrite:$true
@@ -89,6 +92,11 @@ $SolrParameters = @{
 
 Install-SitecoreConfiguration @SolrParameters -Path "$localPath\Solr-SingleDeveloper.json" -Verbose *>&1 | Tee-Object "$localLogPath\solr-install.log"
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\solr-install.log" -raw)
+
+# Pause time for the Target Group to catch up on seeing the instance as healthy
+Start-Sleep -Seconds 180
+
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Starting creation of Sitecore Cores on SolrDev server'
 
 # Configuring Solr Cores
 $sitecoreSolrCores = @{

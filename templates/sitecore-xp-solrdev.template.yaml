@@ -13,20 +13,27 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   SCQSPrefix:
     Type: String
-  SCQSRandomString:
-    Type: String
   LocalQSScripts:
     Type: String
-  R53HostedZoneID:
+  R53HostedZoneID: # Gets passed in if R53HostedZoneID isnt '' (This will be the created or provided hostedzoneID)
     Type: String 
   S3BucketName:
     Type: String
   QSS3BucketName:
     Type: String
-  QSS3KeyPrefix:
+  AutoscalingSNS:
     Type: String
-  LambdaZipsBucketName:
+  LoadBalancerInternalDNS:
     Type: String
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+  InternalCertificateARN:
+    Type: String
+  LoadBalancerInternal:
+    Type: String
+  
+Conditions:
+  CreateSolrR53Record: !Not [!Equals [!Ref R53HostedZoneID, '']] # If not '' then create the record in R53.
   
 Resources:
   SitecoreCustomSolrSSM:
@@ -122,26 +129,76 @@ Resources:
     Properties:
       Roles:
         - !Ref SolrInstanceRole
+  # Create SolrDev R53 record
+  SolrDevR53Record:
+    Type: AWS::Route53::RecordSet
+    Condition: CreateSolrR53Record
+    Properties:
+      HostedZoneId: !Ref R53HostedZoneID
+      Name: !Sub '{{resolve:ssm:/${SCQSPrefix}/service/solrdevfqdn:1}}' # !Sub solrdev.${IntDNS}
+      Type: CNAME
+      TTL: '900'
+      ResourceRecords:
+        - !Ref LoadBalancerInternalDNS
+  # Solr Target Group
+  SolrDevTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '8983'
+      HealthCheckProtocol: HTTPS
+      HealthCheckPath: '/solr'
+      Matcher:
+        HttpCode: '302'
+      Port: 8983
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+      Tags:
+        - Key: !Sub SolrDev-${SCQSPrefix}
+          Value: "NonProduction : This solr deployemt is for developemnt and is not produciton ready"
+  # Listener for internal ALB
+  HTTPSListenerInternal:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref InternalCertificateARN
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref SolrDevTargetGroup
+      LoadBalancerArn: !Ref LoadBalancerInternal
+      Port: 8983
+      Protocol: HTTPS
 # Solr installation
-  SolrASG:
+  SolrDevASG:
     Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn:
+      - SolrDevR53Record
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
         Timeout: PT25M
         Count: 1
     Properties:
-      LaunchConfigurationName: !Ref SolrLC
+      LaunchConfigurationName: !Ref SolrDevLC
       MaxSize: '1'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier: 
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
+      TargetGroupARNs:
+        - !Ref SolrDevTargetGroup
+      NotificationConfigurations:
+        - TopicARN: !Ref AutoscalingSNS
+          NotificationTypes:
+            - autoscaling:EC2_INSTANCE_LAUNCH
+            - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+            - autoscaling:EC2_INSTANCE_TERMINATE
+            - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
       Tags:
       - Key: Name
         Value: !Sub Solr-${SCQSPrefix}
         PropagateAtLaunch: true
-  SolrLC:
+  SolrDevLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
@@ -158,30 +215,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -hostedZoneID '
             - !Sub '"${R53HostedZoneID}"'
             - "\n"
-            - !Sub 'New-AWSQuickStartResourceSignal -Resource "SolrASG" -Stack '
+            - !Sub 'New-AWSQuickStartResourceSignal -Resource "SolrDevASG" -Stack '
             - !Sub '"${AWS::StackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
             - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
-  # Create Lambda cleanup function
-  DeleteSolrResourcesLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      Description: Removes resources created by the Solr server installation
-      Handler: lambda_function.handler
-      MemorySize: 128
-      Role: !GetAtt SolrInstanceRole.Arn
-      Runtime: python3.6
-      Timeout: 900
-      Code:
-        S3Bucket: !Ref LambdaZipsBucketName
-        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/DeleteSolrResources/lambda.zip'
-  DeleteSolrResources:
-    Type: Custom::CopyZips
-    Properties:
-      ServiceToken: !GetAtt 'DeleteSolrResourcesLambda.Arn'
-      SCQSPrefix: !Ref SCQSPrefix
-      SCQSRandomString: !Ref SCQSRandomString
-      R53HostedZoneID: !Ref R53HostedZoneID
