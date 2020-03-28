@@ -1,0 +1,355 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "This template deploys Target Groups, Listeners and Rules used for the Sitecore roles ASG's and LB's"
+Parameters:
+  LoadBalancerInternal:
+    Type: String
+  InternalCertificateARN:
+    Type: String
+  LoadBalancerExternal:
+    Type: String
+  ExternalCertificateARN:
+    Type: String
+  XConnectNLB:
+    Type: String
+  VPCID:
+    Type: AWS::EC2::VPC::Id
+  IntDNS:
+    Type: String
+  SCQSPrefix:
+    Type: String
+
+Resources:
+  # Listener for internal ALB
+  HTTPSListenerInternal:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref InternalCertificateARN
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref RepIntTargetGroup
+      LoadBalancerArn: !Ref LoadBalancerInternal
+      Port: 443
+      Protocol: HTTPS
+  
+  # Internal ALB Target Groups
+  ColIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-Collection
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CPIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-CortexProcessing
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CRIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-CortexReporting
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  MAIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-MarketingAutomation
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  MARIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-MarketingAutomationReporting
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  PrcIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-PRC
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  RDIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-ReferenceData
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  RepIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Int-REP
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+
+  # CollSearch / xConnect (Target Group / Internal NLB)
+  CSIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: TCP
+      Name: Int-CollectionSearch
+      Port: 443
+      Protocol: TCP
+      TargetType: instance
+      VpcId: !Ref VPCID
+
+  XConnectListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref CSIntTargetGroup
+      LoadBalancerArn: !Ref XConnectNLB
+      Port: 443
+      Protocol: TCP
+
+  # Rule with priority 1 is reserved for the SolrDev deployment - See the SolrStack
+  HTTPSListenerInternalRule3:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref RDIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub refdata.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 3
+  HTTPSListenerInternalRule4:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref MAIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub mktauto.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 4
+  HTTPSListenerInternalRule5:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref MARIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub mktautorep.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 5
+  HTTPSListenerInternalRule6:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CPIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub cortexproc.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 6
+  HTTPSListenerInternalRule7:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CRIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub cortexrep.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 7
+  HTTPSListenerInternalRule8:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref PrcIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub proc.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 8
+  HTTPSListenerInternalRule9:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref RepIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub rep.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 9
+  HTTPSListenerInternalRule10:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ColIntTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub coll.${IntDNS}
+      ListenerArn: !Ref HTTPSListenerInternal
+      Priority: 10
+  # --- External ALB Config --- #
+  # HTTPS Listner
+  HTTPSListenerExternal:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref ExternalCertificateARN
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref CDExtTargetGroup
+      LoadBalancerArn: !Ref LoadBalancerExternal
+      Port: 443
+      Protocol: HTTPS
+  # HTTP Listner # TODO could be a redirect to HTTPS?
+  HTTPListenerExternal:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref CDExtTargetGroup
+      LoadBalancerArn: !Ref LoadBalancerExternal
+      Port: 80
+      Protocol: HTTP
+  # HTTPS External Rules
+  HTTPSListenerExternalRule1:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref CMExtTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}/service/cmdns:1}}'
+      ListenerArn: !Ref HTTPSListenerExternal
+      Priority: 1
+  HTTPSListenerExternalRule2:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ISExtTargetGroup
+      Conditions:
+        - Field: host-header
+          Values:
+            - !Sub '{{resolve:ssm:/${SCQSPrefix}/service/isdns:1}}'
+      ListenerArn: !Ref HTTPSListenerExternal
+      Priority: 2
+  #External Target Groups
+  CDExtTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Ext-Content-Delivery
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      VpcId: !Ref VPCID
+  CMExtTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Ext-Content-Management
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+  ISExtTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: HTTP
+      Name: Ext-Identity-Server
+      Port: 443
+      Protocol: HTTPS
+      TargetType: instance
+      VpcId: !Ref VPCID
+
+Outputs:
+  InternalALBListner:
+    Description: ID of the internal ALB Listener.
+    Value: !Ref HTTPSListenerInternal
+  CDTargetGroup:
+    Description: The ID of the Content Delivery Target Group
+    Value: !Ref CDExtTargetGroup
+  CMTargetGroup:
+    Description: The ID of the Content Management Target Group
+    Value: !Ref CMExtTargetGroup
+  ISTargetGroup:
+    Description: The ID of the Content Delivery Target Group
+    Value: !Ref ISExtTargetGroup
+  CollectionTargetGroup:
+    Description: The ID of the Collection Target Group
+    Value: !Ref ColIntTargetGroup
+  ColSearchTargetGroup:
+    Description: The ID of the Collection Search Target Group
+    Value: !Ref CSIntTargetGroup
+  CortProcTargetGroup:
+    Description: The ID of the Cortex Processing Target Group
+    Value: !Ref CPIntTargetGroup
+  CortRepTargetGroup:
+    Description: The ID of the Cortex Reporting Target Group
+    Value: !Ref CRIntTargetGroup
+  MarkAutoTargetGroup:
+    Description: The ID of the Marketing Automation Target Group
+    Value: !Ref MAIntTargetGroup
+  MarkAutoRepTargetGroup:
+    Description: The ID of the Marketing Automation Reporting Target Group
+    Value: !Ref MARIntTargetGroup
+  ProcessingTargetGroup:
+    Description: The ID of the Processing Target Group
+    Value: !Ref PrcIntTargetGroup
+  RefDataTargetGroup:
+    Description: The ID of the Reference Data Target Group
+    Value: !Ref RDIntTargetGroup
+  ReportingDataTargetGroup:
+    Description: The ID of the Reporting Target Group
+    Value: !Ref RepIntTargetGroup
