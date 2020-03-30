@@ -363,6 +363,7 @@ Parameters:
   SOLRUrl:
     Type: String
     Description: The URL of your Solr server/cluster.
+    Default: ''
   EnvironmentType:
     Description: The type of deployment
     AllowedValues:

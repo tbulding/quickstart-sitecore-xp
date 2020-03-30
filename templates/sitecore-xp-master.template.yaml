@@ -12,7 +12,6 @@ Metadata:
           - PublicSubnet1CIDR
           - PublicSubnet2CIDR
           - AvailabilityZones
-          - ExternalCertificateARN
       - Label:
           default: RDGW configuration
         Parameters:
@@ -24,12 +23,16 @@ Metadata:
           - RDGWCIDR
           - KeyPairName
       - Label:
-          default: Sitecore Configuration
+          default: Sitecore Networking Configuration
         Parameters:
           - CDDNSName
           - CMDNSName
           - ISDNSName
           - IntDNS
+          - ExternalCertificateARN
+      - Label:
+          default: Sitecore Configuration
+        Parameters:
           - CDMinSize
           - CDMaxSize
           - CDDesiredCapacity
@@ -433,6 +436,7 @@ Parameters:
   SOLRUrl:
     Description: The URL of your Solr server/cluster. 
     Type: String 
+    Default: ''
   EnvironmentType: 
     Description: The type of deployment
     AllowedValues:
