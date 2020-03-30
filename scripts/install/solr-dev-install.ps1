@@ -96,6 +96,19 @@ Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogSt
 # Pause time for the Target Group to catch up on seeing the instance as healthy
 Start-Sleep -Seconds 180
 
+
+
+# If private DNS is used, set the host file to point locally to initiate the Solr Cores. (This entry is removed later)
+If ($R53HostedZoneID -eq '') {
+    $hostfile = "$($env:windir)\system32\Drivers\etc\hosts"
+    $hostentry = "127.0.0.1 $SolrDNS"
+
+    If ((Get-Content $hostfile ) -notcontains $hostentry) {
+        Add-Content -Encoding UTF8  $hostfile $hostentry 
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Adding Host file entry to deploy Solr Cores'
+        }
+}
+
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Starting creation of Sitecore Cores on SolrDev server'
 
 # Configuring Solr Cores
@@ -113,15 +126,30 @@ Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogSt
 Install-SitecoreConfiguration @sitecoreSolrCores -Path "$localPath\xconnect-solr.json" -Verbose *>&1 | Tee-Object "$localLogPath\xconnect-cores-install.log"
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\xconnect-cores-install.log" -raw)
 
+# If private DNS is used, remove the created host file entry
+If ($R53HostedZoneID -eq '') {
+    $hostfile = "$($env:windir)\system32\Drivers\etc\hosts"
+    $hostentry = "127.0.0.1 $SolrDNS"
+
+    If ((Get-Content $hostfile ) -contains $hostentry) {
+        (Get-Content -Path $hostfile) |
+        ForEach-Object {$_ -Replace $hostentry, ''} |
+            Set-Content -Path $hostfile
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString 'Removing Host file entry'
+    }
+}
+
+#TODO as this is now behind a LB, the cert shouldnt be needed on the instances
+
 # Export the Solr certificate in the personal store for installation on the Sitecore Roles
-$solrcert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*solr*" }
-$certThumbprint = $solrcert.Thumbprint
-$certExportName = "$localCertpath\solrdev.pfx"
+# $solrcert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.FriendlyName -like "*solr*" }
+# $certThumbprint = $solrcert.Thumbprint
+# $certExportName = "$localCertpath\solrdev.pfx"
 
-Export-PfxCertificate -Cert "Cert:\LocalMachine\My\$certThumbprint" -Password $ExportPassword -FilePath $certExportName -Verbose *>&1 | Tee-Object "$localLogPath\solr-cert.log"
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\solr-cert.log" -raw)
+# Export-PfxCertificate -Cert "Cert:\LocalMachine\My\$certThumbprint" -Password $ExportPassword -FilePath $certExportName -Verbose *>&1 | Tee-Object "$localLogPath\solr-cert.log"
+# Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\solr-cert.log" -raw)
 
-# Copy up to S3
-$key = $S3BucketCertificatePrefix + "solrdev.pfx"
-Write-S3Object -BucketName $S3BucketName -File $certExportName -Key $key -Verbose *>&1 | Tee-Object "$localLogPath\solr-cert-upload.log"
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\solr-cert-upload.log" -raw)
+# # Copy up to S3
+# $key = $S3BucketCertificatePrefix + "solrdev.pfx"
+# Write-S3Object -BucketName $S3BucketName -File $certExportName -Key $key -Verbose *>&1 | Tee-Object "$localLogPath\solr-cert-upload.log"
+# Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $(Get-Content -Path "$localLogPath\solr-cert-upload.log" -raw)

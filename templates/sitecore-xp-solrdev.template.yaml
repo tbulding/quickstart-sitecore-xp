@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Creates the development (Non-Production) Solr Instance"
+Description: "Creates a development (Non-Production) Solr Instance"
 Parameters:
   PrivateSubnet1A:
     Type: AWS::EC2::Subnet::Id
@@ -171,8 +171,6 @@ Resources:
 # Solr installation
   SolrDevASG:
     Type: AWS::AutoScaling::AutoScalingGroup
-    DependsOn:
-      - SolrDevR53Record
     CreationPolicy: # Wait for the instance to signal that it is created
       ResourceSignal:
         Timeout: PT25M
