@@ -103,14 +103,4 @@ cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertNa
 # Download Sitecore License
 licence_download -LicenseBucketName $s3BucketName -LicenseObjPrefix $LicencePrefix -LicenseInstance $SCInstallRoot
 
-#TODO this is now behind a LB, and probably not needed
-# Download Solr Cert if developer Solr Build by Quick Start
-# Check to see if the parameter exists
-# if ((Get-SSMParameterList).Name.Contains("/${SCQSPrefix}/service/customsolr")) {
-#     $SDevSolrBuild = (Get-SSMParameter -Name "/${SCQSPrefix}/service/customsolr").Value
-# }
-# if ($SDevSolrBuild -eq "Quickstart-Solr-Dev") {
-#     cert_import -CertBucketName $s3BucketName -CertPrefix $CertificatePrefix -CertName 'solrdev' -CertStoreLocation 'Cert:\LocalMachine\Root' -CertPass $CertSecurePassword
-# }
-
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString "Preperation completed for installation of role : $Role"
