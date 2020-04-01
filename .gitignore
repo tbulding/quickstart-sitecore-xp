@@ -1,12 +1,9 @@
-taskcat_outputs/*
-maint/*
+# Taskcat
+.taskcat_overrides.yml
+.taskcat_*
+taskcat_outputs/
+.taskcat/
 *project_override*
-*dub.json
-ci/taskcat-ireland.yml
-*frankfurt.json
-ci/taskcat-frankfurt.yml
-*n-virginia.json
-ci/taskcat-n-virginia.yml
+maint/*
 .vscode/settings.json
 .taskcat-*-*-*.yml
-.taskcat/*

@@ -1,7 +1,22 @@
 project:
-  name: sitecore-xp
+  name: quickstart-sitecore-xp
   regions:
+    - ap-northeast-1
+    - ap-northeast-2
+    - ap-south-1
+    - ap-southeast-1
+    - ap-southeast-2
+    - eu-central-1
+    - eu-north-1
+    - eu-west-1
+    - eu-west-2
+    - eu-west-3
+    - sa-east-1
+    - us-east-1
+    - us-west-1
     - us-east-2
+    - us-west-2
+    - ca-central-1
   parameters:
     VPCCIDR: 10.0.0.0/16
     PrivateSubnet1ACIDR: 10.0.0.0/19
@@ -14,23 +29,20 @@ project:
     DomainDNSName: example.com
     NumberOfRDGWHosts: 1
     RDGWInstanceType: "t2.large"
-    RDGWCIDR: 0.0.0.0/0
-    KeyPairName: override
+    RDGWCIDR: 10.0.0.0/0
     CDMinSize: 1
     CDMaxSize: 1
     CDDesiredCapacity: 1
     SitecoreInstanceType: m4.large
-    SitecoreKeyPair: override
     SitecorePrefix: sc
-    SitecoreS3Bucket: yourbucket
-    SCResourcesPrefix: resources/
-    SCLicensePrefix: license/
+    SitecoreS3Bucket: override
+    SCResourcesPrefix: override # resources/
+    SCLicensePrefix: override # license/
     SOLRCorePrefix: scsolr
-    SOLRUrl: SOlr-URL
+    SOLRUrl: override # SOlr-URL
     EnvironmentType: Production
     SCLogLevel: Information
-    CorsOrigins: replace
-    PubliclyAccessible: "false"
+    CorsOrigins: '*'
     DBInstanceClass: db.m5.xlarge
     DBAutoMinorVersionUpgrade: "false"
     SQLEngineEdition: sqlserver-se
@@ -39,17 +51,19 @@ project:
     VolumeType: gp2
     BackupRetentionPeriod: 1
     QSS3BucketName: "$[taskcat_autobucket]"
+    QSS3BucketRegion: "$[taskcat_current_region]"
     QSS3KeyPrefix: quickstart-sitecore-xp/
-    ExternalCertificateARN: arn:aws:acm:your cert arn
-    CDDNSName: sitecore.cd.internal.test
-    CMDNSName: sitecore.cn.internal.test
-    ISDNSName: sitecore.id.internal.test
-    IntDNS: sitecore.internal.test
-    EmailNotifications: operator@example.com
 tests:
-  default:
+  master:
     template: ./templates/sitecore-xp-master.template.yaml
-  ohio:
-    template: ./templates/sitecore-xp-master.template.yaml
-    regions:
-      - us-east-2
+    regions: 
+      - us-east-1
+    parameters: 
+      KeyPairName: override
+      SitecoreKeyPair: override
+      ExternalCertificateARN: override # arn:aws:acm:your cert arn
+      CDDNSName: override
+      CMDNSName: override
+      ISDNSName: override
+      IntDNS: ''
+      EmailNotifications: override
