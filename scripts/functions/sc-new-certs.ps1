@@ -265,7 +265,8 @@ function CopyToS3Bucket {
     )
 
     $key = $bucketPrefix + $objectName
-    Write-S3Object -BucketName $bucketName -File $localFileName -Key $key
+    $BucketLocation = Get-S3BucketLocation -BucketName $BucketName
+    Write-S3Object -BucketName $bucketName -File $localFileName -Key $key -Region $BucketLocation
 
     Return "$bucketName/$key"
 }

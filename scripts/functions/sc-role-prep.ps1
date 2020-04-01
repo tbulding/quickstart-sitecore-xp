@@ -36,8 +36,18 @@ function cert_import {
     )
     
     begin {
-        $CertBucketLocation = Get-S3BucketLocation -BucketName $CertBucketName
-        if ($CertBucketLocation -eq '') { $CertBucketLocation = 'us-east-1' } # Get-S3BucketLocation returns Null when the bucket is located in us-east-1
+        $bucket_locationConstraint = Get-S3BucketLocation -BucketName $CertBucketName
+        $BucketRegionValue = $bucket_locationConstraint.value
+
+        if (!$BucketRegionValue) { # Get-S3BucketLocation returns Null when the bucket is located in us-east-1
+                $bucketRegion = 'us-east-1'
+            }
+        elseif ($BucketRegionValue -eq 'EU') {
+                $bucketRegion = 'eu-west-1'
+            }
+        else {
+                $bucketRegion =  $BucketRegionValue
+            }
         $CertPath = $CertPrefix + $CertName + '.pfx'
         $CertLocation = 'c:\certificates'
         $LocalCertFile = "$CertLocation\$CertName.pfx"
@@ -51,7 +61,7 @@ function cert_import {
             Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString "$CertLocation already exists"
         }
         
-        Read-S3Object -BucketName $CertBucketName -Region $CertBucketLocation.value -Key $CertPath -File $LocalCertFile
+        Read-S3Object -BucketName $CertBucketName -Region $bucketRegion -Key $CertPath -File $LocalCertFile
         $CertImport = Import-PfxCertificate -FilePath $LocalCertFile -CertStoreLocation $CertStoreLocation -Password $CertPass -Exportable
         Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamCert -LogString $CertImport
     }
@@ -71,20 +81,30 @@ function licence_download {
     )
     
     begin {
-        $bucketlocation = Get-S3BucketLocation -BucketName $LicenseBucketName
-        if ($bucketlocation -eq '') { $bucketlocation = 'us-east-1' } # Get-S3BucketLocation returns Null when the bucket is located in us-east-1
+        $bucket_locationConstraint = Get-S3BucketLocation -BucketName $LicenseBucketName
+        $BucketRegionValue = $bucket_locationConstraint.value
+
+        if (!$BucketRegionValue) { # Get-S3BucketLocation returns Null when the bucket is located in us-east-1
+                $bucketRegion = 'us-east-1'
+            }
+        elseif ($BucketRegionValue -eq 'EU') {
+                $bucketRegion = 'eu-west-1'
+            }
+        else {
+                $bucketRegion =  $BucketRegionValue
+            }
     }
     
     process {
-        $file = Get-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value | Where-Object { ($_.Key -like "$LicenseObjPrefix*license.zip") -or ($_.Key -like "$LicencePrefix*license.xml") }
+        $file = Get-S3Object -BucketName $LicenseBucketName -Region $bucketRegion | Where-Object { ($_.Key -like "$LicenseObjPrefix*license.zip") -or ($_.Key -like "$LicencePrefix*license.xml") }
 
         if (($file.key -like '*license.zip')) {
-            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value -Key $file.key -File "$LicenseInstance\license.zip" | Out-String)
+            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketRegion -Key $file.key -File "$LicenseInstance\license.zip" | Out-String)
             Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Expand-Archive -LiteralPath "$LicenseInstance\license.zip" -DestinationPath $LicenseInstance -Force -Verbose *>&1 | Out-String)
         }
         
         elseif (($file.key -like '*license.xml')) {
-            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketlocation.value -Key $file.key -File "$LicenseInstance\license.xml")
+            Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamLicense -LogString (Read-S3Object -BucketName $LicenseBucketName -Region $bucketRegion -Key $file.key -File "$LicenseInstance\license.xml")
         }
         
     }
