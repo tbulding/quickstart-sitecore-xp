@@ -15,7 +15,7 @@ import json
 
 # Create clients
 acm = boto3.client('acm')
-s3 = boto3.client('s3')
+
 secretsmanager = boto3.client('secretsmanager')
 ssm = boto3.client('ssm')
 helper = CfnResource()
@@ -26,7 +26,19 @@ def get_secret(yourSecretId):
     )
     secretValue = json.loads(response['SecretString'])
     return secretValue['password']
-def s3_download(s3Bucket, s3object, localFile):
+def s3_bucket_location(s3Bucket):
+    s3 = boto3.client('s3')
+    response = s3.get_bucket_location(Bucket=s3Bucket)
+    location = response['LocationConstraint']
+    if location == None:
+        bucket_region = 'us-east-1'
+    elif location == 'EU':
+        bucket_region = 'eu-west-1'
+    else:
+        bucket_region = location
+    return bucket_region
+def s3_download(s3Bucket, s3object, localFile, s3Region):
+    s3 = boto3.client('s3', region_name=s3Region)
     download = s3.download_file(s3Bucket, s3object, localFile)
     return download
 def convert_pfx(pfx_path, pfx_password):
@@ -100,8 +112,9 @@ def convert_upload(event, _):
     SecretPath = event['ResourceProperties']['SecretLocation']
     acm_ssm_path = event['ResourceProperties']['AcmParameterPath']
     temp_dowload_path = '/tmp/convert.pfx'
+    bucket_region = s3_bucket_location(bucket_name)
     cert_password = get_secret(SecretPath)
-    cert_location = s3_download(bucket_name, object_prefix, temp_dowload_path)
+    cert_location = s3_download(bucket_name, object_prefix, temp_dowload_path, bucket_region)
     pfx_convert = convert_pfx(temp_dowload_path, cert_password)
     acm_import = import_acm(pfx_convert[0], pfx_convert[1], pfx_convert[2])
     write_parameter(acm_ssm_path, acm_import['CertificateArn'])
