@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Creates a new VPC and RD GW host, and deploys Sitecore into the newly created VPC
+Description: Creates a new VPC and RD GW host, and deploys Sitecore into the newly created VPC (qs-1qjogjg57)
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -421,7 +421,10 @@ Parameters:
     Description: The prefix to be used for the sitecore installation
     MinLength: 1
     MaxLength: 8
-    AllowedPattern: ^[a-zA-Z0-9]*
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Sitecore prefix can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
   SitecoreS3Bucket:
     Type: String
     Description: The name of the S3 Bucket where the Sitecore resources (instalation files, license file, etc.) reside.

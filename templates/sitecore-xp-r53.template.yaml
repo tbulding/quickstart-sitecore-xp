@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'This template deploys an internal Route53 hosted zone used for the Sitecore roles'
+Description: 'This template deploys an internal Route53 hosted zone used for the Sitecore roles (qs-1qjogjg57)'
 Parameters:
   InternalR53DNS:
     Type: String

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Deploys Lambda functions required for the AWS Sitecore Quick Start
+Description: Deploys Lambda functions required for the AWS Sitecore Quick Start (qs-1qjogjg57)
 Parameters:
   LambdaZipsBucketName:
     Description: Bucket Name where the lambda zip files should be placed
@@ -120,7 +120,7 @@ Resources:
     Type: Custom::RandomString
     Properties:
       ServiceToken: !GetAtt 'RandomStringFunction.Arn'
-      RandomLength: 24
+      RandomLength: 8
   ConvertCertificatesLambda:
     DependsOn: CopyZips
     Type: AWS::Lambda::Function

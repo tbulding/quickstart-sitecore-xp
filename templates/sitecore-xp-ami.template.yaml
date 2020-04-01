@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "This template creates an SSM document and deploys an EC2 Instance. These are used for creation of the Sitecore AMI and for the deployment of the Sitecore databases to RDS MSSQL"
+Description: "This template creates an SSM document and deploys an EC2 Instance. These are used for creation of the Sitecore AMI and for the deployment of the Sitecore databases to RDS MSSQL (qs-1qjogjg57)"
 Parameters:
   ImageID:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>

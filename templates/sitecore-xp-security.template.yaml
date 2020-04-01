@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment'
+Description: 'This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment (qs-1qjogjg57)'
 Parameters:
   SitecoreS3Bucket:
     Type: String

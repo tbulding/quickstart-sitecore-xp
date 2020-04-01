@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Deploys the Auto Scaling Groups, Target Groups, Listners and rules for the Load balancers. These launch the instances for the Sitecore roles'
+Description: 'Deploys the Auto Scaling Groups, Target Groups, Listeners and rules for the Load balancers. These launch the instances for the Sitecore roles  (qs-1qjogjg57)'
 Parameters:
   PrivateSubnet1A:
     Type: String
@@ -141,7 +141,6 @@ Resources:
             - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CD" -StackName '
             - !Sub '"${AWS::StackName}" -Region '
             - !Sub '"${AWS::Region}"'
-            - "\n"
             - "</powershell>\n"
   CDScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
