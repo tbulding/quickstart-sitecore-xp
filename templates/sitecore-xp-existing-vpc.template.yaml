@@ -68,6 +68,7 @@ Metadata:
           default: AWS Quick Start configuration
         Parameters:
           - QSS3BucketName
+          - QSS3BucketRegion
           - QSS3KeyPrefix
     ParameterLabels:
       # VPC
@@ -168,6 +169,8 @@ Metadata:
       # Quick Start Config Params
       QSS3BucketName:
         default: Quick Start S3 bucket name
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
 Parameters:
@@ -499,6 +502,10 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, and hyphens (-).
       It cannot start or end with a hyphen (-).
     Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     ConstraintDescription:
@@ -512,6 +519,7 @@ Parameters:
     Type: String
 
 Conditions:
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   CreateLambdaZipsBucket: !Equals [!Ref 'LambdaZipsBucketName', '']
   InternalDNSName: !Equals [!Ref 'IntDNS', '']
   CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
@@ -692,7 +700,11 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: CreateInternalR53
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-r53.template.yaml'
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-r53.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         InternalR53DNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
         VPCID: !Ref VPCID
@@ -705,10 +717,14 @@ Resources:
   SecurityStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-security.template.yaml'
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-security.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         SitecoreS3Bucket: !Ref SitecoreS3Bucket
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         LambdaZipsBucketName:
           !If [
@@ -719,9 +735,13 @@ Resources:
   # Create lambda functions
   FunctionsStack:
     Type: 'AWS::CloudFormation::Stack'
-    # DependsOn: SecurityStack
+    # DependsOn: 
+    #   - SecurityStack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-functions.template.yaml'
+      TemplateURL: !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-functions.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         LambdaZipsBucketName:
           !If [
@@ -729,7 +749,7 @@ Resources:
             !Ref LambdaZipsBucket,
             !Ref LambdaZipsBucketName,
           ]
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         CopyZipsRoleArn: !GetAtt SecurityStack.Outputs.CopyZipsRoleArn
         ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
@@ -738,11 +758,15 @@ Resources:
   # Sitecore Parameter Store Stack
   ParamStack:
     Type: AWS::CloudFormation::Stack
-    # DependsOn: LoadBalancerInternal; FunctionsStack
+    # DependsOn: 
+    #   - LoadBalancerInternal
+    #   - FunctionsStack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-parameters.template.yaml'
+      TemplateURL: !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-parameters.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
-        # IntLBDNS: !GetAtt LoadBalancerInternal.DNSName
         SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         SCPrefix: !Ref SitecorePrefix
         SOLRCorePrefix: !Ref SOLRCorePrefix
@@ -765,13 +789,18 @@ Resources:
   # Builds RDS MSSQL Database and ElastiCache Redis
   DBStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: [SecurityStack, ParamStack] # RDSsqlSG
+    DependsOn: 
+      - SecurityStack
+      - ParamStack # RDSsqlSG
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-rds-mssql.template.yaml'
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-rds-mssql.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         PrivateSubnet1AID: !Ref PrivateSubnet1A
         PrivateSubnet2AID: !Ref PrivateSubnet2A
-        # PubliclyAccessible: !Ref PubliclyAccessible
         DBInstanceClass: !Ref DBInstanceClass
         SQLEngineEdition: !Ref SQLEngineEdition
         SQLEngineVersion: !Ref SQLEngineVersion
@@ -791,9 +820,15 @@ Resources:
   # Sitecore AMI Build Stack
   CustomAMIStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn: [SecurityStack, ParamStack]
+    # DependsOn: 
+    #   - SecurityStack
+    #   - ParamStack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-ami.template.yaml'
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-ami.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AutomationAssumeRole: !GetAtt SecurityStack.Outputs.SCAutomationRoleARN
         ImageID: '/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base'
@@ -806,23 +841,27 @@ Resources:
         LocalQSScripts: !GetAtt ParamStack.Outputs.QSLocalResourcePath
         RootStackName: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         TargetAmiName: !GetAtt ParamStack.Outputs.CustomAmiName
-        QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+        QSS3BucketRegion: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
 
   # Custom Resource to convert and import Instance certificate, as it has the full certificate chain
   CertConvertACM:
     Type: AWS::CloudFormation::CustomResource
-    DependsOn: CustomAMIStack # SecurityStack, CertConvertACM
+    DependsOn:  
+      - CustomAMIStack 
+      # - SecurityStack
+      # - CertConvertACM
     Properties:
       ServiceToken: !GetAtt FunctionsStack.Outputs.ConvertCertificatesLambdaArn
       S3BucketName: !Ref SitecoreS3Bucket
       S3ObjectPrefix: !GetAtt ParamStack.Outputs.InstanceCertificateLocation
-      SecretLocation: !Join #!Sub sitecore-quickstart-${AWS::StackName}-certpass
+      SecretLocation: !Join 
         - ''
         - - 'sitecore-quickstart-'
           - !GetAtt FunctionsStack.Outputs.SCQSPrefix
           - '-certpass'
-      AcmParameterPath: !Join #!Sub /${AWS::StackName}/cert/internal/acm
+      AcmParameterPath: !Join 
         - ''
         - - '/'
           - !GetAtt FunctionsStack.Outputs.SCQSPrefix
@@ -833,7 +872,11 @@ Resources:
     #   - CertConvertACM
     #   - FunctionsStack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-networking.template.yaml'
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-networking.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         LoadBalancerInternal: !Ref LoadBalancerInternal
         InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
@@ -848,9 +891,16 @@ Resources:
   SolrStack:
     Type: AWS::CloudFormation::Stack
     Condition: CreateDevSolr
-    DependsOn: CustomAMIStack # [SecurityStack, ParamStack]
+    DependsOn: 
+      - CustomAMIStack 
+      # - SecurityStack
+      # - ParamStack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-solrdev.template.yaml'
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-solrdev.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         PrivateSubnet1A: !Ref PrivateSubnet1A
         PrivateSubnet2A: !Ref PrivateSubnet2A
@@ -865,7 +915,7 @@ Resources:
             '',
           ] # If VPCPrivateDNS is True, this will be '' and no record for solr will be created.
         S3BucketName: !Ref SitecoreS3Bucket
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
         AutoscalingSNS: !Ref AutoscalingSNS
         LoadBalancerInternalDNS: !GetAtt LoadBalancerInternal.DNSName
         VPCID: !Ref VPCID
@@ -876,7 +926,8 @@ Resources:
   # The dependency varies depending on the condition where SOLR is to be deployed or not.
   SOLRWaitHandle:
     Condition: CreateDevSolr
-    DependsOn: SolrStack
+    DependsOn: 
+      - SolrStack
     Type: AWS::CloudFormation::WaitConditionHandle
 
   WaitHandle:
@@ -892,9 +943,14 @@ Resources:
   # Sitecore ALB Stack
   ALBStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: SOLRDependencyCheck #[SolrStack, CustomAMIStack]
+    DependsOn: 
+      - SOLRDependencyCheck
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/sitecore-xp-alb.template.yaml'
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-alb.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         PrivateSubnet1A: !Ref PrivateSubnet1A
         PrivateSubnet2A: !Ref PrivateSubnet2A

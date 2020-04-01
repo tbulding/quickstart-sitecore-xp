@@ -32,6 +32,13 @@ Resources:
               - Effect: Allow
                 Action: s3:GetObject
                 Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
+        - PolicyName: Get-BucketLocation
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:GetBucketLocation
+                Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}'
         - PolicyName: Import-Delete-ACM
           PolicyDocument:
             Version: '2012-10-17'

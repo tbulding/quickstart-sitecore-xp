@@ -84,7 +84,7 @@ Resources:
       - functions/packages/ConvertCertificate/lambda.zip
       - functions/packages/DeleteBucketContents/lambda.zip
       - functions/packages/DeleteResources/lambda.zip
-      - functions/packages/DeleteSolrResources/lambda.zip
+      # - functions/packages/DeleteSolrResources/lambda.zip
   RandomStringFunction:
       Type: AWS::Lambda::Function
       Properties:
@@ -147,7 +147,6 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaZipsBucketName
         S3Key: !Sub '${QSS3KeyPrefix}functions/packages/DeleteResources/lambda.zip'
-  # TODO run the lambda to delete - this may need to be moved to a location where the resources are already created
   DeleteSCResources:
     Type: Custom::CopyZips
     Properties:

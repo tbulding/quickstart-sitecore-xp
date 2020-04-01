@@ -21,6 +21,8 @@ Parameters:
     Type: String
   QSS3BucketName: # Used for scripts
     Type: String
+  QSS3BucketRegion:
+    Type: String
   QSS3KeyPrefix:
     Type: String
   LocalQSScripts: # Location to store the quicks start scripts on the instance. This same location is used for the ASG's instance deployments
@@ -83,6 +85,9 @@ Resources:
           QSS3BucketName:
             type: "String"
             default: !Ref QSS3BucketName
+          QSS3BucketRegion:
+            type: "String"
+            default: !Ref QSS3BucketRegion
           QSS3KeyPrefix:
             type: "String"
             default: !Ref QSS3KeyPrefix
@@ -135,14 +140,14 @@ Resources:
                 - "{{SCInstanceIds.InstanceId}}"
               Parameters:
                 commands:
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}submodules/quickstart-microsoft-utilities/scripts/" -Folder "{{ScriptsLocalPath}}\utilities"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}submodules/quickstart-microsoft-utilities/modules/" -Folder "{{ScriptsLocalPath}}\utilities"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/install/" -Folder "{{ScriptsLocalPath}}"'
-                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/functions/" -Folder "{{ScriptsLocalPath}}"'
-                  - 'Read-S3Object -BucketName "aws-codedeploy-{{SitecoreRegion}}" -Key latest/codedeploy-agent.msi -File "{{ScriptsLocalPath}}\codedeploy-agent.msi"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Region {{QSS3BucketRegion}} -KeyPrefix "/{{QSS3KeyPrefix}}submodules/quickstart-microsoft-utilities/scripts/" -Folder "{{ScriptsLocalPath}}\utilities"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Region {{QSS3BucketRegion}} -KeyPrefix "/{{QSS3KeyPrefix}}submodules/quickstart-microsoft-utilities/modules/" -Folder "{{ScriptsLocalPath}}\utilities"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Region {{QSS3BucketRegion}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/install/" -Folder "{{ScriptsLocalPath}}"'
+                  - 'Read-S3Object -BucketName {{QSS3BucketName}} -Region {{QSS3BucketRegion}} -KeyPrefix "/{{QSS3KeyPrefix}}scripts/functions/" -Folder "{{ScriptsLocalPath}}"'
+                  - 'Read-S3Object -BucketName "aws-codedeploy-{{SitecoreRegion}}" -Region {{SitecoreRegion}} -Key latest/codedeploy-agent.msi -File "{{ScriptsLocalPath}}\codedeploy-agent.msi"'
                   - '& "{{ScriptsLocalPath}}\utilities\Unzip-Archive.ps1" -Source "{{ScriptsLocalPath}}\utilities\AWSQuickStart.zip" -Destination "C:\Windows\system32\WindowsPowerShell\v1.0\Modules\"'
                   - '& "{{ScriptsLocalPath}}\sc-new-certs.ps1" -SCQSPrefix {{rootStackName}}'
-                  - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -SCQSPrefix {{rootStackName}} -QSS3BucketName {{QSS3BucketName}} -QSS3KeyPrefix {{QSS3KeyPrefix}}'
+                  - '& "{{ScriptsLocalPath}}\sc-bootstrap.ps1" -SCQSPrefix {{rootStackName}} -QSS3BucketName {{QSS3BucketName}} -QSS3KeyPrefix {{QSS3KeyPrefix}} -QSS3BucketRegion {{QSS3BucketRegion}}'
                   - '& "{{ScriptsLocalPath}}\sc-update-zips.ps1" -pathToZips {{scResourcesPath}}'
                   - '& {{ScriptsLocalPath}}\codedeploy-agent.msi /quiet /l {{ScriptsLocalPath}}\codedeploy-agent.log'
                   - Main
