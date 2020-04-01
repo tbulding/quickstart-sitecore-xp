@@ -5,7 +5,7 @@ param (
     [string]$SCQSPrefix
 )
 
-$urlsuffix = (Get-SSMParameter -Name "/$SCQSPrefix/service/internaldns").Value 
+# $urlsuffix = (Get-SSMParameter -Name "/$SCQSPrefix/service/internaldns").Value 
 $SolrDNS = (Get-SSMParameter -Name "/$SCQSPrefix/service/solrdevfqdn").Value  # 'solrdev.' + $urlsuffix 
 $SolrURL = (Get-SSMParameter -Name "/${SCQSPrefix}/user/solruri").Value
 $SolrVersion = "8.1.1"
@@ -13,12 +13,12 @@ $SolrPort = 8983
 $SolrCorePrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/solrcoreprefix").Value # Path on the instance where the files will be located
 $localPath = (Get-SSMParameter -Name "/$SCQSPrefix/user/localresourcespath").Value # Path on the instance where the files will be located
 $localLogPath = "$localPath\logs" # Path on the instance where the log files will be located
-$qslocalPath = (Get-SSMParameter -Name "/$SCQSPrefix/user/localqsresourcespath").Value # Path on the instance where the Quick Start files will be located
+# $qslocalPath = (Get-SSMParameter -Name "/$SCQSPrefix/user/localqsresourcespath").Value # Path on the instance where the Quick Start files will be located
 $localCertpath = "$localPath\certificates" # Path on the instance where the log files will be located
 $RawPassword = (ConvertFrom-Json -InputObject (Get-SECSecretValue -SecretId "sitecore-quickstart-$SCQSPrefix-certpass").SecretString).password
 $ExportPassword = ConvertTo-SecureString $RawPassword -AsPlainText -Force
-$S3BucketName = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/name").Value
-$S3BucketCertificatePrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/certificateprefix").Value
+# $S3BucketName = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/name").Value
+# $S3BucketCertificatePrefix = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/certificateprefix").Value
 
 # Check and create logs path
 If(!(test-path $localLogPath))

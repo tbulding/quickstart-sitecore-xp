@@ -2,7 +2,8 @@
 param (
     [string]$SCQSPrefix,
     [string]$QSS3BucketName,
-    [string]$QSS3KeyPrefix
+    [string]$QSS3KeyPrefix,
+    [string]$QSS3BucketRegion
 )
 
 $S3BucketName = (Get-SSMParameter -Name "/$SCQSPrefix/user/s3bucket/name").Value # The bucket containing the Sitecore 9.3 install files and sitecore license.zip file
@@ -34,10 +35,23 @@ Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logSt
 
 # Get Sitecore install read-s3 files from S3
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Initiating Sitecore resource files download'
-$files = Get-S3Object -BucketName $s3BucketName | Where-Object { ($_.Key -like "$S3ScResourcesPrefix*.zip") }
+$bucket_locationConstraint = Get-S3BucketLocation -BucketName $s3BucketName
+$BucketRegionValue = $bucket_locationConstraint.value
+
+if (!$BucketRegionValue) {
+        $bucketRegion = 'us-east-1'
+    }
+elseif ($BucketRegionValue -eq 'EU') {
+        $bucketRegion = 'eu-west-1'
+    }
+else {
+        $bucketRegion =  $BucketRegionValue
+    }
+
+$files = Get-S3Object -BucketName $s3BucketName -Region $bucketRegion | Where-Object { ($_.Key -like "$S3ScResourcesPrefix*.zip") }
 foreach ($file in $files) {
     $filename = Split-path -Path $file.key -leaf
-    Read-S3Object -BucketName $s3BucketName -Key $file.key -File "$localpath\$filename"
+    Read-S3Object -BucketName $s3BucketName -Key $file.key -File "$localpath\$filename" -Region $bucketRegion
     if ($? -eq 'true') { Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Downloaded $filename" }
     if (($file.key -like '*configuration*')) {
         Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString (Expand-Archive -LiteralPath "$localpath\$filename" -DestinationPath $localpath -Force -Verbose *>&1 | Out-String)
