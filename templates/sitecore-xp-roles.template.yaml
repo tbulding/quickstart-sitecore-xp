@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Deploys the Auto Scaling Groups, Target Groups, Listeners and rules for the Load balancers. These launch the instances for the Sitecore roles  (qs-1qjogjg57)'
+Description: 'This template deploys the Auto Scaling Groups and Launch Configurations. The Launch Configurations launch the instances for the Sitecore roles  (qs-1qjogjg57)'
 Parameters:
   PrivateSubnet1A:
     Type: String
@@ -115,6 +115,9 @@ Resources:
         - Key: Name
           Value: !Sub ContentDelivery-${SCQSPrefix}
           PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
   ContentDeliveryLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -189,6 +192,9 @@ Resources:
         - Key: Name
           Value: !Sub ContentManagement-${SCQSPrefix}
           PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
+          PropagateAtLaunch: true
   ContentManagementLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -242,7 +248,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref CollectionLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -260,6 +266,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub Collection-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   CollectionLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -303,7 +312,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref CollectionSearchLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -321,6 +330,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub CollectionSearch-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   CollectionSearchLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -364,7 +376,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref CortexProcessingLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -382,6 +394,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub CortexProcessing-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   CortexProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -425,7 +440,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref CortexReportingLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -443,6 +458,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub CortexReporting-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   CortexReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -486,7 +504,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref IdentityLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -505,6 +523,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub Identity-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   IdentityLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -549,7 +570,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref MarketingAutomationLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -567,6 +588,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub MarketingAutomation-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   MarketingAutomationLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -610,7 +634,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref MarketingAutoRepLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -628,6 +652,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub MarketingAutomationReporting-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   MarketingAutoRepLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -671,7 +698,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref ProcessingLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -689,6 +716,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub Processing-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   ProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -732,7 +762,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref ReferenceDataLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -750,6 +780,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ReferenceData-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   ReferenceDataLC:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -793,7 +826,7 @@ Resources:
         PauseTime: PT15M
     Properties:
       LaunchConfigurationName: !Ref ReportingLC
-      MaxSize: '1'
+      MaxSize: '2'
       MinSize: '1'
       DesiredCapacity: '1'
       VPCZoneIdentifier:
@@ -811,6 +844,9 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub Reporting-${SCQSPrefix}
+          PropagateAtLaunch: true
+        - Key: Sitecore-QuickStart
+          Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
   ReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
