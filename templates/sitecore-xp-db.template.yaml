@@ -119,8 +119,8 @@ Resources:
       Value: !Sub "${RedisCD.RedisEndpoint.Address}:${RedisCD.RedisEndpoint.Port}"
 Outputs:
   RDSSQLEndpoint:
-    Description: Database endpoint
+    Description: The SQL Database endpoint for the Sitecore deployment.
     Value: !Sub "${RDSSQL.Endpoint.Address}:${RDSSQL.Endpoint.Port}"
   CDRedisEndpoint:
-    Description: The Redis primary endpoint location for the Content Delivery role
+    Description: The Redis primary endpoint used for the Content Delivery role.
     Value: !Sub "${RedisCD.RedisEndpoint.Address}:${RedisCD.RedisEndpoint.Port}"

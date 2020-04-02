@@ -124,3 +124,6 @@ Outputs:
   R53IntHostedID:
     Description: ID of the internal R53 Hosted Zone
     Value: !If [CreateR53Zone, !Ref InternalR53, !Ref IntVPCR53Zone]
+  InternalDNSFQDN:
+    Description: The internal VPC FQDN for the Sitecore deployment 
+    Value: !Ref InternalR53DNS

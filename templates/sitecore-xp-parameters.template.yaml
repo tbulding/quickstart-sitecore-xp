@@ -485,18 +485,21 @@ Resources:
 
 Outputs:
   CustomAmiName:
-    Description: The name of the Quick Start Sitecore custom AMI
+    Description: The name of the Quick Start Sitecore custom AMI.
     Value: !GetAtt CustomAmiName.Value
   SCLocalResourcePath:
-    Description: The location of the Sitecore resources on the AMI
+    Description: The location of the Sitecore resources on the AMI.
     Value: !GetAtt LocalResourcesPath.Value
   QSLocalResourcePath:
-    Description: The name of the Quick Start Sitecore custom AMI
+    Description: The location of the Quick Start resources on the AMI.
     Value: !GetAtt LocalQuickStartResourcesPath.Value
   InstanceCertificateLocation:
-    Description: Location of the certificate on the instance
+    Description: Location of the Sitecore generated certificate in the S3 bucket.
     Value: !Join
       - ''
       - - !GetAtt S3CertificatePrefix.Value
         - !GetAtt ExportInstanceCertName.Value
         - '.pfx'
+  SolrURL:
+    Description: The URL of the Solr instance.
+    Value: !GetAtt SolrUrl.Value
