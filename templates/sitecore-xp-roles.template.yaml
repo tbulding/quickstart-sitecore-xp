@@ -138,9 +138,11 @@ Resources:
             - !Sub '${LocalQSScripts}\sc-update-web-config.ps1 -SCQSPrefix '
             - !Sub '"${SCQSPrefix}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CD" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ContentDeliveryASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
             - "</powershell>\n"
   CDScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
@@ -207,9 +209,11 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CM" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ContentManagementASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
+            - "\n"
             - "\n"
             - "</powershell>\n"
   CMScalingPolicy:
@@ -277,9 +281,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Collection" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CollectionASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   CollectionSearchASG:
@@ -337,9 +342,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CollectionSearch" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CollectionSearchASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   CortexProcessingASG:
@@ -397,9 +403,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CortexProcessing" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CortexProcessingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   CortexReportingASG:
@@ -457,9 +464,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "CortexReporting" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "CortexReportingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   IdentityASG:
@@ -518,9 +526,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "IdentityServer" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "IdentityASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   MarketingAutomationASG:
@@ -579,9 +588,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "MarketingAutomation" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "MarketingAutomationASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   MarketingAutoRepASG:
@@ -639,9 +649,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "MarketingAutomationReporting" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "MarketingAutoRepASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   ProcessingASG:
@@ -699,9 +710,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Prc" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ProcessingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   ReferenceDataASG:
@@ -759,9 +771,10 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "ReferenceData" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ReferenceDataASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
   ReportingASG:
@@ -819,8 +832,9 @@ Resources:
             - !Sub '"${SCQSPrefix}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
-            - !Sub '${LocalQSScripts}\sc-cfn-signaling.ps1 -Role "Rep" -StackName '
-            - !Sub '"${AWS::StackName}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
+            - !Sub '"${AWS::Region}" -Resource "ReportingASG"'
+            - "\n"
+            - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
