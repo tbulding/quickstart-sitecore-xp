@@ -213,7 +213,7 @@ Resources:
             - !Sub '"${SCQSPrefix}" -hostedZoneID '
             - !Sub '"${R53HostedZoneID}"'
             - "\n"
-            - !Sub 'New-AWSQuickStartResourceSignal -Resource "SolrDevASG" -Stack '
+            - 'New-AWSQuickStartResourceSignal -Resource "SolrDevASG" -Stack '
             - !Sub '"${AWS::StackName}" -Region '
             - !Sub '"${AWS::Region}"'
             - "\n"
