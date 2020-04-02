@@ -265,10 +265,22 @@ function CopyToS3Bucket {
     )
 
     $key = $bucketPrefix + $objectName
-    $BucketLocation = Get-S3BucketLocation -BucketName $BucketName
-    Write-S3Object -BucketName $bucketName -File $localFileName -Key $key -Region $BucketLocation
+    $bucket_locationConstraint = Get-S3BucketLocation -BucketName $BucketName
+    $BucketRegionValue = $bucket_locationConstraint.value
 
-    Return "$bucketName/$key"
+    if (!$BucketRegionValue) { # Get-S3BucketLocation returns Null when the bucket is located in us-east-1
+            $bucketRegion = 'us-east-1'
+        }
+    elseif ($BucketRegionValue -eq 'EU') {
+            $bucketRegion = 'eu-west-1'
+        }
+    else {
+            $bucketRegion =  $BucketRegionValue
+        }
+    
+    Write-S3Object -BucketName $bucketName -File $localFileName -Key $key -Region $bucketRegion -Verbose
+
+    Return "$bucketName\$key"
 }
 
 function WriteToParameterStore {
@@ -291,7 +303,7 @@ Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logSt
 $ValidateRootCA = ValidateCertificate -Cert $root
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Exporting Root certificate...'
 $ExportRootCA = ExportCert -Cert $root -Path $ExportPath -Name $ExportRootCertName -IncludePrivateKey -Password $ExportPassword
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $ExportRootCA
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString "Exported Root certificate $ExportRootCA"
 
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Copying Root certificate to S3...'
 $RootCAToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $ExportRootCA.certname -localFileName $ExportRootCA.localPath
@@ -312,7 +324,7 @@ WriteToParameterStore -Cert $signedCertificate -type 'instance'
 $ValidateInstanceCert = ValidateCertificate -Cert $signedCertificate
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Exporting Instance certificate...'
 $exportinstanceCert = ExportCert -Cert $signedCertificate -Path $ExportPath -Name $ExportInstanceCertName -IncludePrivateKey -Password $ExportPassword
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $exportinstanceCert
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString "Exported Instance certificate $exportinstanceCert"
 
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Copying Instance certificate to S3...'
 $InstanceCertToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $exportinstanceCert.certname -localFileName $exportinstanceCert.localPath
@@ -332,7 +344,7 @@ WriteToParameterStore -Cert $signedCertificate -type 'xconnect'
 
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Exporting Collection Search certificate...'
 $exportxconnectCert = ExportCert -Cert $signedCertificate -Path $ExportPath -Name $ExportXConnectCertName -IncludePrivateKey -Password $ExportPassword
-Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString $exportxconnectCert
+Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString "Exported Collection Search certificate $exportxconnectCert"
 
 Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $logStreamName -LogString 'Copying Collection Search  certificate to S3...'
 $XconnectCertToS3 = CopyToS3Bucket -bucketName $S3BucketName -bucketPrefix $S3BucketCertificatePrefix -objectName $exportxconnectCert.certname -localFileName $exportxconnectCert.localPath
