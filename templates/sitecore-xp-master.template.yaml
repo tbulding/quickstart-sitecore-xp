@@ -298,15 +298,15 @@ Parameters:
     Type: String
     Description: Internal DNS name. If left blank, one will be generated for you
   CDMinSize:
-    Type: Number
+    Type: String
     Default: '1'
     Description: The minimum number of Content Delivery instances to be available (this currently applies to ALL roles)
   CDMaxSize:
-    Type: Number
-    Default: '1'
+    Type: String
+    Default: '2'
     Description: The maximum number of Content Delivery instances to be available (this currently applies to ALL roles)
   CDDesiredCapacity:
-    Type: Number
+    Type: String
     Default: '1'
     Description: The desired number of Content Delivery instances to be available (this currently applies to ALL roles)
   CDInstanceType:
@@ -360,12 +360,12 @@ Parameters:
     Default: 300
     Type: Number
   CMMinSize:
-    Type: Number
-    Default: 1
+    Type: String
+    Default: '1'
     Description: The minimum number of Content Management instances to be available (this currently applies to ALL roles)
   CMMaxSize:
-    Type: Number
-    Default: 1
+    Type: String
+    Default: '2'
     Description: The maximum number of Content Management instances to be available (this currently applies to ALL roles)
   CMInstanceType:
     AllowedValues:
@@ -588,6 +588,16 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
     Type: String
+Rules:
+  CDInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Delivery instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CDMinSize, !Ref CDMaxSize]]
+  CMInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Management instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CMMinSize, !Ref CMMaxSize]]
+
 Conditions:
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 Resources:

@@ -229,16 +229,16 @@ Parameters:
                   a wildcard certificate will be created for you. "
   #Sitecore Configuration
   CDMinSize:
-    Type: Number
-    Default: 1
+    Type: String
+    Default: '1'
     Description: The minimum number of Content Delivery instances to be available (this currently applies to ALL roles)
   CDMaxSize:
-    Type: Number
-    Default: 1
+    Type: String
+    Default: '2'
     Description: The maximum number of Content Delivery instances to be available (this currently applies to ALL roles)
   CDDesiredCapacity:
-    Type: Number
-    Default: 1
+    Type: String
+    Default: '1'
     Description: The desired number of Content Delivery instances to be available (this currently applies to ALL roles)
   CDInstanceType:
     AllowedValues:
@@ -287,12 +287,12 @@ Parameters:
     Default: 300
     Type: Number
   CMMinSize:
-    Type: Number
-    Default: 1
+    Type: String
+    Default: '1'
     Description: The minimum number of Content Management instances to be available (this currently applies to ALL roles)
   CMMaxSize:
-    Type: Number
-    Default: 1
+    Type: String
+    Default: '2'
     Description: The maximum number of Content Management instances to be available (this currently applies to ALL roles)
   CMInstanceType:
     AllowedValues:
@@ -517,7 +517,15 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
     Type: String
-
+Rules:
+  CDInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Delivery instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CDMinSize, !Ref CDMaxSize]]
+  CMInstanceNumbers:
+    Assertions:
+      - AssertDescription: Maximum number of Content Management instances must be larger than the minimum number specified.
+        Assert: !Not [!Equals [!Ref CMMinSize, !Ref CMMaxSize]]
 Conditions:
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   CreateLambdaZipsBucket: !Equals [!Ref 'LambdaZipsBucketName', '']
@@ -941,7 +949,7 @@ Resources:
       Count: 0
 
   # Sitecore ALB Stack
-  ALBStack:
+  RolesStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: 
       - SOLRDependencyCheck
@@ -985,24 +993,27 @@ Resources:
         RDIntTargetGroup: !GetAtt NetworkStack.Outputs.RefDataTargetGroup
         RepIntTargetGroup: !GetAtt NetworkStack.Outputs.ReportingDataTargetGroup
 Outputs:
-  ALBInternalDNS:
+  InternalALBDNS:
     Description: Internal DNS name of the ALB
     Value: !GetAtt LoadBalancerInternal.DNSName
-  ALBExternalDNS:
+  ExternalALBDNS:
     Description: DNS name of the external facing ALB. This will be used for the Content Delivery, Content Management & Identity Server DNS CNAME's
     Value: !GetAtt LoadBalancerExternal.DNSName
-  XConnectInternalDNS:
+  InternalXConnectDNS:
     Description: Internal DNS name of the XConnect NLB
     Value: !GetAtt XConnectNLB.DNSName
   ContentDelivery:
-    Description: The website name for the Content Delivery role. A CNAME entry needs to be added pointing to the 'ALBExternalDNS'
+    Description: The website name for the Content Delivery role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
     Value: !Ref CDDNSName
   ContentManagment:
-    Description: The website name for the Content Managment role. A CNAME entry needs to be added pointing to the 'ALBExternalDNS'
+    Description: The website name for the Content Managment role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
     Value: !Ref CMDNSName
   IdentityServer:
-    Description: The website name for the Identity Server role. A CNAME entry needs to be added pointing to the 'ALBExternalDNS'
+    Description: The website name for the Identity Server role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
     Value: !Ref ISDNSName
+  SolrURL:
+    Description: The Solr URL configured for the Sitecore deployment
+    Value: !GetAtt ParamStack.Outputs.SolrURL
   SQLEndpoint:
     Description: RDS SQL Database endpoint
     Value: !GetAtt DBStack.Outputs.RDSSQLEndpoint
@@ -1012,3 +1023,9 @@ Outputs:
   SitecoreQuickStartPrefix:
     Description: The prefix used for resources created by the Quick Start
     Value: !GetAtt FunctionsStack.Outputs.SCQSPrefix
+  InternalR53Zone:
+    Description: The HostedZone ID of the R53 
+    Value: !If [CreateInternalR53, !GetAtt R53Stack.Outputs.R53IntHostedID, 'Private VPC DNS selected. Please create internal DNS entries for Sitecore. See Deployment Guide for more details.']
+  InternalDNSFQDN:
+    Description: The internal VPC FQDN for the Sitecore deployment 
+    Value: !If [CreateInternalR53, !GetAtt R53Stack.Outputs.InternalDNSFQDN, !Ref IntDNS]
