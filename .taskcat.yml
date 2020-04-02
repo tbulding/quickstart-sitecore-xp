@@ -31,7 +31,7 @@ project:
     RDGWInstanceType: "t2.large"
     RDGWCIDR: 10.0.0.0/0
     CDMinSize: 1
-    CDMaxSize: 1
+    CDMaxSize: 2
     CDDesiredCapacity: 1
     SitecoreInstanceType: m4.large
     SitecorePrefix: sc
