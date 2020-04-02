@@ -154,7 +154,9 @@ Resources:
                 Resource:
                   - !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
               - Effect: 'Allow'
-                Action: s3:ListBucket
+                Action: 
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
                 Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}'
               # Customer's S3 Bucket Access
               - Effect: 'Allow'
@@ -166,6 +168,7 @@ Resources:
               - Effect: 'Allow'
                 Action:
                   - s3:ListBucket
+                  - s3:GetBucketLocation
                 Resource:
                   - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}'
         - PolicyName: SSMAccess
