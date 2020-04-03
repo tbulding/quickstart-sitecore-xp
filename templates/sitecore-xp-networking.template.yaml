@@ -11,6 +11,18 @@ Parameters:
     Type: String
   XConnectNLB:
     Type: String
+  CollectionNLB:
+    Type: String
+  RefDataNLB:
+    Type: String
+  MarketAutoRepNLB:
+    Type: String
+  MarketAutoNLB:
+    Type: String
+  CortexRepNLB:
+    Type: String
+  CortexProcNLB:
+    Type: String
   VPCID:
     Type: AWS::EC2::VPC::Id
   IntDNS:
@@ -37,9 +49,9 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
+      HealthCheckProtocol: TCP
       Port: 443
-      Protocol: HTTPS
+      Protocol: TCP
       TargetType: instance
       VpcId: !Ref VPCID
       Tags:
@@ -49,9 +61,9 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
+      HealthCheckProtocol: TCP
       Port: 443
-      Protocol: HTTPS
+      Protocol: TCP
       TargetType: instance
       VpcId: !Ref VPCID
       Tags:
@@ -61,9 +73,9 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
+      HealthCheckProtocol: TCP
       Port: 443
-      Protocol: HTTPS
+      Protocol: TCP
       TargetType: instance
       VpcId: !Ref VPCID
       Tags:
@@ -73,9 +85,9 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
+      HealthCheckProtocol: TCP
       Port: 443
-      Protocol: HTTPS
+      Protocol: TCP
       TargetType: instance
       VpcId: !Ref VPCID
       Tags:
@@ -85,14 +97,26 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
+      HealthCheckProtocol: TCP
       Port: 443
-      Protocol: HTTPS
+      Protocol: TCP
       TargetType: instance
       VpcId: !Ref VPCID
       Tags:
         - Key: !Ref SCQSPrefix
           Value: "Marketing Automation Reporting Role"
+  RDIntTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPort: '80'
+      HealthCheckProtocol: TCP
+      Port: 443
+      Protocol: TCP
+      TargetType: instance
+      VpcId: !Ref VPCID
+      Tags:
+        - Key: !Ref SCQSPrefix
+          Value: "Reference Data Role"
   PrcIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -105,18 +129,6 @@ Resources:
       Tags:
         - Key: !Ref SCQSPrefix
           Value: "Processing Role"
-  RDIntTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      HealthCheckPort: '80'
-      HealthCheckProtocol: HTTP
-      Port: 443
-      Protocol: HTTPS
-      TargetType: instance
-      VpcId: !Ref VPCID
-      Tags:
-        - Key: !Ref SCQSPrefix
-          Value: "Reference Data Role"
   RepIntTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -153,68 +165,122 @@ Resources:
       LoadBalancerArn: !Ref XConnectNLB
       Port: 443
       Protocol: TCP
-
-  # Rule with priority 1 is reserved for the SolrDev deployment - See the SolrStack
-  HTTPSListenerInternalRule3:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  CollectionListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      Actions:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ColIntTargetGroup
+      LoadBalancerArn: !Ref CollectionNLB
+      Port: 443
+      Protocol: TCP
+  RefDataListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref RDIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub refdata.${IntDNS}
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 3
-  HTTPSListenerInternalRule4:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      LoadBalancerArn: !Ref RefDataNLB
+      Port: 443
+      Protocol: TCP
+  MarketAutoRepListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref MAIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub mktauto.${IntDNS}
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 4
-  HTTPSListenerInternalRule5:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      Actions:
+      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref MARIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub mktautorep.${IntDNS}
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 5
-  HTTPSListenerInternalRule6:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      LoadBalancerArn: !Ref MarketAutoRepNLB
+      Port: 443
+      Protocol: TCP
+  MarketAutoListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      Actions:
+      DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref CPIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub cortexproc.${IntDNS}
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 6
-  HTTPSListenerInternalRule7:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+          TargetGroupArn: !Ref MAIntTargetGroup
+      LoadBalancerArn: !Ref MarketAutoNLB
+      Port: 443
+      Protocol: TCP
+  CortexRepListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      Actions:
+      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref CRIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub cortexrep.${IntDNS}
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 7
+      LoadBalancerArn: !Ref CortexRepNLB
+      Port: 443
+      Protocol: TCP
+  CortexProcListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref CPIntTargetGroup
+      LoadBalancerArn: !Ref CortexProcNLB
+      Port: 443
+      Protocol: TCP
+
+  # Rule with priority 1 is reserved for the SolrDev deployment - See the SolrStack
+  # HTTPSListenerInternalRule3:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref RDIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub refdata.${IntDNS}
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 3
+  # HTTPSListenerInternalRule4:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref MAIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub mktauto.${IntDNS}
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 4
+  # HTTPSListenerInternalRule5:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref MARIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub mktautorep.${IntDNS}
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 5
+  # HTTPSListenerInternalRule6:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref CPIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub cortexproc.${IntDNS}
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 6
+  # HTTPSListenerInternalRule7:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref CRIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub cortexrep.${IntDNS}
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 7
   HTTPSListenerInternalRule8:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -239,18 +305,18 @@ Resources:
             - !Sub rep.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
       Priority: 9
-  HTTPSListenerInternalRule10:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref ColIntTargetGroup
-      Conditions:
-        - Field: host-header
-          Values:
-            - !Sub coll.${IntDNS}
-      ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 10
+  # HTTPSListenerInternalRule10:
+  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  #   Properties:
+  #     Actions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref ColIntTargetGroup
+  #     Conditions:
+  #       - Field: host-header
+  #         Values:
+  #           - !Sub coll.${IntDNS}
+  #     ListenerArn: !Ref HTTPSListenerInternal
+  #     Priority: 10
   # --- External ALB Config --- #
   # HTTPS Listner
   HTTPSListenerExternal:

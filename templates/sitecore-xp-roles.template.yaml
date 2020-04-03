@@ -77,6 +77,8 @@ Parameters:
     Type: String
   RepIntTargetGroup:
     Type: String
+  InternalDNS:
+    Type: String
 
 Resources:
   #Create Auto Scaling Groups & Launch Configurations
@@ -874,3 +876,32 @@ Resources:
             - "Write-AWSQuickStartStatus"
             - "\n"
             - "</powershell>\n"
+Outputs:
+  Collection:
+    Description: Collection Role URL
+    Value: !Sub coll.${InternalDNS}
+  CollectionSearch:
+    Description: Collection Search Role URL
+    Value: !Sub collsearch.${InternalDNS}
+  ReferenceData:
+    Description: Reference Data Role URL
+    Value: !Sub refdata.${InternalDNS}
+  MarketingAutomation:
+    Description: Marketing Automation Role URL
+    Value: !Sub mktauto.${InternalDNS}
+  MarketingAutomationReporting:
+    Description: Marketing Automation Reporting Role URL
+    Value: !Sub mktautorep.${InternalDNS}
+  CortexProcessing:
+    Description: Cortex Processing Role URL
+    Value: !Sub cortexproc.${InternalDNS}
+  CortexReporting:
+    Description: Cortex Reporting Role URL
+    Value: !Sub cortexrep.${InternalDNS}
+  Processing:
+    Description: Processing Role URL
+    Value: !Sub proc.${InternalDNS}
+  Reporting:
+    Description: Reporting Role URL
+    Value: !Sub rep.${InternalDNS}
+  

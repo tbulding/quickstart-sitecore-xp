@@ -9,6 +9,18 @@ Parameters:
     Type: String
   XConnectNLBDNS:
     Type: String
+  CollectionNLBDNS:
+    Type: String
+  RefDataNLBDNS:
+    Type: String
+  MarketAutoRepNLBDNS:
+    Type: String
+  MarketAutoNLBDNS:
+    Type: String
+  CortexRepNLBDNS:
+    Type: String
+  CortexProcNLBDNS:
+    Type: String
   IntVPCR53Zone:
     Type: String
   SOLRUrl:
@@ -36,7 +48,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !Ref LoadBalancerInternalDNS
+        - !Ref CollectionNLBDNS
   CSRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -54,7 +66,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !Ref LoadBalancerInternalDNS
+        - !Ref RefDataNLBDNS
   MARecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -63,7 +75,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !Ref LoadBalancerInternalDNS
+        - !Ref MarketAutoNLBDNS
   MARRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -72,7 +84,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !Ref LoadBalancerInternalDNS
+        - !Ref MarketAutoRepNLBDNS
   CPRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -81,7 +93,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !Ref LoadBalancerInternalDNS
+        - !Ref CortexProcNLBDNS
   CRRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -90,7 +102,7 @@ Resources:
       Type: CNAME
       TTL: '900'
       ResourceRecords:
-        - !Ref LoadBalancerInternalDNS
+        - !Ref CortexRepNLBDNS
   PRCRecord:
     Type: AWS::Route53::RecordSet
     Properties:

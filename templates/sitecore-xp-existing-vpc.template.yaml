@@ -667,6 +667,66 @@ Resources:
       Subnets:
         - !Ref PrivateSubnet1A
         - !Ref PrivateSubnet2A
+  CollectionNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  RefDataNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  MarketAutoRepNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  MarketAutoNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  CortexRepNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
+  CortexProcNLB:
+    # DependsOn: LoadBalancerInternalSG
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet2A
 
 
   # Parameter entries for internal & External ALB - put here so that Parameter Stack not waiting
@@ -692,7 +752,73 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String
       Value: !GetAtt LoadBalancerExternal.DNSName
-  XConnectALBURL:
+  CollNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/collection/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt CollectionNLB.DNSName
+  RefDataNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/RefData/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt RefDataNLB.DNSName
+  MarketAutoRepNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/MarketAutoRep/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt MarketAutoRepNLB.DNSName
+  MarketAutoNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/MarketAuto/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt MarketAutoNLB.DNSName
+  CortexProcNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/CortexProc/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt CortexProcNLB.DNSName
+  CortexRepNLBURL:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Join #!Sub /${AWS::StackName}/net/public/alb
+        - ''
+        - - '/'
+          - !GetAtt FunctionsStack.Outputs.SCQSPrefix
+          - '/net/CortexRep/nlb'
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !GetAtt CortexRepNLB.DNSName
+  XConnectNLBURL:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Join #!Sub /${AWS::StackName}/net/public/alb
@@ -718,6 +844,12 @@ Resources:
         VPCID: !Ref VPCID
         LoadBalancerInternalDNS: !GetAtt LoadBalancerInternal.DNSName
         XConnectNLBDNS: !GetAtt XConnectNLB.DNSName
+        CollectionNLBDNS: !GetAtt CollectionNLB.DNSName
+        RefDataNLBDNS: !GetAtt RefDataNLB.DNSName
+        MarketAutoRepNLBDNS: !GetAtt MarketAutoRepNLB.DNSName
+        MarketAutoNLBDNS: !GetAtt MarketAutoNLB.DNSName
+        CortexRepNLBDNS: !GetAtt CortexRepNLB.DNSName
+        CortexProcNLBDNS: !GetAtt CortexProcNLB.DNSName
         IntVPCR53Zone: !Ref IntVPCR53Zone
         SOLRUrl: !Ref SOLRUrl
         
@@ -891,6 +1023,12 @@ Resources:
         LoadBalancerExternal: !Ref LoadBalancerExternal
         ExternalCertificateARN: !Ref ExternalCertificateARN
         XConnectNLB: !Ref XConnectNLB
+        CollectionNLB: !Ref CollectionNLB
+        RefDataNLB: !Ref RefDataNLB
+        MarketAutoRepNLB: !Ref MarketAutoRepNLB
+        MarketAutoNLB: !Ref MarketAutoNLB
+        CortexRepNLB: !Ref CortexRepNLB
+        CortexProcNLB: !Ref CortexProcNLB
         VPCID: !Ref VPCID
         IntDNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref 'IntDNS']
         SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
@@ -992,6 +1130,7 @@ Resources:
         PrcIntTargetGroup: !GetAtt NetworkStack.Outputs.ProcessingTargetGroup
         RDIntTargetGroup: !GetAtt NetworkStack.Outputs.RefDataTargetGroup
         RepIntTargetGroup: !GetAtt NetworkStack.Outputs.ReportingDataTargetGroup
+        InternalDNS: !If [InternalDNSName, !Sub '${AWS::Region}.sitecore.internal', !Ref IntDNS]
 Outputs:
   InternalALBDNS:
     Description: Internal DNS name of the ALB
