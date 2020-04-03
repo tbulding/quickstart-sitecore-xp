@@ -4,8 +4,6 @@ Parameters:
 # RDS Parameters
   DBAutoMinorVersionUpgrade: 
     Type: String
-  # PubliclyAccessible: 
-  #   Type: String
   DBInstanceClass:
     Type: String
   SQLEngineEdition:
@@ -87,7 +85,7 @@ Resources:
       MasterUsername: !Sub '{{resolve:secretsmanager:sitecore-quickstart-${SCQSPrefix}-sqladmin:SecretString:username}}'
       MultiAZ: False # Sitecore does not support DB Mirroring - this needs to be false
       VPCSecurityGroups: !Ref RDSSecurityGroup
-      PubliclyAccessible: false # !Ref PubliclyAccessible
+      PubliclyAccessible: false
       DBParameterGroupName: !Ref RDSParameterGroup
       DBInstanceIdentifier: !Sub sc-${SCQSPrefix}
       StorageType: !If [DBProvisionedIops, io1, gp2]
