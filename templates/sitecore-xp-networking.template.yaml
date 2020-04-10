@@ -221,67 +221,8 @@ Resources:
       Protocol: TCP
 
   # Rule with priority 1 is reserved for the SolrDev deployment - See the SolrStack
-  # HTTPSListenerInternalRule3:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref RDIntTargetGroup
-  #     Conditions:
-  #       - Field: host-header
-  #         Values:
-  #           - !Sub refdata.${IntDNS}
-  #     ListenerArn: !Ref HTTPSListenerInternal
-  #     Priority: 3
-  # HTTPSListenerInternalRule4:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref MAIntTargetGroup
-  #     Conditions:
-  #       - Field: host-header
-  #         Values:
-  #           - !Sub mktauto.${IntDNS}
-  #     ListenerArn: !Ref HTTPSListenerInternal
-  #     Priority: 4
-  # HTTPSListenerInternalRule5:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref MARIntTargetGroup
-  #     Conditions:
-  #       - Field: host-header
-  #         Values:
-  #           - !Sub mktautorep.${IntDNS}
-  #     ListenerArn: !Ref HTTPSListenerInternal
-  #     Priority: 5
-  # HTTPSListenerInternalRule6:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref CPIntTargetGroup
-  #     Conditions:
-  #       - Field: host-header
-  #         Values:
-  #           - !Sub cortexproc.${IntDNS}
-  #     ListenerArn: !Ref HTTPSListenerInternal
-  #     Priority: 6
-  # HTTPSListenerInternalRule7:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref CRIntTargetGroup
-  #     Conditions:
-  #       - Field: host-header
-  #         Values:
-  #           - !Sub cortexrep.${IntDNS}
-  #     ListenerArn: !Ref HTTPSListenerInternal
-  #     Priority: 7
-  HTTPSListenerInternalRule8:
+
+  HTTPSListenerInternalRule3:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
@@ -292,8 +233,8 @@ Resources:
           Values:
             - !Sub proc.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 8
-  HTTPSListenerInternalRule9:
+      Priority: 3
+  HTTPSListenerInternalRule4:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
       Actions:
@@ -304,19 +245,8 @@ Resources:
           Values:
             - !Sub rep.${IntDNS}
       ListenerArn: !Ref HTTPSListenerInternal
-      Priority: 9
-  # HTTPSListenerInternalRule10:
-  #   Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #   Properties:
-  #     Actions:
-  #       - Type: forward
-  #         TargetGroupArn: !Ref ColIntTargetGroup
-  #     Conditions:
-  #       - Field: host-header
-  #         Values:
-  #           - !Sub coll.${IntDNS}
-  #     ListenerArn: !Ref HTTPSListenerInternal
-  #     Priority: 10
+      Priority: 4
+      
   # --- External ALB Config --- #
   # HTTPS Listner
   HTTPSListenerExternal:
@@ -335,8 +265,14 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref CDExtTargetGroup
+       - Type: "redirect"
+         RedirectConfig:
+           Protocol: "HTTPS"
+           Port: "443"
+           Host: "#{host}"
+           Path: "/#{path}"
+           Query: "#{query}"
+           StatusCode: "HTTP_301"
       LoadBalancerArn: !Ref LoadBalancerExternal
       Port: 80
       Protocol: HTTP
