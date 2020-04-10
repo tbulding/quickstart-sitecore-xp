@@ -434,13 +434,14 @@ Parameters:
     Type: String
   SQLEngineVersion:
     AllowedValues:
+      - 14.00.3223.3.v1
       - 14.00.3192.2.v1
       - 14.00.3049.1.v1
       - 14.00.3035.2.v1
       - 14.00.3015.40.v1
       - 14.00.1000.169.v1
     ConstraintDescription: 'Must select a MSSQL Database Engine Version.'
-    Default: 14.00.3192.2.v1
+    Default: 14.00.3223.3.v1
     Description: 'MSSQL Database Engine Version.'
     Type: String
   BackupRetentionPeriod:
@@ -950,6 +951,7 @@ Resources:
         VolumeIops: !Ref VolumeIops
         VolumeSize: !Ref VolumeSize
         VolumeType: !Ref VolumeType
+        RDSMonitoringRole: !GetAtt SecurityStack.Outputs.RDSEnhancedMonitoringArn
         SCQSPrefix: !GetAtt FunctionsStack.Outputs.SCQSPrefix
         RedisSecurityGroup: !Ref RedisSG
         CacheNodeType: !Ref CacheNodeType

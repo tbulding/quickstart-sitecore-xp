@@ -388,6 +388,20 @@ Resources:
                   - cloudformation:SignalResource
                 Resource:
                   - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*/*'
+  RDSEnhancedmonitoringRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Principal:
+              Service:
+                - monitoring.rds.amazonaws.com
+            Effect: Allow
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole'
 Outputs:
   SCAMIInstanceRoleARN:
     Description: ARN for the Instance Role.
@@ -419,3 +433,6 @@ Outputs:
   CopyZipsRoleArn:
     Description: The role ARN for the Lambda function to copy Zip's to local S3 bucket for Lambda Functions.
     Value: !GetAtt CopyZipsRole.Arn
+  RDSEnhancedMonitoringArn:
+    Description: The role ARN for the Lambda function to copy Zip's to local S3 bucket for Lambda Functions.
+    Value: !GetAtt RDSEnhancedmonitoringRole.Arn

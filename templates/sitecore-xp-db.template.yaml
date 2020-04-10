@@ -20,6 +20,8 @@ Parameters:
     Type: List<String>
   VolumeType:
     Type: String
+  RDSMonitoringRole:
+    Type: String
 # Redis parameters
   RedisSecurityGroup:
     Type: AWS::EC2::SecurityGroup::Id
@@ -89,6 +91,8 @@ Resources:
       DBParameterGroupName: !Ref RDSParameterGroup
       DBInstanceIdentifier: !Sub sc-${SCQSPrefix}
       StorageType: !If [DBProvisionedIops, io1, gp2]
+      MonitoringInterval: '60'
+      MonitoringRoleArn: !Ref RDSMonitoringRole
 # Redis Configuration for the Content Delivery role
   RedisCD:
     Type: AWS::ElastiCache::CacheCluster
