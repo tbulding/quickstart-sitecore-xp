@@ -130,7 +130,7 @@ function NewCertificate {
 
         $certificate.Issuer = $issuer
         $certificate.SignerCertificate = $signerCertificate
-        $certificate.NotAfter = ($date).AddDays(730)
+        $certificate.NotAfter = ($date).AddYears(5)
         $certificate.X509Extensions.Add($webserverEnhancedKeyUsage)
         $certificate.X509Extensions.Add($webserverBasicKeyUsage)
 
