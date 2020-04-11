@@ -931,7 +931,7 @@ Resources:
   DBStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: 
-      - SecurityStack
+      # - SecurityStack
       - ParamStack # RDSsqlSG
     Properties:
       TemplateURL: 
@@ -1170,3 +1170,27 @@ Outputs:
   InternalDNSFQDN:
     Description: The internal VPC FQDN for the Sitecore deployment 
     Value: !If [CreateInternalR53, !GetAtt R53Stack.Outputs.InternalDNSFQDN, !Ref IntDNS]
+  LoadBalancerProcRep:
+    Description: The loadbalancer endpoint for the Processing and Reporting DNS CNames.
+    Value: !GetAtt LoadBalancerInternal.DNSName
+  LoadBalancerCollSearch:
+    Description: The loadbalancer endpoint for the CollectionSearch DNS CName.
+    Value: !GetAtt XConnectNLB.DNSName
+  LoadBalancerColl:
+    Description: The loadbalancer endpoint for the Collection DNS CName.
+    Value: !GetAtt CollectionNLB.DNSName
+  LoadBalancerRefData:
+    Description: The loadbalancer endpoint for the ReferenceData DNS CName.
+    Value: !GetAtt RefDataNLB.DNSName
+  LoadBalancerMarketAutoRep:
+    Description: The loadbalancer endpoint for the MarketingAutomationReporting DNS CName.
+    Value: !GetAtt MarketAutoRepNLB.DNSName
+  LoadBalancerMarketAuto:
+    Description: The loadbalancer endpoint for the MarketingAutomation DNS CName.
+    Value: !GetAtt MarketAutoNLB.DNSName
+  LoadBalancerCortexRep:
+    Description: The loadbalancer endpoint for the CortexReporting DNS CName.
+    Value: !GetAtt CortexRepNLB.DNSName
+  LoadBalancerCortexProc:
+    Description: The loadbalancer endpoint for the CortexProcessing DNS CName.
+    Value: !GetAtt CortexProcNLB.DNSName
