@@ -882,5 +882,55 @@ If ($Role -ne 'DbResources') {
     # Setting permissions for AppPool Identity in Administrators
     $AppPoolSiteName = $DeploymentParameters.SiteName
     Add-LocalGroupMember -Group "Administrators" -Member "IIS AppPool\$AppPoolSiteName"
+    
+    $Site = Get-Website -Name $DeploymentParameters.SiteName
+    $AppPool = Get-ItemProperty ("IIS:\AppPools\$AppPoolSiteName")
+    # Configure Application Pool StartMode
+    $CurrentStratMode = $AppPool.startMode
+    if($CurrentStratMode -ne "AlwaysRunning")
+        {
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Current StartMode: $CurrentStratMode"
+            $AppPool | Set-ItemProperty -name "startMode" -Value "AlwaysRunning"
+            $AppPool = Get-ChildItem IIS:\AppPools\ | Where-Object { $_.Name -eq $Site.applicationPool }
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "StartMode set to $ACurrentStratMode"
+        } 
+        else 
+        {
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "StartMode is : $CurrentStratMode. No update required"
+        }
+
+    #Configure Application Pool Idle Timeout value
+    $currentIdleTimeout = Get-ItemProperty ("IIS:\AppPools\$AppPoolSiteName") -Name processModel.idleTimeout.value
+    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Idle Timeout value is : $currentIdleTimeout"
+    # Set to 30 min
+    $SitecoreIdleTimeout = '0'
+    $SitecoreIdleTimeoutAction = 'Suspend'
+    $userProfile = "True"
+    $maxProcesses = 1
+    Set-ItemProperty ("IIS:\AppPools\$AppPoolSiteName") -Name processModel.idleTimeout -value ( [TimeSpan]::FromMinutes($SitecoreIdleTimeout))
+    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Idle Timeout value updated to : $SitecoreIdleTimeout"
+
+    Set-ItemProperty ("IIS:\AppPools\$AppPoolSiteName") processModel.idleTimeoutAction -Value $SitecoreIdleTimeoutAction
+    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Idle Timeout Action updated to : $SitecoreIdleTimeoutAction"
+
+    Set-ItemProperty ("IIS:\AppPools\$AppPoolSiteName") processModel.loadUserProfile -Value $userProfile
+    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Load user profile updated to : $userProfile"
+
+    Set-ItemProperty ("IIS:\AppPools\$AppPoolSiteName") processModel.maxProcesses -Value $maxProcesses
+    Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "MaxProcess updated to : $maxProcesses"
+
+    $currentSitePreload = (Get-ItemProperty "IIS:\Sites\$AppPoolSiteName" -Name applicationDefaults.preloadEnabled).Value
+    # Enable Preload
+    if(!(Get-ItemProperty "IIS:\Sites\$AppPoolSiteName" -Name applicationDefaults.preloadEnabled).Value) 
+        {
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Current Site Preload : $currentSitePreload"
+            Set-ItemProperty "IIS:\Sites\$AppPoolSiteName" -Name applicationDefaults.preloadEnabled -Value True
+            $newSitePreload = (Get-ItemProperty "IIS:\Sites\$AppPoolSiteName" -Name applicationDefaults.preloadEnabled).Value
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Site Preload update to: $newSitePreload"
+        } 
+        else
+        {
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Site Preload is : $CurrentStratMode. No update required"
+        }
     Pop-Location
 }
