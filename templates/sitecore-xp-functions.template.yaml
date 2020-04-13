@@ -84,6 +84,7 @@ Resources:
       - functions/packages/ConvertCertificate/lambda.zip
       - functions/packages/DeleteBucketContents/lambda.zip
       - functions/packages/DeleteResources/lambda.zip
+      - functions/packages/ACMCert/lambda.zip
   RandomStringFunction:
       Type: AWS::Lambda::Function
       Properties:

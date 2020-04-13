@@ -30,6 +30,8 @@ Metadata:
           - ISDNSName
           - IntDNS
           - ExternalCertificateARN
+          - ExternalCertFQDN
+          - ExternalR53ZoneID
       - Label:
           default: Sitecore Configuration
         Parameters:
@@ -92,8 +94,6 @@ Metadata:
         default: Public subnet 2 CIDR
       AvailabilityZones:
         default: Availability Zones
-      ExternalCertificateARN:
-        default: External Amazon Certificate Manager ARN
     #RDGW
       AdminUser:
         default: RD Gateway Admin User Name
@@ -109,7 +109,7 @@ Metadata:
         default: Allowed RD Gateway External Access CIDR
       KeyPairName:
         default: Key pair name for the RD Gateway
-    # Sitecore Configuration
+    # Sitecore Network Configuration
       CDDNSName:
         default: DNS name for Content Delivery Role
       CMDNSName:
@@ -118,6 +118,13 @@ Metadata:
         default: DNS name for Identity Server Role
       IntDNS:
         default: '[OPTIONAL] Internal DNS suffix for the Sitecore installation'
+      ExternalCertificateARN:
+        default: External Amazon Certificate Manager ARN
+      ExternalCertFQDN:
+        default: External Certificate Domain Name
+      ExternalR53ZoneID:
+        default: External Route 53 Zone ID
+    # Sitecore Configuration
       CDMinSize:
         default: Min number of Content Delivery instances # Currently applied to all instances
       CDMaxSize:
@@ -228,9 +235,6 @@ Parameters:
   AvailabilityZones:
     Description: "List of Availability Zones to use for the subnets in the VPC. Note: The logical order is preserved."
     Type: List<AWS::EC2::AvailabilityZone::Name>
-  ExternalCertificateARN:
-    Type: String
-    Description: This is the certificate which will be used on the external facing load balancer (or potentially cloudfront) 
 #RDGW
   AdminUser:
     Description: User name for the new local administrator account
@@ -284,7 +288,7 @@ Parameters:
   KeyPairName:
     Description: Public/private key pairs allow you to securely connect to your instance after it launches
     Type: AWS::EC2::KeyPair::KeyName
-#Sitecore
+# Sitecore Networking Configuration
   CDDNSName:
     Type: String
     Description: DNS name for Content Delivery Role
@@ -297,6 +301,17 @@ Parameters:
   IntDNS:
     Type: String
     Description: Internal DNS name. If left blank, one will be generated for you
+  ExternalCertificateARN:
+    Type: String
+    Description: "[OPTIONAL] Provide the ARN of the wildcard certificate (E.g: *.example.com) created in Amazon Certificate Manager. If not provided, 
+                  a wildcard certificate will be created for you. If you provide an ARN of an existing certificate, you do not need to provide details for the External Certificate Domain or the External Route 53 Zone ID."
+  ExternalCertFQDN: 
+    Type: String
+    Description: "[OPTIONAL] The external domain name for the Sitecore deployment (E.g: example.com). This will be created in ACM as a wildcard certificate (E.g: *.example.com) if no certificate ARN was provided above."
+  ExternalR53ZoneID: 
+    Type: String
+    Description: "[OPTIONAL] The R53 Hosted Zone ID of the above domain name provided if you require a certificate generated and validation to be done via DNS. If no ID is provided, validation will be done via email."
+# Sitecore Configuration
   CDMinSize:
     Type: String
     Default: '1'
@@ -661,6 +676,8 @@ Resources:
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1ID 
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2ID 
         ExternalCertificateARN: !Ref ExternalCertificateARN
+        ExternalCertFQDN: !Ref ExternalCertFQDN
+        ExternalR53ZoneID: !Ref ExternalR53ZoneID
         CDDNSName: !Ref CDDNSName
         CMDNSName: !Ref CMDNSName
         ISDNSName: !Ref ISDNSName

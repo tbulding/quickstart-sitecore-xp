@@ -22,6 +22,8 @@ Metadata:
           - IntVPCR53Zone
           - VPCPrivateDNS # true/false - this is here for instances where deploying into a VPC that has DHCP Option Sets that utilize private (non-Route53) DNS servers. EX: Active Directory provided DNS
           - ExternalCertificateARN
+          - ExternalCertFQDN
+          - ExternalR53ZoneID
       - Label:
           default: Sitecore Configuration
         Parameters:
@@ -84,9 +86,7 @@ Metadata:
         default: Public subnet 1 ID
       PublicSubnet2:
         default: Public subnet 2 ID
-      ExternalCertificateARN:
-        default: External Amazon Certificate Manager ARN
-      # Sitecore Configuration
+      # Sitecore Network Configuration
       CDDNSName:
         default: DNS name for Content Delivery Role
       CMDNSName:
@@ -99,6 +99,13 @@ Metadata:
         default: The internal Route53 hosted zone ID
       VPCPrivateDNS:
         default: Private (Non-Route53) DNS
+      ExternalCertificateARN:
+        default: External Amazon Certificate Manager ARN
+      ExternalCertFQDN:
+        default: External Certificate Domain Name
+      ExternalR53ZoneID:
+        default: External Route 53 Zone ID
+      # Sitecore Configuration
       CDMinSize:
         default: Min number of Content Delivery instances # Currently applied to all instances
       CDMaxSize:
@@ -222,11 +229,16 @@ Parameters:
     Description: "Select 'True' if you have your own provided DNS servers for your VPC. Should you have your own DNS servers, 
                   you will need to create cname entries for the sitecore roles. Please see the deloyment guide for details.
                   Leave as 'False' if you have a private Route53 hosted zone connected to your VPC."
-  
-  ExternalCertificateARN: # TODO add in functionality for creating certificate in ACM
+  ExternalCertificateARN:
     Type: String
     Description: "[OPTIONAL] Provide the ARN of the wildcard certificate (E.g: *.example.com) created in Amazon Certificate Manager. If not provided, 
-                  a wildcard certificate will be created for you. "
+                  a wildcard certificate will be created for you. If you provide an ARN of an existing certificate, you do not need to provide details for the External Certificate Domain or the External Route 53 Zone ID."
+  ExternalCertFQDN: 
+    Type: String
+    Description: "[OPTIONAL] The external domain name for the Sitecore deployment (E.g: example.com). This will be created in ACM as a wildcard certificate (E.g: *.example.com) if no certificate ARN was provided above."
+  ExternalR53ZoneID: 
+    Type: String
+    Description: "[OPTIONAL] The R53 Hosted Zone ID of the above domain name provided if you require a certificate generated and validation to be done via DNS. If no ID is provided, validation will be done via email."
   #Sitecore Configuration
   CDMinSize:
     Type: String
@@ -533,6 +545,7 @@ Conditions:
   InternalDNSName: !Equals [!Ref 'IntDNS', '']
   CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
   CreateInternalR53: !Equals [!Ref 'VPCPrivateDNS', 'False'] # If there is no provided internal DNS, then create a R53 hosted Zone
+  CreateExternalCertificate: !Equals [!Ref 'ExternalCertificateARN', '']
 
 Resources:
   # Local region S3 bucket for Lambda functions
@@ -830,7 +843,8 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String
       Value: !GetAtt XConnectNLB.DNSName
-  # Sitecore SRoute 53 Stack
+
+  # Sitecore Route 53 Stack
   R53Stack:
     Type: AWS::CloudFormation::Stack
     Condition: CreateInternalR53
@@ -896,6 +910,28 @@ Resources:
         ConvertCertsRoleArn: !GetAtt SecurityStack.Outputs.ConvertCertificatesLambdaRoleArn
         DeleteResourcesRoleArn: !GetAtt SecurityStack.Outputs.DeleteResourcesLambdaRoleArn
         SitecorePrefix: !Ref SitecorePrefix
+  # Sitecore ACM Stack
+  ACMStack:
+    Type: AWS::CloudFormation::Stack
+    Condition: CreateExternalCertificate
+    DependsOn:
+      - FunctionsStack
+    Properties:
+      TemplateURL: 
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/sitecore-xp-acm.template.yaml'
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+      Parameters:
+        DomainName: !Ref ExternalCertFQDN
+        HostedZoneID: !Ref ExternalR53ZoneID
+        LambdaZipsBucketName:
+          !If [
+            CreateLambdaZipsBucket,
+            !Ref LambdaZipsBucket,
+            !Ref LambdaZipsBucketName,
+          ]
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   # Sitecore Parameter Store Stack
   ParamStack:
     Type: AWS::CloudFormation::Stack
@@ -1023,7 +1059,7 @@ Resources:
         LoadBalancerInternal: !Ref LoadBalancerInternal
         InternalCertificateARN: !GetAtt CertConvertACM.InternalCertARN
         LoadBalancerExternal: !Ref LoadBalancerExternal
-        ExternalCertificateARN: !Ref ExternalCertificateARN
+        ExternalCertificateARN: !If [CreateExternalCertificate, !GetAtt ACMStack.Outputs.ACMCertificate, !Ref ExternalCertificateARN]
         XConnectNLB: !Ref XConnectNLB
         CollectionNLB: !Ref CollectionNLB
         RefDataNLB: !Ref RefDataNLB
