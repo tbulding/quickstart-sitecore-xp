@@ -58,7 +58,7 @@ Resources:
             Effect: Allow
         Version: '2012-10-17'
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:${AWS::Partition}:iam::${AWS::Partition}:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
@@ -69,16 +69,16 @@ Resources:
                   - s3:GetObject
                   - s3:ListBucket
                 Resource: 
-                  - !Sub "arn:aws:s3:::${QSS3BucketName}/*"
-                  - !Sub "arn:aws:s3:::${QSS3BucketName}"
+                  - !Sub "arn:${AWS::Partition}:s3:::${QSS3BucketName}/*"
+                  - !Sub "arn:${AWS::Partition}:s3:::${QSS3BucketName}"
               - Effect: "Allow"
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:ListBucket
                 Resource:
-                  - !Sub "arn:aws:s3:::${S3BucketName}/*"
-                  - !Sub "arn:aws:s3:::${S3BucketName}"
+                  - !Sub "arn:${AWS::Partition}:s3:::${S3BucketName}/*"
+                  - !Sub "arn:${AWS::Partition}:s3:::${S3BucketName}"
         - PolicyName: CWAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -90,8 +90,8 @@ Resources:
                   - logs:DescribeLogStreams
                   - logs:PutLogEvents
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*"
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*"
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*"
               - Effect: "Allow"
                 Action:
                   - logs:CreateLogGroup
@@ -104,7 +104,7 @@ Resources:
                 Action:
                   - ssm:GetParameter
                   - ssm:PutParameter
-                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
         - PolicyName: SECAccess
           PolicyDocument:
             Version: "2012-10-17"
@@ -113,7 +113,7 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
+                  - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*"
         - PolicyName: R53Updates
           PolicyDocument:
             Version: "2012-10-17"
@@ -123,7 +123,7 @@ Resources:
                   - route53:ListResourceRecordSets
                   - route53:ChangeResourceRecordSets
                 Resource:
-                  - !Sub "arn:aws:route53:::hostedzone/${R53HostedZoneID}"
+                  - !Sub "arn:${AWS::Partition}:route53:::hostedzone/${R53HostedZoneID}"
   SCInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:

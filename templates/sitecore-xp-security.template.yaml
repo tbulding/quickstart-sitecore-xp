@@ -31,14 +31,14 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${SitecoreS3Bucket}/*'
         - PolicyName: Get-BucketLocation
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action: s3:GetBucketLocation
-                Resource: !Sub 'arn:aws:s3:::${SitecoreS3Bucket}'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${SitecoreS3Bucket}'
         - PolicyName: Import-Delete-ACM
           PolicyDocument:
             Version: '2012-10-17'
@@ -54,7 +54,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: secretsmanager:GetSecretValue
-                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:*:secret:*'
+                Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:*:secret:*'
         - PolicyName: Put-Delete-SSM-Parameter
           PolicyDocument:
             Version: '2012-10-17'
@@ -64,7 +64,7 @@ Resources:
                   - ssm:PutParameter
                   - ssm:GetParameter
                   - ssm:DeleteParameter
-                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:*:parameter/*'
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:*:parameter/*'
   DeleteResourcesLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -94,7 +94,7 @@ Resources:
                 Action:
                   - ssm:DeleteParameter
                   - ssm:GetParameter
-                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
   CopyZipsRole:
     Type: AWS::IAM::Role
     Properties:
@@ -114,12 +114,12 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
-                Resource: !Sub 'arn:aws:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${LambdaZipsBucketName}/${QSS3KeyPrefix}*'
   # IAM Role AMI Instance
   SCAMIInstanceRole:
     Type: 'AWS::IAM::Role'
@@ -146,31 +146,31 @@ Resources:
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::aws-codedeploy-${AWS::Region}/latest/codedeploy-agent.msi'
+                  - !Sub 'arn:${AWS::Partition}:s3:::aws-codedeploy-${AWS::Region}/latest/codedeploy-agent.msi'
               # Quick Start bucket Access
               - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
               - Effect: 'Allow'
                 Action: 
                   - s3:ListBucket
                   - s3:GetBucketLocation
-                Resource: !Sub 'arn:aws:s3:::${QSS3BucketName}'
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}'
               # Customer's S3 Bucket Access
               - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${SitecoreS3Bucket}/*'
               - Effect: 'Allow'
                 Action:
                   - s3:ListBucket
                   - s3:GetBucketLocation
                 Resource:
-                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${SitecoreS3Bucket}'
         - PolicyName: SSMAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -178,8 +178,8 @@ Resources:
               - Effect: 'Allow'
                 Action: ssm:StartAutomationExecution
                 Resource:
-                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/*:VersionId}'
-                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*'
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/*:VersionId}'
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/*'
               - Effect: 'Allow'
                 Action: ssm:GetAutomationExecution
                 Resource: '*'
@@ -195,7 +195,7 @@ Resources:
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                 Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*'
         - PolicyName: SECAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -204,7 +204,7 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
         - PolicyName: EC2MessagesAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -221,7 +221,7 @@ Resources:
                 Action:
                   - kms:Encrypt
                 Resource:
-                  - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
+                  - !Sub 'arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/*'
         - PolicyName: SSMMessagesAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -263,16 +263,16 @@ Resources:
                   - s3:GetObject
                   - s3:ListBucket
                 Resource:
-                  - !Sub 'arn:aws:s3:::${QSS3BucketName}/*'
-                  - !Sub 'arn:aws:s3:::${QSS3BucketName}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}/*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}'
               - Effect: 'Allow'
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:ListBucket
                 Resource:
-                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}/*'
-                  - !Sub 'arn:aws:s3:::${SitecoreS3Bucket}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${SitecoreS3Bucket}/*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${SitecoreS3Bucket}'
               - Effect: 'Allow'
                 Action:
                   - s3:GetBucketLocation
@@ -289,8 +289,8 @@ Resources:
                   - logs:DescribeLogStreams
                   - logs:PutLogEvents
                 Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
               - Effect: 'Allow'
                 Action:
                   - logs:CreateLogGroup
@@ -302,7 +302,7 @@ Resources:
               - Effect: 'Allow'
                 Action:
                   - ssm:GetParameter
-                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
               - Effect: 'Allow'
                 Action:
                   - ssm:DescribeParameters
@@ -315,7 +315,7 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
   SCInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -345,7 +345,7 @@ Resources:
                 Action:
                   - ec2:RebootInstances
                 Resource:
-                  - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
               - Effect: 'Allow'
                 Action:
                   - ec2:DescribeInstances
@@ -365,7 +365,7 @@ Resources:
               - Effect: 'Allow'
                 Action: ['ssm:PutParameter', 'ssm:GetParameter']
                 Resource:
-                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
         - PolicyName: CWAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -378,7 +378,7 @@ Resources:
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                 Resource:
-                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*'
         - PolicyName: CFNAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -387,7 +387,7 @@ Resources:
                 Action:
                   - cloudformation:SignalResource
                 Resource:
-                  - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*/*'
+                  - !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*/*'
   RDSEnhancedmonitoringRole:
     Type: 'AWS::IAM::Role'
     Properties:
