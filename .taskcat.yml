@@ -31,15 +31,16 @@ project:
     RDGWInstanceType: "t2.large"
     RDGWCIDR: 10.0.0.0/0
     CDMinSize: 1
-    CDMaxSize: 2
-    CDDesiredCapacity: 1
+    CDMaxSize: 3
+    CDDesiredCapacity: 2
     SitecoreInstanceType: m4.large
     SitecorePrefix: sc
     SitecoreS3Bucket: override
     SCResourcesPrefix: override # resources/
     SCLicensePrefix: override # license/
+    IntDNS: ''
     SOLRCorePrefix: scsolr
-    SOLRUrl: override # SOlr-URL
+    SOLRUrl: ''
     EnvironmentType: Production
     SCLogLevel: Information
     CorsOrigins: '*'
@@ -59,11 +60,12 @@ tests:
     regions: 
       - us-east-1
     parameters: 
-      KeyPairName: override
-      SitecoreKeyPair: override
-      ExternalCertificateARN: override # arn:aws:acm:your cert arn
+      KeyPairName: "$[taskcat_getkeypair]"
+      SitecoreKeyPair: "$[taskcat_getkeypair]"
+      ExternalCertificateARN: ''
+      ExternalCertFQDN: ''
+      ExternalR53ZoneID: ''
       CDDNSName: override
       CMDNSName: override
       ISDNSName: override
-      IntDNS: ''
-      EmailNotifications: override
+      EmailNotifications: user@example.com
