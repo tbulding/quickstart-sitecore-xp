@@ -1,14 +1,38 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: 'This template deploys required IAM resources as well as entries into Secrets Manager for use in the Sitecore deployment (qs-1qjogjg57)'
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: General configuration
+        Parameters:
+          - SitecoreS3Bucket
+          - QSS3BucketName
+          - QSS3KeyPrefix
+          - LambdaZipsBucketName
+    ParameterLabels:
+      SitecoreS3Bucket:
+        default: Sitecore Resources Bucket
+      QSS3BucketName:
+        default: Quick Start S3 Bucket
+      QSS3KeyPrefix:
+        default: Quick Start S3 Prefix
+      LambdaZipsBucketName:
+        default: Lambda Zips Bucket Name
+
 Parameters:
   SitecoreS3Bucket:
     Type: String
+    Description: ''
   QSS3BucketName:
     Type: String
+    Description: ''
   QSS3KeyPrefix:
     Type: String
+    Description: ''
   LambdaZipsBucketName:
     Type: String
+    Description: ''
 
 Resources:
   # Lambda IAM Policies
@@ -23,7 +47,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: Get-Certificate-S3
           PolicyDocument:
@@ -76,7 +100,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: Ec2-RemoveAMI
           PolicyDocument:
@@ -106,7 +130,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: lambda-copier
           PolicyDocument:
@@ -135,7 +159,7 @@ Resources:
             Effect: Allow
         Version: 2012-10-17
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSSMAutomationRole'
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
@@ -250,9 +274,9 @@ Resources:
             Effect: Allow
         Version: 2012-10-17
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
-        - 'arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess'
-        - 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonSSMDirectoryServiceAccess'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/CloudWatchAgentServerPolicy'
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
@@ -335,7 +359,7 @@ Resources:
             Effect: Allow
         Version: 2012-10-17
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonSSMAutomationRole'
       Policies:
         - PolicyName: EC2Access
           PolicyDocument:
@@ -401,7 +425,7 @@ Resources:
             Effect: Allow
         Version: 2012-10-17
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole'
 Outputs:
   SCAMIInstanceRoleARN:
     Description: ARN for the Instance Role.

@@ -3,34 +3,49 @@ Description: "Creates a development (Non-Production) Solr Instance (qs-1qjogjg57
 Parameters:
   PrivateSubnet1A:
     Type: AWS::EC2::Subnet::Id
+    Description: ''
   PrivateSubnet2A:
     Type: AWS::EC2::Subnet::Id
+    Description: ''
   SolrInstanceType:
     Type: String
+    Description: ''
   SolrInstanceSG:
     Type: AWS::EC2::SecurityGroup::Id
+    Description: ''
   SolrKeyPair:
     Type: AWS::EC2::KeyPair::KeyName
+    Description: ''
   SCQSPrefix:
     Type: String
+    Description: ''
   LocalQSScripts:
     Type: String
+    Description: ''
   R53HostedZoneID: # Gets passed in if R53HostedZoneID isnt '' (This will be the created or provided hostedzoneID)
     Type: String 
+    Description: ''
   S3BucketName:
     Type: String
+    Description: ''
   QSS3BucketName:
     Type: String
+    Description: ''
   AutoscalingSNS:
     Type: String
+    Description: ''
   LoadBalancerInternalDNS:
     Type: String
+    Description: ''
   VPCID:
     Type: AWS::EC2::VPC::Id
+    Description: ''
   InternalCertificateARN:
     Type: String
+    Description: ''
   LoadBalancerInternal:
     Type: String
+    Description: ''
   
 Conditions:
   CreateSolrR53Record: !Not [!Equals [!Ref R53HostedZoneID, '']] # If not '' then create the record in R53.
@@ -58,7 +73,7 @@ Resources:
             Effect: Allow
         Version: '2012-10-17'
       ManagedPolicyArns:
-        - !Sub arn:${AWS::Partition}:iam::${AWS::Partition}:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: S3Access
           PolicyDocument:
