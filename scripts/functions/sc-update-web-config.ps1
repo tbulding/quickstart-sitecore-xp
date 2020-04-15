@@ -52,24 +52,38 @@ function redisWebConfig {
     $xml.Save($webfilepath)
 }
 
-function redisConnectionString {
-
-    Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating App_Config\ConnectionStrings.config file for Redis session state"
+function ConnectionStringAdd {
+    [CmdletBinding()]
+    param (
+        $xmlPath,
+        $nodename,
+        $newconnectionString
+    )
     
-    $xml = New-Object -TypeName xml
-    $xml.Load($constringfilepath)
-    $item = Select-Xml -Xml $xml -XPath '//add[@name="xconnect.collection"]'
-    $newnode = $item.Node.CloneNode($true)
+    begin {
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating App_Config\ConnectionStrings.config file for Redis $nodename state"
+    }
+    
+    process {
+        $xml = New-Object -TypeName xml
+        $xml.Load($xmlPath)
+        $item = Select-Xml -Xml $xml -XPath '//add[@name="xconnect.collection"]'
+        $newnode = $item.Node.CloneNode($true)
 
-    $newnode.name = 'session'
-    $newnode.connectionString = $connectionString
-    $cs = Select-Xml -Xml $xml -XPath '//connectionStrings'
-    $out = ($cs.Node.AppendChild($newnode)*>&1 | Out-String)
+        $newnode.name = $nodename
+        $newnode.connectionString = $newconnectionString
+        $cs = Select-Xml -Xml $xml -XPath '//connectionStrings'
+        $out = ($cs.Node.AppendChild($newnode)*>&1 | Out-String)
 
-    Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $out
-
-    $xml.Save($constringfilepath)
+        $xml.Save($xmlPath)
+    }
+    
+    end {
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $out
+    }
 }
 
+ConnectionStringAdd -xmlPath $constringfilepath -nodename 'session' -newconnectionString $connectionString
+ConnectionStringAdd -xmlPath $constringfilepath -nodename 'sharedSession' -newconnectionString $connectionString
+
 redisWebConfig
-redisConnectionString
