@@ -14,7 +14,7 @@ $logGroupName  = "$SCQSPrefix-CD"
 $LogStreamName = "Update-Redis-Configuration" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
 
 
-function redisWebConfig {
+function redisPrivateWebConfig {
 
     Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating web.config file for Redis Private session state"
     #$filepath = '/c/dev/resourcefiles/configfiles/Web.config'
@@ -52,6 +52,32 @@ function redisWebConfig {
     $xml.Save($webfilepath)
 }
 
+function redisSharedWebConfig {    
+    begin {
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString "Updating Sitecore.Analytics.Tracking.config file for Redis Shared session state"
+        $RedisSharedConfigPath = 'C:\inetpub\wwwroot\sc.CD\App_Config\Sitecore\Marketing.Tracking\Sitecore.Analytics.Tracking.config'
+    }
+    
+    process {
+        $searchString = '<add name="InProc" type="System.Web.SessionState.InProcSessionStateStore" />'
+        $replaceString = '<add name="redis" type="Sitecore.SessionProvider.Redis.RedisSessionStateProvider,  
+                                    Sitecore.SessionProvider.Redis"
+                                    connectionString="sharedSession"
+                                    pollingInterval="2"
+                                    applicationName="shared"/>'
+        
+
+        $contents = Get-Content -Path $RedisSharedConfigPath -Raw
+        $newContent = $contents -replace $searchString, $replaceString
+
+        $newContent | Set-Content -Path $RedisSharedConfigPath
+    }
+    
+    end {
+        Write-AWSQuickStartCWLogsEntry -logGroupName $logGroupName -LogStreamName $LogStreamName -LogString $replaceString
+    }
+}
+
 function ConnectionStringAdd {
     [CmdletBinding()]
     param (
@@ -86,4 +112,5 @@ function ConnectionStringAdd {
 ConnectionStringAdd -xmlPath $constringfilepath -nodename 'session' -newconnectionString $connectionString
 ConnectionStringAdd -xmlPath $constringfilepath -nodename 'sharedSession' -newconnectionString $connectionString
 
-redisWebConfig
+redisPrivateWebConfig
+redisSharedWebConfig
