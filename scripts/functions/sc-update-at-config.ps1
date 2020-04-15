@@ -13,8 +13,7 @@ $replaceString = '<add name="redis" type="Sitecore.SessionProvider.Redis.RedisSe
                             connectionString="sharedSession"
                             pollingInterval="2"
                             applicationName="shared"/>'
-#$filePath = 'C:\inetpub\wwwroot\sc.CD\App_Config\Sitecore\Marketing.Tracking\Sitecore.Analytics.Tracking.config'
-$filePath = '~/Downloads/Sitecore.Analytics.Tracking.config'
+$filePath = 'C:\inetpub\wwwroot\sc.CD\App_Config\Sitecore\Marketing.Tracking\Sitecore.Analytics.Tracking.config'
 
 $contents = Get-Content -Path $filePath -Raw
 $newContent = $contents -replace $searchString, $replaceString
