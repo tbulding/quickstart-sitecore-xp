@@ -43,8 +43,8 @@ Metadata:
           - SitecoreS3Bucket
           - SCResourcesPrefix
           - SCLicensePrefix
-          - SOLRCorePrefix
           - SOLRUrl
+          - SOLRCorePrefix
           - EnvironmentType
           - SCLogLevel
           - CorsOrigins
@@ -79,22 +79,22 @@ Metadata:
       VPCCIDR:
         default: VPC CIDR
       PrivateSubnet1A:
-        default: Private subnet 1 ID
+        default: Private subnet 1A ID
       PrivateSubnet2A:
-        default: Private subnet 2 ID
+        default: Private subnet 2A ID
       PublicSubnet1:
         default: Public subnet 1 ID
       PublicSubnet2:
         default: Public subnet 2 ID
       # Sitecore Network Configuration
       CDDNSName:
-        default: DNS name for Content Delivery Role
+        default: ontent Delivery FQDN
       CMDNSName:
-        default: DNS name for Content Management Role
+        default: Content Management FQDN
       ISDNSName:
-        default: DNS name for Identity Server Role
+        default: Identity Server FQDN
       IntDNS:
-        default: '[OPTIONAL] Internal DNS suffix for the Sitecore installation'
+        default: Internal DNS suffix
       IntVPCR53Zone:
         default: The internal Route53 hosted zone ID
       VPCPrivateDNS:
@@ -102,58 +102,59 @@ Metadata:
       ExternalCertificateARN:
         default: External Amazon Certificate Manager ARN
       ExternalCertFQDN:
-        default: External Certificate Domain Name
+        default: External Certificate domain name
       ExternalR53ZoneID:
         default: External Route 53 Zone ID
       # Sitecore Configuration
       CDMinSize:
-        default: Min number of Content Delivery instances # Currently applied to all instances
+        default: Minimum Content Delivery instances
       CDMaxSize:
-        default: Max number of Content Delivery instances # Currently applied to all instances
+        default: Maximum Content Delivery instances
       CDDesiredCapacity:
-        default: The current number of desired Content Delivery instances # Currently applied to all instances
+        default: Desired Content Delivery instances
       CDInstanceType:
-        default: The instance type to be used for the Content Delivery instances # Currently applied to all instances
+        default: Content Delivery instance type
       CDScalingMetric:
-        default: The metric used to determine scalling of the Content Delivery role
+        default: Content Delivery scaling metric
       CDScalingMetricValue:
-        default: The metric value used to determine scalling of the Content Delivery role
+        default: Content Delivery scaling metric value
       CMMinSize:
-        default: Min number of Content Management instance
+        default: Minimum Content Management instance
       CMMaxSize:
-        default: Max number of Content Management instance
+        default: Maximum Content Management instance
       CMInstanceType:
-        default: The instance type to be used for the Content Management instances
+        default: Content Management instance type
       CMScalingMetric:
-        default: The metric used to determine scalling of the Content Management role
+        default: Content Management scaling metric
       CMScalingMetricValue:
-        default: The metric value used to determine scalling of the Content Management role
+        default: Content Management caling metric value
       SitecoreKeyPair:
         default: EC2 Key Pair for Sitecore instances
       SitecorePrefix:
-        default: The Prefix to be used for the Sitecore installation
+        default: Sitecore installation prefix
       SitecoreS3Bucket:
-        default: S3 Bucket where Sitecore artifacts are located (Resource files, licence files.) This deployment will put objects into this bucket.
+        default: Sitecore Resources S3 Bucket
       SCResourcesPrefix:
-        default: 'The prefix where Sitecore installation files are located (eg: sitecorefiles/)'
+        default: Sitecore installation files prefix
       SCLicensePrefix:
-        default: 'The prefix where the sitecore license.zip is located (eg: licence/)'
+        default: Sitecore license file prefix
       SOLRCorePrefix:
-        default: The prefix used for the SOLR Cores
+        default: The prefix of the Solr cores
       SOLRUrl:
-        default: The Url for the SOLR deployment
+        default: Solr server/cluster URL
       EnvironmentType:
-        default: The Sitecore Environment Type
+        default: Sitecore environment type
       SCLogLevel:
-        default: The Sitecore Log Level
+        default: Sitecore log level
       CorsOrigins:
         default: The Sitecore Cors Origins
       EmailNotifications:
-        default: The email address for receiving notifications on instance scaling.
+        default: Email notifications
       LambdaZipsBucketName:
-        default: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
+        default: Lambda S3 bucket name
+    # SQL Configuration
       DBInstanceClass:
-        default: To be udpated
+        default: Database instance class
       DBAutoMinorVersionUpgrade:
         default: Database auto minor version upgrade
       SQLEngineEdition:
@@ -172,7 +173,7 @@ Metadata:
       CacheNodeType:
         default: Redis cache node type
       RedisPort:
-        default: Redis Port
+        default: Redis port
       # Quick Start Config Params
       QSS3BucketName:
         default: Quick Start S3 bucket name
@@ -205,17 +206,18 @@ Parameters:
   # Sitecore Networking Configuration
   CDDNSName:
     Type: String
-    Description: DNS name for Content Delivery Role. An alias for the ELB should be created after the stack creation
+    Description: 'The fully qualified domain name for the Content Delivery Role. (E.g: home.example.com)'
   CMDNSName:
     Type: String
-    Description: DNS name for Content Managment Role. An alias for the ELB should be created after the stack creation
+    Description: The fully qualified domain name for the Content Management Role.
   ISDNSName:
     Type: String
-    Description: DNS name for Identity Server Role. An alias for the ELB should be created after the stack creation
+    Description: The fully qualified domain name for the Identity Server Role.
   IntDNS:
     Type: String
     Default: ''
-    Description: Internal DNS name. If left blank, one will be generated for you. If you have a private Route53 hosted zone or a private managed DNS connected to your VPC, please provide the DNS suffix of the hosted zone.
+    Description: "[OPTIONAL] Internal DNS name. If left blank, one will be generated for you. If you have a private Route53 hosted zone 
+      or a private managed DNS connected to your VPC, please provide the DNS suffix of the hosted zone."
   IntVPCR53Zone:
     Type: String
     Default: ''
@@ -227,31 +229,34 @@ Parameters:
       - 'False'
     Default: 'False'
     Description: "Select 'True' if you have your own provided DNS servers for your VPC. Should you have your own DNS servers, 
-                  you will need to create cname entries for the sitecore roles. Please see the deloyment guide for details.
+                  you will need to create cname entries for the Sitecore roles. Please see the deloyment guide for details.
                   Leave as 'False' if you have a private Route53 hosted zone connected to your VPC."
   ExternalCertificateARN:
     Type: String
-    Description: "[OPTIONAL] Provide the ARN of the wildcard certificate (E.g: *.example.com) created in Amazon Certificate Manager. If not provided, 
-                  a wildcard certificate will be created for you. If you provide an ARN of an existing certificate, you do not need to provide details for the External Certificate Domain or the External Route 53 Zone ID."
+    Description: "[OPTIONAL] Provide the ARN of the wildcard certificate created in Amazon Certificate Manager. If not provided, 
+      a wildcard certificate will be created for you. If you provide an ARN, you do not need to provide details 
+      for the External Certificate Domain or the External Route 53 Zone ID."
   ExternalCertFQDN: 
     Type: String
-    Description: "[OPTIONAL] The external domain name for the Sitecore deployment (E.g: example.com). This will be created in ACM as a wildcard certificate (E.g: *.example.com) if no certificate ARN was provided above."
+    Description: "[OPTIONAL] The external domain name for the Sitecore deployment (E.g: example.com). This will be created in ACM as a wildcard 
+      certificate (E.g: *.example.com) if no External Amazon Certificate Manager ARN was provided."
   ExternalR53ZoneID: 
     Type: String
-    Description: "[OPTIONAL] The R53 Hosted Zone ID of the above domain name provided if you require a certificate generated and validation to be done via DNS. If no ID is provided, validation will be done via email."
+    Description: "[OPTIONAL] Provide the R53 Hosted Zone ID of the above 'External Certificate Domain Name' if you require certificate 
+      validation to be done via DNS. If no R53 Hosted Zone ID is provided, validation will be done via email."
   #Sitecore Configuration
   CDMinSize:
     Type: String
     Default: '1'
-    Description: The minimum number of Content Delivery instances to be available (this currently applies to ALL roles)
+    Description: The minimum number of Content Delivery instances available.
   CDMaxSize:
     Type: String
-    Default: '2'
-    Description: The maximum number of Content Delivery instances to be available (this currently applies to ALL roles)
+    Default: '3'
+    Description: The maximum number of Content Delivery instances available.
   CDDesiredCapacity:
     Type: String
-    Default: '1'
-    Description: The desired number of Content Delivery instances to be available (this currently applies to ALL roles)
+    Default: '2'
+    Description: The desired number of Content Delivery instances available.
   CDInstanceType:
     AllowedValues:
       - m4.large
@@ -284,10 +289,10 @@ Parameters:
       - i2.8xlarge
     ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
     Default: m4.large
-    Description: Web server instance type (this currently applies to ALL roles)
+    Description: The Content Delivery instance type
     Type: String
   CDScalingMetric:
-    Description: The metric used to determine scalling of the Content Delivery role
+    Description: The metric used to determine scaling of the Content Delivery role.
     Default: ASGAverageCPUUtilization
     AllowedValues:
       - ASGAverageCPUUtilization
@@ -295,17 +300,17 @@ Parameters:
       - ALBRequestCountPerTarget
     Type: String
   CDScalingMetricValue:
-    Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes)
+    Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes).
     Default: 300
     Type: Number
   CMMinSize:
     Type: String
     Default: '1'
-    Description: The minimum number of Content Management instances to be available (this currently applies to ALL roles)
+    Description: The minimum number of Content Management instances available.
   CMMaxSize:
     Type: String
     Default: '2'
-    Description: The maximum number of Content Management instances to be available (this currently applies to ALL roles)
+    Description: The maximum number of Content Management instances available.
   CMInstanceType:
     AllowedValues:
       - m4.large
@@ -338,10 +343,10 @@ Parameters:
       - i2.8xlarge
     ConstraintDescription: Choose an instance type. m3.medium or larger recommended.
     Default: m4.large
-    Description: Web server instance type for the Content Management role
+    Description: The Content Management instance type.
     Type: String
   CMScalingMetric:
-    Description: The metric used to determine scalling of the Content Management role
+    Description: The metric used to determine scaling of the Content Management role.
     Default: ASGAverageCPUUtilization
     AllowedValues:
       - ASGAverageCPUUtilization
@@ -349,44 +354,48 @@ Parameters:
       - ALBRequestCountPerTarget
     Type: String
   CMScalingMetricValue:
-    Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes)
+    Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes).
     Default: 300
     Type: Number
   SitecoreKeyPair:
     Type: AWS::EC2::KeyPair::KeyName
-    Description: The EC2 Key Pair to use with the Sitecore instances
+    Description: The EC2 Key Pair to use for the Sitecore instances.
   SitecorePrefix:
     Type: String
-    Description: The prefix to be used for the sitecore installation. This is limited to 8 characters.
+    Description: The prefix to be used for the Sitecore installation. This is limited to 8 characters.
     MinLength: 1
     MaxLength: 8
     AllowedPattern: ^[a-zA-Z0-9]*
   SitecoreS3Bucket:
     Type: String
-    Description: The name of the S3 Bucket where the Sitecore resources (instalation files, license file, etc.) reside.
+    Description: The S3 Bucket name where the Sitecore 9.3 resources are located (installation files, license file, etc.).
+      This deployment will put objects into this bucket.
   SCResourcesPrefix:
     Type: String
-    Description: The prefix for the sitecore install files.
+    Description: "The prefix in the S3 Bucket for the Sitecore install files (eg: resources/)."
     Default: resources/
   SCLicensePrefix:
     Type: String
-    Description: 'The prefix for the sitecore licence.zip file. eg: license/'
+    Description: "The prefix in the S3 Bucket for the license.zip file (eg: license/)." 
     Default: license/
-  SOLRCorePrefix:
-    Type: String
-    Description: The prefix used for the SOLR Cores
   SOLRUrl:
     Type: String
-    Description: The URL of your Solr server/cluster.
+    Description: "[OPTIONAL] The URL of your Solr server/cluster. If no URL is provided a development Solr instance will be 
+      created for this Sitecore deployment. Note: This development Solr instance should not be used within a production environment."
     Default: ''
+  SOLRCorePrefix:
+    Type: String
+    Description: If you have provided a Solr Url, this will be the prefix of your pre-configured Solr cores. If no Solr URL provided, this will be the prefix used 
+      for the Solr cores on the development Solr instance.
   EnvironmentType:
-    Description: The type of deployment
+    Description: The type of Sitecore deployment.
     AllowedValues:
       - Production
       - Development
     Default: Production
     Type: String
   SCLogLevel:
+    Description: The Sitecore deployment configured log level.
     AllowedValues:
       - Information
       - Debug
@@ -398,8 +407,10 @@ Parameters:
   CorsOrigins:
     Type: String
   EmailNotifications:
+    Description: The email address for receiving notifications for Sitecore instance auto scaling.
     Type: String
   LambdaZipsBucketName:
+    Description: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
     Type: String
     Default: ''
   # RDS MS SQL
@@ -432,7 +443,7 @@ Parameters:
       - db.r4.16xlarge
     ConstraintDescription: 'Must select a valid database instance type.'
     Default: db.r4.2xlarge
-    Description: 'The name of the compute and memory capacity class of the database instance.'
+    Description: The name of the compute and memory capacity class of the database instance.
     Type: String
   SQLEngineEdition:
     AllowedValues:
@@ -442,7 +453,7 @@ Parameters:
       - sqlserver-web
     ConstraintDescription: 'Must select a MSSQL Database Engine Edition.'
     Default: sqlserver-se
-    Description: 'MSSQL Database Engine Edition.'
+    Description: MSSQL Database Engine Edition.
     Type: String
   SQLEngineVersion:
     AllowedValues:
@@ -454,11 +465,12 @@ Parameters:
       - 14.00.1000.169.v1
     ConstraintDescription: 'Must select a MSSQL Database Engine Version.'
     Default: 14.00.3223.3.v1
-    Description: 'MSSQL Database Engine Version.'
+    Description: MSSQL Database Engine Version.
     Type: String
   BackupRetentionPeriod:
     Default: 7
-    Description: The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. Setting this parameter to 0 disables automated backups.
+    Description: The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. 
+      Setting this parameter to 0 disables automated backups.
     Type: Number
   VolumeIops:
     Default: 1000
@@ -500,6 +512,7 @@ Parameters:
       - cache.r4.4xlarge
       - cache.r4.8xlarge
   RedisPort:
+    Description: The port number to be used for Redis ElastiCache.
     Type: Number
     Default: 6379
   # Quick Start Confguration
@@ -582,7 +595,7 @@ Resources:
           ToPort: 80
           CidrIp: !Ref VPCCIDR
           Description: HTTP Traffic from within the VPC
-        - IpProtocol: tcp # TODO Add conditional for this rule
+        - IpProtocol: tcp
           FromPort: 8983
           ToPort: 8983
           CidrIp: !Ref VPCCIDR
@@ -1182,8 +1195,8 @@ Outputs:
   ContentDelivery:
     Description: The website name for the Content Delivery role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
     Value: !Ref CDDNSName
-  ContentManagment:
-    Description: The website name for the Content Managment role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
+  ContentManagement:
+    Description: The website name for the Content Management role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
     Value: !Ref CMDNSName
   IdentityServer:
     Description: The website name for the Identity Server role. A CNAME entry needs to be added pointing to the 'ExternalALBDNS'
