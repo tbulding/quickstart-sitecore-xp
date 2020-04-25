@@ -3,18 +3,25 @@ Description: 'This template deploys the Auto Scaling Groups and Launch Configura
 Parameters:
   PrivateSubnet1A:
     Type: String
+    Description: 'ID of the private subnet 1 in Availability Zone 1 (e.g., subnet-a0246dcd)'
   PrivateSubnet2A:
     Type: String
+    Description: 'ID of the private subnet 2 in Availability Zone 2 (e.g., subnet-a0246dcd)'
   CDMinSize:
     Type: String
+    Description: 'The minimum number of Content Delivery instances available.'
   CDMaxSize:
     Type: String
+    Description: 'The maximum number of Content Delivery instances available.'
   CDDesiredCapacity:
     Type: String
+    Description: 'The desired number of Content Delivery instances available.'
   CDInstanceType:
     Type: String
+    Description: 'The Content Delivery instance type'
   CDScalingMetric:
     Type: String
+    Description: 'The metric used to determine scaling of the Content Delivery role.'
     Default: ASGAverageCPUUtilization
     AllowedValues:
       - ASGAverageCPUUtilization
@@ -22,17 +29,23 @@ Parameters:
       - ALBRequestCountPerTarget
   CDScalingMetricValue:
     Type: String
+    Description: 'The value required for the Content Delivery Scaling Metric (For ASGAverageNetworkIn this value is in bytes).'
     Default: 5
   CMInstanceType:
     Type: String
+    Description: 'The Content Management instance type'
   CMMinSize:
     Type: Number
+    Description: 'The minimum number of Content Management instances available.'
   CMMaxSize:
     Type: Number
+    Description: 'The maximum number of Content Management instances available.'
   CMDesiredCapacity:
     Type: Number
+    Description: 'The desired number of Content Management instances available.'
   CMScalingMetric:
     Type: String
+    Description: 'The metric used to determine scaling of the Content Management role.'
     Default: ASGAverageCPUUtilization
     AllowedValues:
       - ASGAverageCPUUtilization
@@ -40,45 +53,105 @@ Parameters:
       - ALBRequestCountPerTarget
   CMScalingMetricValue:
     Type: String
+    Description: 'The value required for the Content Management Scaling Metric (For ASGAverageNetworkIn this value is in bytes).'
     Default: 5
   SitecoreInstanceSG:
     Type: AWS::EC2::SecurityGroup::Id
+    Description: 'The Sitecore instance security group ID.'
   SCInstanceProfile:
     Type: String
+    Description: 'The Sitecore instance profile ARN.'
   SitecoreKeyPair:
     Type: String
+    Description: 'The sitecore EC2 key pair'
   AutoscalingSNS:
     Type: String
+    Description: 'The SNS topic ARn for Auto Scaling notification'
   LocalQSScripts:
     Type: String
+    Description: 'Local path for Quick Start scripts'
   SCQSPrefix:
     Type: String
+    Description: 'The Sitecore Quick Start prefix'
   CDExtTargetGroup:
     Type: String
+    Description: 'Content Delivery Target Group'
   CMExtTargetGroup:
     Type: String
+    Description: 'Content Management Target Group'
   ISExtTargetGroup:
     Type: String
+    Description: 'Identity Target Group'
   ColIntTargetGroup:
     Type: String
+    Description: 'Collection Target Group'
   CSIntTargetGroup:
     Type: String
+    Description: 'Collection Search Target Group'
   CPIntTargetGroup:
     Type: String
+    Description: 'Cortex Processing Target Group'
   CRIntTargetGroup:
     Type: String
+    Description: 'Cortex Reporting Target Group'
   MAIntTargetGroup:
     Type: String
+    Description: 'Marketing Automation Target Group'
   MARIntTargetGroup:
     Type: String
+    Description: 'Marketing Automation Reporting Target Group'
   PrcIntTargetGroup:
     Type: String
+    Description: 'Processing Target Group'
   RDIntTargetGroup:
     Type: String
+    Description: 'Reference Data Target Group'
   RepIntTargetGroup:
     Type: String
+    Description: 'Reporting Target Group'
   InternalDNS:
     Type: String
+    Description: 'Internal DNS FDQN'
+  CollInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Collection instance type'
+  CollSearchInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Collection Search instance type'
+  CortexProcInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Cortex Processing instance type'
+  CortexRepInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Cortex Reporting instance type'
+  IdentityInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Identity instance type'
+  MarkAutoInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Marketing Automation instance type'
+  MarkAutoRepInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Marketing Automation Reporting instance type'
+  ProcessingInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Processing instance type'
+  RefDataInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Reference Data instance type'
+  ReportingInstanceType:
+    Type: String
+    Default: m4.large
+    Description: 'The Reporting instance type'
 
 Resources:
   #Create Auto Scaling Groups & Launch Configurations
@@ -276,7 +349,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref CollInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -340,7 +413,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref CollSearchInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -404,7 +477,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref CortexProcInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -468,7 +541,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref CortexRepInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -533,7 +606,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref IdentityInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -598,7 +671,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref MarkAutoInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -612,7 +685,8 @@ Resources:
             - "\n"
             - !Sub '${LocalQSScripts}\sc-install-resources.ps1 -Role "MarketingAutomation" -SCQSPrefix '
             - !Sub '"${SCQSPrefix}" -Region '
-            - !Sub '"${AWS::Region}"'
+            - !Sub '"${AWS::Region}" -$StackName '
+            - !Sub '"${AWS::StackName}"'
             - "\n"
             - !Sub 'New-AWSQuickStartResourceSignal -Stack "${AWS::StackName}" -Region '
             - !Sub '"${AWS::Region}" -Resource "MarketingAutomationASG"'
@@ -662,7 +736,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref MarkAutoRepInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -726,7 +800,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref ProcessingInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -790,7 +864,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref RefDataInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
@@ -854,7 +928,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       ImageId: !Sub '{{resolve:ssm:/${SCQSPrefix}/instance/ami/customid:1}}'
-      InstanceType: !Ref CDInstanceType
+      InstanceType: !Ref ReportingInstanceType
       SecurityGroups:
         - !Ref SitecoreInstanceSG
       IamInstanceProfile: !Ref SCInstanceProfile
