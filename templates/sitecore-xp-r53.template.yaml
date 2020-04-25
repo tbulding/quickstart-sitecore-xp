@@ -3,28 +3,40 @@ Description: 'This template deploys an internal Route53 hosted zone used for the
 Parameters:
   InternalR53DNS:
     Type: String
+    Description: 'The internal R53 DNS FQDN.'
   VPCID:
     Type: String
+    Description: 'The VPC ID.'
   LoadBalancerInternalDNS:
     Type: String
+    Description: 'The internal Application Load Balancer DNS name.'
   XConnectNLBDNS:
     Type: String
+    Description: 'The internal Network Load Balancer DNS name for the XConnect Role.'
   CollectionNLBDNS:
     Type: String
+    Description: 'The internal Network Load Balancer DNS name for the Collection Role.'
   RefDataNLBDNS:
     Type: String
+    Description: 'The internal Network Load Balancer DNS name for the Reference data Role.'
   MarketAutoRepNLBDNS:
     Type: String
+    Description: 'The internal Network Load Balancer DNS name for the Marketing Automation Reporting Role.'
   MarketAutoNLBDNS:
     Type: String
+    Description: 'The internal Network Load Balancer DNS name for the Marketing Automation Role.'
   CortexRepNLBDNS:
     Type: String
+    Description: 'The internal Network Load Balancer DNS name for the Cortex Reporting Role.'
   CortexProcNLBDNS:
     Type: String
+    Description: 'The internal Network Load Balancer DNS name for the Cortex Processing Role.'
   IntVPCR53Zone:
     Type: String
+    Description: 'The internal VPC R53 Zone ID.'
   SOLRUrl:
     Type: String
+    Description: 'The Solr URL for the Sitecore deployment'
 
 Conditions:
   CreateR53Zone: !Equals [!Ref 'IntVPCR53Zone', ''] # If No internal R53 zone is provided, this is true

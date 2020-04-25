@@ -3,32 +3,46 @@ Description: "This template deploys Target Groups, Listeners and Rules used for 
 Parameters:
   LoadBalancerInternal:
     Type: String
+    Description: 'The internal Applicaiton Load Balancer resource name.'
   InternalCertificateARN:
     Type: String
+    Description: 'The ACM ARN for the internal Sitecore certificate.'
   LoadBalancerExternal:
     Type: String
+    Description: 'The external Applicaiton Load Balancer resource name.'
   ExternalCertificateARN:
     Type: String
+    Description: 'The ACM ARN for the external Sitecore certificate.'
   XConnectNLB:
     Type: String
+    Description: 'The internal Netork Load Balancer resource name for the XConnect Role.'
   CollectionNLB:
     Type: String
+    Description: 'The internal Netork Load Balancer resource name for the Collection Role.'
   RefDataNLB:
     Type: String
+    Description: 'The internal Netork Load Balancer resource name for the Reference Data Role.'
   MarketAutoRepNLB:
     Type: String
+    Description: 'The internal Netork Load Balancer resource name for the Marketing Automation Reporting Role.'
   MarketAutoNLB:
     Type: String
+    Description: 'The internal Netork Load Balancer resource name for the Marketing Automation Reporting Role.'
   CortexRepNLB:
     Type: String
+    Description: 'The internal Netork Load Balancer resource name for the Cortex Reporting Role.'
   CortexProcNLB:
     Type: String
+    Description: 'The internal Netork Load Balancer resource name for the Cortex Processing Role.'
   VPCID:
     Type: AWS::EC2::VPC::Id
+    Description: 'The VPC ID.'
   IntDNS:
     Type: String
+    Description: 'The internal DNS FQDN.'
   SCQSPrefix:
     Type: String
+    Description: 'The Sitecore prefix for the Quick Start deployment.'
 
 Resources:
   # Listener for internal ALB
@@ -260,7 +274,6 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancerExternal
       Port: 443
       Protocol: HTTPS
-  # HTTP Listner # TODO could be a redirect to HTTPS?
   HTTPListenerExternal:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:

@@ -25,12 +25,16 @@ Parameters:
     Type: String
   CopyZipsRoleArn:
     Type: String
+    Description: 'IAM Role ARN for copying lambda zip files'
   ConvertCertsRoleArn:
     Type: String
+    Description: 'IAM Role ARN for creating ACM Certificates'
   DeleteResourcesRoleArn:
     Type: String
+    Description: 'IAM Role ARN for deleteing Sitecore resources'
   SitecorePrefix:
     Type: String
+    Description: 'The Sitecore Prefix for the Quick Start deployment'
 
 Resources:
   CopyZipsFunction:
