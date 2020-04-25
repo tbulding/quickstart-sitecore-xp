@@ -1,42 +1,107 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "This template creates an SSM document and deploys an EC2 Instance. These are used for creation of the Sitecore AMI and for the deployment of the Sitecore databases to RDS MSSQL (qs-1qjogjg57)"
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: DNS Configuration
+        Parameters:
+          - ImageID
+          - SitecoreKeyPair
+          - PrivateSubnet1A
+          - PrivateSubnet1A
+          - SecurityGroupIds
+          - InstanceType
+          - IamInstanceProfile
+          - RootStackName
+          - AutomationAssumeRole
+          - LocalPath
+          - QSS3BucketName
+          - QSS3BucketRegion
+          - QSS3KeyPrefix
+          - LocalQSScripts
+          - TargetAmiName
+
+    ParameterLabels:
+      ImageID:
+        default: Base AMI ID
+      SitecoreKeyPair:
+        default: Sitecore Key Pair
+      PrivateSubnet1A:
+        default: Private Subnet 1
+      SecurityGroupIds:
+        default: Security Groups
+      InstanceType:
+        default: Instance Type
+      IamInstanceProfile:
+        default: IAM Instance Profile
+      RootStackName:
+        default: Root Stack Name
+      AutomationAssumeRole:
+        default: Automation Role
+      LocalPath:
+        default: Local scripts path
+      QSS3BucketName:
+        default: Bucket Name
+      QSS3BucketRegion:
+        default: Bucket Region
+      QSS3KeyPrefix:
+        default: Bucket Prefix
+      LocalQSScripts:
+        default: Local scripts path
+      TargetAmiName:
+        default: Name for newly created AMI
 Parameters:
   ImageID:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Description: Base AMI ID
   SitecoreKeyPair:
     Type: AWS::EC2::KeyPair::KeyName
+    Description: Sitecore Key Pair
   PrivateSubnet1A:
     Type: AWS::EC2::Subnet::Id
+    Description: Private Subnet 1
   SecurityGroupIds:
     Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Security Groups
   InstanceType:
     Type: String
+    Description: Instance Type
   IamInstanceProfile:
     Type: String
+    Description: IAM Instance Profile
   RootStackName:
     Type: String
+    Description: Root Stack Name
   AutomationAssumeRole:
     Type: String
+    Description: Automation Role
   LocalPath:
     Type: String
+    Description: Local scripts path
   QSS3BucketName: # Used for scripts
     Type: String
+    Description: Bucket Name
   QSS3BucketRegion:
     Type: String
+    Description: Bucket Region
   QSS3KeyPrefix:
     Type: String
+    Description: Bucket prefix
   LocalQSScripts: # Location to store the quicks start scripts on the instance. This same location is used for the ASG's instance deployments
     Type: String
     Default: c:\quickstart\scripts
+    Description: Local Quick Start scripts location
   TargetAmiName:
     Type: String
+    Description: Name for newly created AMI
 Resources:
   BuildEC2instance:
     DependsOn: SsmAMIBuild
     Type: AWS::EC2::Instance
     CreationPolicy: # This is to stop CFN from showing the instance as completed. The success signal is sent from SSM
       ResourceSignal:
-        Timeout: PT70M
+        Timeout: PT90M
         Count: 1
     Properties:
       ImageId: !Ref ImageID
