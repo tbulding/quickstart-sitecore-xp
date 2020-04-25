@@ -3,32 +3,49 @@ Description: 'Creates the required parameters in Parameter Store (qs-1qjogjg57)'
 Parameters:
   SCPrefix:
     Type: String
+    Description: ''
   SOLRCorePrefix:
     Type: String
+    Description: ''
   SOLRUrl:
     Type: String
+    Description: ''
   EnvironmentType:
     Type: String
+    Description: ''
   SCLogLevel:
     Type: String
+    Description: ''
   CorsOrigins:
     Type: String
+    Description: ''
   SCQSPrefix:
     Type: String
+    Description: ''
   SCS3Bucket:
     Type: String
+    Description: ''
   SCResourcesPrefix:
     Type: String
+    Description: ''
   SCLicensePrefix:
     Type: String
+    Description: ''
   CDDNSName:
     Type: String
+    Description: ''
   CMDNSName:
     Type: String
+    Description: ''
+  VPCPrivateDNS:
+    Type: String
+    Description: ''
   ISDNSName:
     Type: String
+    Description: ''
   IntDNS:
     Type: String
+    Description: ''
 Conditions:
   CreateDevSolr: !Equals [!Ref 'SOLRUrl', '']
 Resources:
@@ -244,6 +261,13 @@ Resources:
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String
       Value: !Sub 'solrdev.${IntDNS}' # If no Solr URL provided, then create solrdev.internaldns, else use provided url
+  InternalPrivateDNS:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${SCQSPrefix}/user/InternalPrivateDNS
+      Description: Parameter for the Sitecore XP1 Quick Start
+      Type: String
+      Value: !Ref VPCPrivateDNS
   
   # Secrets Manager entries
   SQLAdminUser: # Used for RDS Master user

@@ -21,7 +21,8 @@ param (
     [Parameter(Mandatory)]
     $SCQSPrefix,
     [Parameter(Mandatory)]
-    $Region
+    $Region,
+    $StackName
 )
 If (![Environment]::Is64BitProcess) {
     Write-Host "Please run 64-bit PowerShell" -foregroundcolor "yellow"
@@ -875,6 +876,11 @@ switch ($Role) {
 
 If ($Role -ne 'DbResources') {
     Push-Location $($parameters.SCInstallRoot)
+    $internalDNSType = (Get-SSMParameter -Name "/$SCQSPrefix/user/InternalPrivateDNS").Value
+    if ($Role -eq 'MarketingAutomation' -And $internalDNSType -eq 'True') {
+        New-AWSQuickStartResourceSignal -Stack $StackName -Region $Region -Resource "MarketingAutomationASG"
+        Write-AWSQuickStartStatus
+    }
     Install-SitecoreConfiguration @DeploymentParameters -Path $($local.jsonPath) -Skip $skip -Verbose *>&1 | Tee-Object "$localLogPath\$Role.log"
     $LogGroupName = "$SCQSPrefix-$Role"
     $LogStreamName = "$Role-RoleInstallation-" + (Get-Date (Get-Date).ToUniversalTime() -Format "MM-dd-yyyy" )
@@ -892,7 +898,7 @@ If ($Role -ne 'DbResources') {
             Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "Current StartMode: $CurrentStratMode"
             $AppPool | Set-ItemProperty -name "startMode" -Value "AlwaysRunning"
             $AppPool = Get-ChildItem IIS:\AppPools\ | Where-Object { $_.Name -eq $Site.applicationPool }
-            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "StartMode set to $ACurrentStratMode"
+            Write-AWSQuickStartCWLogsEntry -logGroupName $LogGroupName -LogStreamName $LogStreamName -LogString "StartMode set to $CurrentStratMode"
         } 
         else 
         {
