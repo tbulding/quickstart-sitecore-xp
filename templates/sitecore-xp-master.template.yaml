@@ -836,6 +836,7 @@ Resources:
         DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
         SQLEngineEdition: !Ref SQLEngineEdition
         SQLEngineVersion: !Ref SQLEngineVersion
+        SQLAlwaysOn: !Ref SQLAlwaysOn
         VolumeSize: !Ref VolumeSize
         VolumeType: !Ref VolumeType
         VolumeIops: !Ref VolumeIops

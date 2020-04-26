@@ -1111,6 +1111,7 @@ Resources:
         DBInstanceClass: !Ref DBInstanceClass
         SQLEngineEdition: !Ref SQLEngineEdition
         SQLEngineVersion: !Ref SQLEngineVersion
+        SQLAlwaysOn: !Ref SQLAlwaysOn
         DBAutoMinorVersionUpgrade: !Ref DBAutoMinorVersionUpgrade
         BackupRetentionPeriod: !Ref BackupRetentionPeriod
         RDSSecurityGroup: !Ref RDSsqlSG

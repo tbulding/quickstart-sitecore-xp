@@ -85,10 +85,10 @@ Parameters:
     Type: String
     Description: ''
   SQLAlwaysOn:
-    Default: False
+    Default: 'False'
     AllowedValues:
-      - False
-      - True
+      - 'False'
+      - 'True'
     Description: "[OPTIONAL] Select 'True' if you would like to have SQL Always-On (High Availability) for the deployment. Be aware that this only applies if
       selecting 'sqlserver-ee' as the MSSQL database engine edition"
     Type: String
