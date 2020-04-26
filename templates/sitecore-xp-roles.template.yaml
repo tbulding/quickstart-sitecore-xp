@@ -348,7 +348,7 @@ Resources:
   CollectionScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: CollectionASG
+      AutoScalingGroupName: !Ref CollectionASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -422,7 +422,7 @@ Resources:
   CollectionSearchScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: CollectionSearchASG
+      AutoScalingGroupName: !Ref CollectionSearchASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -496,7 +496,7 @@ Resources:
   CortexProcessingScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: CortexProcessingASG
+      AutoScalingGroupName: !Ref CortexProcessingASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -570,7 +570,7 @@ Resources:
   CortexReportingScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: CortexReportingASG
+      AutoScalingGroupName: !Ref CortexReportingASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -645,7 +645,7 @@ Resources:
   IdentityScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: IdentityASG
+      AutoScalingGroupName: !Ref IdentityASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -720,7 +720,7 @@ Resources:
   MarketingAutomationScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: MarketingAutomationASG
+      AutoScalingGroupName: !Ref MarketingAutomationASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -795,7 +795,7 @@ Resources:
   MarketingAutoRepScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: MarketingAutoRepASG
+      AutoScalingGroupName: !Ref MarketingAutoRepASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -869,7 +869,7 @@ Resources:
   ProcessingScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: ProcessingASG
+      AutoScalingGroupName: !Ref ProcessingASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -943,7 +943,7 @@ Resources:
   ReferenceDataScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: ReferenceDataASG
+      AutoScalingGroupName: !Ref ReferenceDataASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
@@ -1017,7 +1017,7 @@ Resources:
   ReportingScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
-      AutoScalingGroupName: ReportingASG
+      AutoScalingGroupName: !Ref ReportingASG
       PolicyType: TargetTrackingScaling
       EstimatedInstanceWarmup: 300
       TargetTrackingConfiguration:
