@@ -381,7 +381,7 @@ Parameters:
     Type: String
   CDScalingMetricValue:
     Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes).
-    Default: 300
+    Default: 70
     Type: Number
   CMMinSize:
     Type: String
@@ -435,7 +435,7 @@ Parameters:
     Type: String
   CMScalingMetricValue:
     Description: The value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes).
-    Default: 300
+    Default: 70
     Type: Number
   CollCSInstanceType:
     AllowedValues:

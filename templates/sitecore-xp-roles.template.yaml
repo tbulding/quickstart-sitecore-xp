@@ -30,7 +30,7 @@ Parameters:
   CDScalingMetricValue:
     Type: String
     Description: 'The value required for the Content Delivery Scaling Metric (For ASGAverageNetworkIn this value is in bytes).'
-    Default: 5
+    Default: 70
   CMInstanceType:
     Type: String
     Description: 'The Content Management instance type'
@@ -54,7 +54,7 @@ Parameters:
   CMScalingMetricValue:
     Type: String
     Description: 'The value required for the Content Management Scaling Metric (For ASGAverageNetworkIn this value is in bytes).'
-    Default: 5
+    Default: 70
   SitecoreInstanceSG:
     Type: AWS::EC2::SecurityGroup::Id
     Description: 'The Sitecore instance security group ID.'
@@ -345,6 +345,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  CollectionScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: CollectionASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   CollectionLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -409,6 +419,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  CollectionSearchScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: CollectionSearchASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   CollectionSearchLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -473,6 +493,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  CortexProcessingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: CortexProcessingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   CortexProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -537,6 +567,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  CortexReportingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: CortexReportingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   CortexReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -602,6 +642,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  IdentityScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: IdentityASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   IdentityLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -667,6 +717,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  MarketingAutomationScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: MarketingAutomationASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   MarketingAutomationLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -732,6 +792,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  MarketingAutoRepScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: MarketingAutoRepASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   MarketingAutoRepLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -796,6 +866,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  ProcessingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: ProcessingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   ProcessingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -860,6 +940,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  ReferenceDataScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: ReferenceDataASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   ReferenceDataLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -924,6 +1014,16 @@ Resources:
         - Key: Sitecore-QuickStart
           Value: !Sub ${SCQSPrefix}
           PropagateAtLaunch: true
+  ReportingScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: ReportingASG
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 300
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
   ReportingLC:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
