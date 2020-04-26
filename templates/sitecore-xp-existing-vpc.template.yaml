@@ -50,7 +50,6 @@ Metadata:
           - SOLRCorePrefix
           - EnvironmentType
           - SCLogLevel
-          - CorsOrigins
           - EmailNotifications
           - LambdaZipsBucketName
       - Label:
@@ -156,8 +155,6 @@ Metadata:
         default: Sitecore environment type
       SCLogLevel:
         default: Sitecore log level
-      CorsOrigins:
-        default: The Sitecore Cors Origins
       EmailNotifications:
         default: Email notifications
       LambdaZipsBucketName:
@@ -517,8 +514,6 @@ Parameters:
       - Warning
       - None
     Default: Information
-    Type: String
-  CorsOrigins:
     Type: String
   EmailNotifications:
     Description: The email address for receiving notifications for Sitecore instance auto scaling.
@@ -1085,7 +1080,6 @@ Resources:
         SOLRUrl: !Ref SOLRUrl
         EnvironmentType: !Ref EnvironmentType
         SCLogLevel: !Ref SCLogLevel
-        CorsOrigins: !Ref CorsOrigins
         SCS3Bucket: !Ref SitecoreS3Bucket
         SCResourcesPrefix: !Ref SCResourcesPrefix
         SCLicensePrefix: !Ref SCLicensePrefix

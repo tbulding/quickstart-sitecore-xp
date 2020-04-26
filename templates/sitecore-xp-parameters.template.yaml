@@ -16,9 +16,6 @@ Parameters:
   SCLogLevel:
     Type: String
     Description: ''
-  CorsOrigins:
-    Type: String
-    Description: ''
   SCQSPrefix:
     Type: String
     Description: ''
@@ -220,7 +217,7 @@ Resources:
       Name: !Sub /${SCQSPrefix}/service/allowedCorsOrigins
       Description: Parameter for the Sitecore XP1 Quick Start
       Type: String
-      Value: !Ref CorsOrigins
+      Value: '*'
   Environment:
     Type: AWS::SSM::Parameter
     Properties:
