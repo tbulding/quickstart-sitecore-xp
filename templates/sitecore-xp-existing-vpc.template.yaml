@@ -91,7 +91,7 @@ Metadata:
         default: Public subnet 2 ID
       # Sitecore Network Configuration
       CDDNSName:
-        default: ontent Delivery FQDN
+        default: Content Delivery FQDN
       CMDNSName:
         default: Content Management FQDN
       ISDNSName:
