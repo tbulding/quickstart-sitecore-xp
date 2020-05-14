@@ -593,7 +593,7 @@ Parameters:
     Default: 1000
     Description:
       Provisioned IOPS for the SQL Data, Logs and TempDb volumes. This
-      parameter is only applicable when SQL Server Volume Type is set to "io1"
+      parameter is only applicable when VolumeType is set to "io1"
     MaxValue: '20000'
     MinValue: '100'
     Type: Number
