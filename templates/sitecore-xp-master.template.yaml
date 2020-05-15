@@ -114,60 +114,60 @@ Metadata:
         default: Key pair name for the RD Gateway
     # Sitecore Network Configuration
       CDDNSName:
-        default: Content Delivery FQDN
+        default: Content delivery FQDN
       CMDNSName:
-        default: Content Management FQDN
+        default: Content management FQDN
       ISDNSName:
-        default: Identity Server FQDN
+        default: Identity server FQDN
       IntDNS:
         default: Internal DNS suffix
       ExternalCertificateARN:
-        default: External Amazon Certificate Manager ARN
+        default: External ACM ARN
       ExternalCertFQDN:
         default: External certificate domain name
       ExternalR53ZoneID:
-        default: External Route 53 Zone ID
+        default: External Route 53 zone ID
     # Sitecore Configuration
       CDMinSize:
-        default: Minimum Content Delivery instances
+        default: Minimum content delivery instances
       CDMaxSize:
-        default: Maximum Content Delivery instances
+        default: Maximum content delivery instances
       CDDesiredCapacity:
-        default: Desired Content Delivery instances
+        default: Desired content delivery instances
       CDInstanceType:
-        default: Content Delivery instance type
+        default: Content delivery
       CDScalingMetric:
-        default: Content Delivery scaling metric
+        default: Content delivery scaling metric
       CDScalingMetricValue:
-        default: Content Delivery scaling metric value
+        default: Content delivery scaling metric value
       CMMinSize:
-        default: Minimum Content Management instance
+        default: Minimum content management instances
       CMMaxSize:
-        default: Maximum Content Management instance
+        default: Maximum content management instances
       CmIdRdInstanceType:
-        default: Content Management, Identity, Reference Data instance type
+        default: Content management, identity, reference data
       CMScalingMetric:
-        default: Content Management scaling metric
+        default: Content management scaling metric
       CMScalingMetricValue:
-        default: Content Management caling metric value
+        default: Content management caling metric value
       CollCSInstanceType:
-        default: Collection, Collection Search instance type
+        default: Collection, collection search
       MaCpPrcInstanceType:
-        default: Marketing Automation, Cortex Processing, Processing instance type
+        default: Marketing automation, cortex processing, processing
       MarCrRepInstanceType:
-        default: Marketing Automation Reporting, Cortex Reporting, Reporting instance type
+        default: Marketing automation reporting, cortex reporting, reporting
       SitecoreKeyPair:
         default: EC2 Key Pair for Sitecore instances
       SitecorePrefix:
         default: Sitecore installation prefix
       SitecoreS3Bucket:
-        default: Sitecore Resources S3 Bucket
+        default: Sitecore resources S3 Bucket
       SCResourcesPrefix:
         default: Sitecore installation files prefix
       SCLicensePrefix:
         default: Sitecore license file prefix
       SOLRCorePrefix:
-        default: Prefix of the Solr cores
+        default: Solr cores prefix
       SOLRUrl:
         default: Solr server/cluster URL
       EnvironmentType:
@@ -188,7 +188,7 @@ Metadata:
       SQLEngineVersion:
         default: MSSQL database engine version
       SQLAlwaysOn:
-        default: MSSQL Always On - Enterprise Edition
+        default: MSSQL always on
       VolumeIops:
         default: Data volume IOPS
       VolumeSize:
@@ -301,42 +301,42 @@ Parameters:
 # Sitecore Networking Configuration
   CDDNSName:
     Type: String
-    Description: 'Fully qualified domain name for the Content Delivery Role (e.g., home.example.com).'
+    Description: 'Fully qualified domain name for the content delivery role (e.g., home.example.com).'
   CMDNSName:
     Type: String
-    Description: Fully qualified domain name for the Content Management Role.
+    Description: Fully qualified domain name for the content management role.
   ISDNSName:
     Type: String
-    Description: Fully qualified domain name for the Identity Server Role.
+    Description: Fully qualified domain name for the identity server role.
   IntDNS:
     Type: String
-    Description: '[Optional] Internal DNS name. If left blank, one will be generated for you.'
+    Description: '[Optional] Internal DNS name. If left blank, one is generated for you.'
   ExternalCertificateARN:
     Type: String
     Description: "[Optional] Provide the Amazon Resource Name (ARN) of the wildcard certificate created in Amazon Certificate Manager. If not provided, 
       a wildcard certificate will be created for you. If you provide an ARN, you do not need to provide details 
-      for the External Certificate Domain or the External Route 53 Zone ID."
+      for ExternalCertFQDN or ExternalRoute53ZoneID."
   ExternalCertFQDN: 
     Type: String
-    Description: "[Optional] External domain name for the Sitecore deployment (e.g., example.com). This will be created in ACM as a wildcard 
-      certificate (e.g., *.example.com) if no External Amazon Certificate Manager ARN was provided."
+    Description: "[Optional] External domain name for the Sitecore deployment (e.g., example.com). 
+      This is created in ACM as a wildcard certificate (e.g., *.example.com) if no value is provided for ExternalCertificateARN."
   ExternalR53ZoneID: 
     Type: String
     Description: "[Optional] Provide the Route 53 Hosted Zone ID for ExternalCertFQDN if you require certificate 
-      validation to be done via DNS. If no Route 53 Hosted Zone ID is provided, validation will be done via email."
+      validation to be done via DNS. If no Route 53 Hosted Zone ID is provided, validation is done via email."
 # Sitecore Configuration
   CDMinSize:
     Type: String
     Default: '1'
-    Description: Minimum number of Content Delivery instances available.
+    Description: Minimum number of content delivery instances available.
   CDMaxSize:
     Type: String
     Default: '3'
-    Description: Maximum number of Content Delivery instances available.
+    Description: Maximum number of content delivery instances available.
   CDDesiredCapacity:
     Type: String
     Default: '2'
-    Description: Desired number of Content Delivery instances available.
+    Description: Desired number of content delivery instances available.
   CDInstanceType:
     AllowedValues:
     - m5.large
@@ -372,7 +372,7 @@ Parameters:
     Description: Content Delivery instance type.
     Type: String
   CDScalingMetric:
-    Description: Metric used to determine scaling of the Content Delivery role.
+    Description: Metric used to determine scaling of the content delivery role.
     Default: ASGAverageCPUUtilization
     AllowedValues:
       - ASGAverageCPUUtilization 
@@ -380,17 +380,17 @@ Parameters:
       - ALBRequestCountPerTarget 
     Type: String
   CDScalingMetricValue:
-    Description: Value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes).
+    Description: Value required for the scaling metric (For ASGAverageNetworkIn this value is in bytes).
     Default: 70
     Type: Number
   CMMinSize:
     Type: String
     Default: '1'
-    Description: Minimum number of Content Management instances available.
+    Description: Minimum number of content management instances available.
   CMMaxSize:
     Type: String
     Default: '2'
-    Description: Maximum number of Content Management instances available.
+    Description: Maximum number of content management instances available.
   CmIdRdInstanceType:
     AllowedValues:
     - m5.large
@@ -423,10 +423,10 @@ Parameters:
     - c5.9xlarge
     ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
     Default: m5a.xlarge
-    Description: Content Management, Identity, Reference Data instance type.
+    Description: Instance type, applied to the roles of content management, identity, and reference data.
     Type: String
   CMScalingMetric:
-    Description: Metric used to determine scaling of the Content Management role.
+    Description: Metric used to determine scaling of the content management role.
     Default: ASGAverageCPUUtilization
     AllowedValues:
       - ASGAverageCPUUtilization 
@@ -434,7 +434,7 @@ Parameters:
       - ALBRequestCountPerTarget 
     Type: String
   CMScalingMetricValue:
-    Description: Value required for the Scaling Metric (For ASGAverageNetworkIn this value is in bytes).
+    Description: Value required for the scaling metric (For ASGAverageNetworkIn this value is in bytes).
     Default: 70
     Type: Number
   CollCSInstanceType:
@@ -469,7 +469,7 @@ Parameters:
     - c5.9xlarge
     ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
     Default: m5a.xlarge
-    Description: Collection, Collection Search instance type.
+    Description: Instance type, applied to the roles of collection, collection search.
     Type: String
   MaCpPrcInstanceType:
     AllowedValues:
@@ -503,7 +503,7 @@ Parameters:
     - c5.9xlarge
     ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
     Default: m5a.xlarge
-    Description: Marketing Automation, Cortex Processing, Processing instance type.
+    Description: Instance type, applied to the roles of marketing automation, cortex processing, and processing.
     Type: String
   MarCrRepInstanceType:
     AllowedValues:
@@ -537,7 +537,7 @@ Parameters:
     - c5.9xlarge
     ConstraintDescription: Choose an instance type. m5.xlarge or larger recommended.
     Default: m5a.xlarge
-    Description: Marketing Automation Reporting, Cortex Reporting, Reporting instance type.
+    Description: Instance type, applied to the roles of marketing automation reporting, cortex reporting, and reporting.
     Type: String
   SitecoreKeyPair:
     Type: AWS::EC2::KeyPair::KeyName
@@ -570,8 +570,8 @@ Parameters:
     Default: ''
   SOLRCorePrefix: 
     Type: String
-    Description: If you have provided a Solr Url, this will be the prefix of your pre-configured Solr cores. If no Solr URL provided, this will be the prefix used 
-      for the Solr cores on the development Solr instance.
+    Description: If you provided a Solr URL, this is the prefix of your pre-configured Solr cores. 
+      If no Solr URL provided, this is the prefix used for the Solr cores on the development Solr instance.
   EnvironmentType: 
     Description: Type of Sitecore deployment.
     AllowedValues:
@@ -590,10 +590,10 @@ Parameters:
     Default: Information
     Type: String
   EmailNotifications:
-    Description: The email address for receiving notifications for Sitecore instance auto scaling.
+    Description: Email address for receiving Sitecore auto scaling notifications.
     Type: String
   LambdaZipsBucketName:
-    Description: '[OPTIONAL] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
+    Description: '[Optional] The name of the S3 bucket where the Lambda zip files should be placed. If you leave this parameter blank, an S3 bucket will be created.'
     Type: String
     Default: ''
 # RDS MS SQL
@@ -602,7 +602,8 @@ Parameters:
       - 'true'
       - 'false'
     Default: 'true'
-    Description: If 'false' minor engine upgrades are not applied to the DB instance.
+    Description: If set to true, minor engine upgrades are applied to the database instance. 
+      If set to false, minor engine upgrades are not applied to the database instance.
     Type: String
   DBInstanceClass:
     AllowedValues:
@@ -624,7 +625,7 @@ Parameters:
       - db.r4.4xlarge
       - db.r4.8xlarge
       - db.r4.16xlarge
-    ConstraintDescription: Must select a valid database instance type.
+    ConstraintDescription: 'Must select a valid database instance type.'
     Default: db.r4.2xlarge
     Description: Name of the compute and memory capacity class of the database instance.
     Type: String
@@ -634,9 +635,9 @@ Parameters:
       - sqlserver-se
       - sqlserver-ex
       - sqlserver-web
-    ConstraintDescription: Must select a MSSQL Database Engine Edition.
+    ConstraintDescription: Must select a MSSQL database engine edition.
     Default: sqlserver-se
-    Description: MSSQL Database Engine Edition.
+    Description: MSSQL database engine edition.
     Type: String
   SQLEngineVersion:
     AllowedValues:
@@ -646,21 +647,22 @@ Parameters:
       - 14.00.3035.2.v1
       - 14.00.3015.40.v1
       - 14.00.1000.169.v1
-    ConstraintDescription: Must select a MSSQL Database Engine Version.
+    ConstraintDescription: Must select a MSSQL database engine version.
     Default: 14.00.3223.3.v1
-    Description: MSSQL Database Engine Version.
+    Description: MSSQL database engine version.
     Type: String
   SQLAlwaysOn:
     Default: 'False'
     AllowedValues:
       - 'False'
       - 'True'
-    Description: "[Optional] Select 'True' if you would like to have SQL Always-On (High Availability) for the deployment. Be aware that this only applies if
-      selecting 'sqlserver-ee' as the MSSQL database engine edition"
+    Description: "[Optional] Set to true if you want SQL to be always on (high availability) for the deployment. 
+      Beware that this only applies when SQLEngineEdition is set to sqlserver-ee (Enterprise Edition) as the MSSQL database engine edition. 
+      If set to false, SQL will be deployed to one Availability Zone."
     Type: String
   BackupRetentionPeriod:
     Default: 7
-    Description: The number of days for which automated backups are retained. Setting this parameter to a positive number enables backups. 
+    Description: Number of days automated backups are retained. Setting this parameter to a positive number enables backups. 
       Setting this parameter to 0 disables automated backups. 
     Type: Number
   VolumeIops:
@@ -672,7 +674,7 @@ Parameters:
     Type: Number
   VolumeSize:
     Default: '500'
-    Description: Volume size for the SQL Data, Logs and TempDb volumes, in GiB.
+    Description: Volume size (GB) for the SQL data, logs, and TempDb volumes.
     MaxValue: '16000'
     MinValue: '100'
     Type: Number
@@ -685,7 +687,7 @@ Parameters:
     Type: String
 # Redis Configuration
   CacheNodeType:
-    Description: Instance type the nodes will launch under.
+    Description: Instance type the nodes are launched under.
     Type: String
     Default: cache.m4.large
     AllowedValues:
