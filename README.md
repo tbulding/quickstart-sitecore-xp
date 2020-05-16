@@ -1,7 +1,7 @@
 # quickstart-sitecore-xp-v93
 ## Sitecore XP 9.3 on AWS
 
-The Sitecore Experience Platform (XP) is a content management system (CMS) for web content and automates marketing to deliver a personalized user experience. This Quick Start is intended for organizations that want to deploy a multirole Sitecore XP 9.3 architecture on the AWS Cloud. 
+The Sitecore Experience Platform (XP) is a content management system (CMS) for web content that automates marketing to deliver a personalized user experience. This Quick Start is intended for organizations that want to deploy a multirole Sitecore XP 9.3 architecture on the AWS Cloud. 
 
 It deploys 12 roles that compose the complete Sitecore XP platform. All of the roles are deployed into individual Auto Scaling groups to ensure recoverability when an instance fails. Database services are provided by SQL Server through Amazon Relational Database Service (Amazon RDS), and caching is managed by Redis on Amazon ElastiCache.
 
@@ -16,6 +16,7 @@ This Quick Start provides two deployment options:
 The Quick Start provides separate templates for these options. It also lets you configure Classless Inter-Domain Routing (CIDR) blocks, instance types, and Sitecore XP 9.3 settings, as discussed later in this guide.
 
 The following diagram shows the architecture for Sitecore XP 9.3.
+
 ![Quick Start architecture for Sitecore XP 9.3](https://d0.awsstatic.com/partner-network/QuickStart/datasheets/sitecore-xp-93-architecture-diagram.png)
 
 For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/yW5pE).
