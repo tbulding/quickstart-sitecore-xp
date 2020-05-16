@@ -16,7 +16,7 @@ This Quick Start provides two deployment options:
 The Quick Start provides separate templates for these options. It also lets you configure Classless Inter-Domain Routing (CIDR) blocks, instance types, and Sitecore XP 9.3 settings, as discussed later in this guide.
 
 The following diagram shows the architecture for Sitecore XP 9.3.
-![Quick Start architecture for Sitecore XP 9.3](https://d1.awsstatic.com/partner-network/QuickStart/datasheets/sitecore-xp-93-architecture-diagram.png)
+![Quick Start architecture for Sitecore XP 9.3](https://d0.awsstatic.com/partner-network/QuickStart/datasheets/sitecore-xp-93-architecture-diagram.png)
 
 For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/yW5pE).
 
