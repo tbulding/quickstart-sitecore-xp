@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'This template deploys the Auto Scaling Groups and Launch Configurations. The Launch Configurations launch the instances for the Sitecore roles  (qs-1qjogjg57)'
+Description: 'This template deploys the Auto Scaling Groups and Launch Configurations. The Launch Configurations launch the instances for the Sitecore roles  (qs-1qp89faoh)'
 Parameters:
   PrivateSubnet1A:
     Type: String
