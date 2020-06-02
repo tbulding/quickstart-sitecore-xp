@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Creates a new VPC and RD GW host, and deploys Sitecore into the newly created VPC (qs-1qp89fams)
+Description: Creates a new VPC and RD GW host, and deploys Sitecore into the newly created VPC (qs-1qppe6855)
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:

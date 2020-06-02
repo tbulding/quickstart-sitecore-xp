@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Deploys Lambda functions required for the AWS Sitecore Quick Start (qs-1qp89famj)
+Description: Deploys Lambda functions required for the AWS Sitecore Quick Start (qs-1qppe684s)
 Parameters:
   LambdaZipsBucketName:
     Description: Bucket Name where the lambda zip files should be placed

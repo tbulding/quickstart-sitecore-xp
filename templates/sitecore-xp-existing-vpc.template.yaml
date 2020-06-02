@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Deploys Sitecore into an existing VPC  (qs-1qjogjg57)'
+Description: 'Deploys Sitecore into an existing VPC  (qs-1qppe684j)'
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Creates the required parameters in Parameter Store (qs-1qp89fant)'
+Description: 'Creates the required parameters in Parameter Store (qs-1qppe686b)'
 Parameters:
   SCPrefix:
     Type: String

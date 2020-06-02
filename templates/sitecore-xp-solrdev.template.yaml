@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Creates a development (Non-Production) Solr Instance (qs-1qp89fap6)"
+Description: "Creates a development (Non-Production) Solr Instance (qs-1qppe687o)"
 Parameters:
   PrivateSubnet1A:
     Type: AWS::EC2::Subnet::Id

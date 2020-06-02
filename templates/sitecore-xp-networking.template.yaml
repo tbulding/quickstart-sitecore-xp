@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "This template deploys Target Groups, Listeners and Rules used for the Sitecore roles ASG's and LB's (qs-1qp89fand)"
+Description: "This template deploys Target Groups, Listeners and Rules used for the Sitecore roles ASG's and LB's (qs-1qppe685p)"
 Parameters:
   LoadBalancerInternal:
     Type: String

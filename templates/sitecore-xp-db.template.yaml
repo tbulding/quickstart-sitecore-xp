@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "This template deploys RDS with MS SQL and its corresponding Parameter and Subnet Groups, along with ElastiCache for Redis and its corresponding Subnet Group.  (qs-1qp89famb)"
+Description: "This template deploys RDS with MS SQL and its corresponding Parameter and Subnet Groups, along with ElastiCache for Redis and its corresponding Subnet Group.  (qs-1qppe684a)"
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
