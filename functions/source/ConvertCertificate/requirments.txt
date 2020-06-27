@@ -1,4 +1,0 @@
-pip install --system -t . crhelper
-pip install --system -t . pyopenssl
-
---runtime python3.6
