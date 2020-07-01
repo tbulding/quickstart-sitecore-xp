@@ -1,13 +1,9 @@
 // Include details about the license and how they can sign up. If no license is required, clarify that. 
 
-These two paragraphs provide an example of the details you can provide. Provide links as appropriate.
+This Quick Start requires a Sitecore XP 9.3 license. To use the Quick Start in your
+production environment, https://www.sitecore.com/knowledge-center/getting-started/developer-trial[sign up for a developer trial license]. For a full license, contact a
+Sitecore sales representative or Sitecore partner. Before you launch the Quick Start, place
+the license key in the deployment’s associated S3 bucket, and specify its location. For more
+information, see the <<_prepare_for_the_sitecore_deployment,Prepare for the Sitecore deployment>> section.
 
-
-Example content below:
-
-_<license information>This Quick Start requires a license for {partner-product-name}. To use the Quick Start in your production environment, sign up for a license at <link>. When you launch the Quick Start, place the license key in an S3 bucket and specify its location._
-
-_If you don’t have a license, the Quick Start deploys with a trial license. The trial license gives you <n> days of free usage in a non-production environment. After this time, you can upgrade to a production license by following the instructions at <link>._
-
-// Or, if the deployment uses an AMI, update this paragraph. If it doesn’t, remove the paragraph.
-_<AMI information>The Quick Start requires a subscription to the Amazon Machine Image (AMI) for {partner-product-name}, which is available from https://aws.amazon.com/marketplace/[AWS Marketplace]. Additional pricing, terms, and conditions may apply. For instructions, see link:#step-2.-subscribe-to-the-software-ami[step 2] in the deployment section._
+If you don’t have a license, the Quick Start deployment will not complete successfully.

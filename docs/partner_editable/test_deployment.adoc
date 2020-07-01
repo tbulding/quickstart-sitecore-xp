@@ -1,4 +1,13 @@
 // Add steps as necessary for accessing the software, post-configuration, and testing. Don’t include full usage instructions for your software, but add links to your product documentation for that information.
 === Test the deployment
 
-<Add instructions for testing the deployment.>
+Use a web browser to find the DNS name you provided for the content delivery role.
+
+To log in to Sitecore, retrieve the administrator password by opening AWS Secrets Manager
+from within the Region where you deployed this Quick Start. Search for “sitecoreadmin” to
+find the password value.
+
+When you have the password, use a web browser to find the DNS name for either the
+content delivery role or content management role. Append `/sitecore/admin` to the DNS
+name. This displays the login screen where you can log in and configure your Sitecore
+environment.
