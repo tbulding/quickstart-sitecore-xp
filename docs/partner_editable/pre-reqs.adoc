@@ -1,6 +1,6 @@
 // If no preperation is required, remove all content from here
 
-==== Prepare for the {partner-product-name} deployment
+==== Prepare for the deployment
 This Quick Start requires that you https://dev.sitecore.net/[sign up with Sitecore] to obtain the Sitecore XP 9.3
 resource files.
 
