@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: 'Deploys Sitecore into an existing VPC  (qs-1qppe684j)'
 Metadata:
+  QuickStartDocumentation:
+    EntrypointName: "Launch into an existing VPC"
+    OptionalParameters:
+      - IntDNS
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
