@@ -1,9 +1,0 @@
-# Taskcat
-.taskcat_overrides.yml
-.taskcat_*
-taskcat_outputs/
-.taskcat/
-*project_override*
-maint/*
-.vscode/settings.json
-.taskcat-*-*-*.yml
