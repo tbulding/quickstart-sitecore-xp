@@ -4,7 +4,7 @@
 :doc-month: May
 :doc-year: 2020
 :partner-contributors: 
-:quickstart-contributors: Dylan Owen and Tony Bulding, AWS Quick Start team
+:quickstart-contributors: Dylan Owen and Tony Bulding, AWS Quick Start Team
 :deployment_time: 1–1.5 hours
 :default_deployment_region: us-east-1
 :production_build:
